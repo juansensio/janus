@@ -6,12 +6,14 @@ export function unwrapIpcInvokeMessage(message: string): string {
     return match?.[1] ?? message;
 }
 
+const DUPLICATE_BOOK_TITLE_MARKERS = [
+    "that name already exists. choose a different name.",
+    "that name is already on your shelf. choose a different book name.",
+] as const;
+
 function isDuplicateBookTitleMessage(message: string): boolean {
     const lower = message.toLowerCase();
-    return (
-        lower.includes("already exists") ||
-        lower.includes("already on your shelf")
-    );
+    return DUPLICATE_BOOK_TITLE_MARKERS.some((phrase) => lower.includes(phrase));
 }
 
 export function bridgeErrorCode(error: unknown): string | undefined {

@@ -100,6 +100,29 @@ export function createShelfService(
         await fs.mkdir(booksDir, { recursive: true });
     }
 
+    function assertBookDirPathUnderBooksRoot(dir: string): void {
+        const booksRoot = booksDir.replace(/\/+$/, "");
+        const bookPath = dir.replace(/\/+$/, "");
+        if (!bookPath.startsWith(`${booksRoot}/`)) {
+            throw new ShelfServiceError("BOOK_NOT_FOUND", "Book not found");
+        }
+        const segment = bookPath.slice(booksRoot.length + 1);
+        if (!segment || segment.includes("/")) {
+            throw new ShelfServiceError("BOOK_NOT_FOUND", "Book not found");
+        }
+    }
+
+    async function ensureBookDirContained(dir: string): Promise<void> {
+        assertBookDirPathUnderBooksRoot(dir);
+        const [resolvedDir, resolvedBooksDir] = await Promise.all([
+            fs.realpath(dir),
+            fs.realpath(booksDir),
+        ]);
+        if (!isResolvedPathInsideRoot(resolvedDir, resolvedBooksDir)) {
+            throw new ShelfServiceError("BOOK_NOT_FOUND", "Book not found");
+        }
+    }
+
     async function collectTakenBookDirectoryNames(): Promise<Set<string>> {
         const taken = new Set<string>();
         let entries: string[] | ShelfFsDirent[];
@@ -192,6 +215,7 @@ export function createShelfService(
             const taken = await collectTakenBookDirectoryNames();
             const dirName = allocateBookDirectoryName(title, taken);
             const dir = fs.join(booksDir, dirName);
+            assertBookDirPathUnderBooksRoot(dir);
             await fs.mkdir(dir, { recursive: true });
             await fs.writeFile(
                 fs.join(dir, "book.json"),
@@ -204,6 +228,7 @@ export function createShelfService(
         async renameBook(id: string, titleRaw: string): Promise<BookSummary> {
             const title = normalizeTitleForService(titleRaw);
             const dir = await resolveBookDirById(booksDir, id, fs);
+            await ensureBookDirContained(dir);
             const manifestPath = fs.join(dir, "book.json");
             let manifest;
             try {
@@ -238,6 +263,20 @@ export function createShelfService(
             if (targetDirName !== currentDirName) {
                 const targetDir = fs.join(booksDir, targetDirName);
                 if (targetDir !== dir) {
+                    assertBookDirPathUnderBooksRoot(targetDir);
+                    try {
+                        await fs.stat(targetDir);
+                        await ensureBookDirContained(targetDir);
+                    } catch (error) {
+                        if (
+                            error !== null &&
+                            typeof error === "object" &&
+                            "code" in error &&
+                            (error as { code: unknown }).code !== "ENOENT"
+                        ) {
+                            throw error;
+                        }
+                    }
                     await fs.rename(dir, targetDir);
                 }
             }
@@ -263,16 +302,7 @@ export function createShelfService(
                     "Book not found",
                 );
             }
-            const [resolvedDir, resolvedBooksDir] = await Promise.all([
-                fs.realpath(dir),
-                fs.realpath(booksDir),
-            ]);
-            if (!isResolvedPathInsideRoot(resolvedDir, resolvedBooksDir)) {
-                throw new ShelfServiceError(
-                    "BOOK_NOT_FOUND",
-                    "Book not found",
-                );
-            }
+            await ensureBookDirContained(dir);
             await fs.rm(dir, { recursive: true });
         },
     };

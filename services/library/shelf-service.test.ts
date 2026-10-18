@@ -119,6 +119,20 @@ describe("createShelfService", () => {
         expect(manifest).toContain('"title": "My Novel"');
     });
 
+    it("createBook with title .. stays under books/ (folder Untitled)", async () => {
+        const fs = createMemoryFs();
+        const service = createShelfService(
+            "/lib",
+            fs,
+            () => "550e8400-e29b-41d4-a716-446655440000",
+        );
+
+        const created = await service.createBook("..");
+        expect(created.title).toBe("..");
+        expect(fs.files.has("/lib/books/Untitled/book.json")).toBe(true);
+        expect(fs.files.has("/lib/book.json")).toBe(false);
+    });
+
     it("createBook disambiguates folder when sanitized titles collide (foobar vs foo/bar)", async () => {
         const fs = createMemoryFs();
         const service = createShelfService(
@@ -214,6 +228,24 @@ describe("createShelfService", () => {
                 "/lib/books/660e8400-e29b-41d4-a716-446655440001/book.json",
             ),
         ).toBe(false);
+    });
+
+    it("renameBook rejects when book directory resolves outside books/", async () => {
+        const id = "550e8400-e29b-41d4-a716-446655440000";
+        const fs = createMemoryFs();
+        const baseRealpath = fs.realpath.bind(fs);
+        fs.realpath = async (target: string) => {
+            if (target === "/lib/books/Safe") {
+                return "/outside/library";
+            }
+            return baseRealpath(target);
+        };
+        const service = createShelfService("/lib", fs, () => id);
+        await service.createBook("Safe");
+
+        await expect(service.renameBook(id, "Safer")).rejects.toMatchObject({
+            code: "BOOK_NOT_FOUND",
+        });
     });
 
     it("renameBook disambiguates folder when sanitized title collides with another book", async () => {

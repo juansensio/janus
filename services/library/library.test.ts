@@ -132,6 +132,11 @@ describe("bookDirectoryName", () => {
             "Part 1 Prologue draft",
         );
     });
+
+    it("maps dot-only names to Untitled so path.join cannot escape books/", () => {
+        expect(bookDirectoryName(".")).toBe("Untitled");
+        expect(bookDirectoryName("..")).toBe("Untitled");
+    });
 });
 
 describe("book manifest", () => {
