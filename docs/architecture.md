@@ -78,7 +78,7 @@ On mobile there is no IPC: `apps/mobile/src/native-bridge.ts` builds `JanusBridg
 
 ## Presentation vs domain (invariant 12)
 
-Templates and UI code **display** values and **invoke** the bridge. They do not encode domain rules (ID format, manifest fields, title allocation, sort keys). Those belong in `services/<domain>/`. UI copy and layout (e.g. `packages/ui/src/shelf/strings.ts`) are presentation, not business logic.
+Templates and UI code **display** values and **invoke** the bridge. They do not encode domain rules (ID format, manifest fields, title allocation, sort keys). Those belong in `services/<domain>/`. Translated UI copy lives in `services/languages/locales/`; the web UI looks up keys via `t("…")` after the bridge supplies a catalog.
 
 ## Example: shelf create (desktop)
 
@@ -105,3 +105,4 @@ Templates and UI code **display** values and **invoke** the bridge. They do not 
 - Install and manual gates: [`docs/install-macos.md`](install-macos.md)
 - Shell toolchain and bridge introduction: [`docs/specs/SPEC-shell.md`](specs/SPEC-shell.md)
 - Library slice 1 (shelf CRUD): [`docs/specs/SPEC-library.md`](specs/SPEC-library.md)
+- Interface languages (add a locale): [`services/languages/README.md`](../services/languages/README.md)
