@@ -48,6 +48,19 @@ bun run desktop:prod
 
 Close the Electron window when you have confirmed **Janus** inside `<main id="app">` with `data-platform="desktop"`.
 
+### Library (slice 1)
+
+After `bun run dev:desktop` or `bun run desktop:prod`, verify the bookshelf (not only the **Janus** heading):
+
+1. **Empty shelf** — **No books yet** and a **New book** button.
+2. **New book** — click **New book**; a card appears titled **Untitled** (second book **Untitled 2**, and so on).
+3. **Delete** — click **Delete** on a card; confirm with **Delete "{title}"? This cannot be undone.**; the card disappears.
+4. **Persistence** — quit the app completely and reopen (`dev:desktop` or `desktop:prod`); the same books remain in the same order.
+
+On **iOS Simulator** (`bun run dev:ios` for live reload, or `cap:sync:ios` + Xcode Run for production-like), repeat steps 1–4 with `data-platform="mobile"`.
+
+`bun run validate:install` remains a **shell** toolchain check (tests + `build:ui` artifacts); it does not launch Electron or the Simulator. Use the steps above for library sign-off.
+
 If Electron fails to start (missing `path.txt`, *“failed to install correctly”*, or `Electron Framework.framework` not loaded), the `node_modules/electron/dist` bundle is probably incomplete. Fix it with:
 
 ```bash

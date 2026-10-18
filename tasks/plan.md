@@ -56,15 +56,15 @@ Full acceptance criteria: **`tasks/todo.md`** Tasks **1–8**.
 - [x] Both shells expose `listBooks` / `createBook` / `deleteBook`
 
 ### Phase 3: Shelf
-- [ ] Task 5: Bookshelf UI and mount wiring
-- [ ] Task 6: Install doc — library manual checks
+- [x] Task 5: Bookshelf UI and mount wiring
+- [x] Task 6: Install doc — library manual checks
 
 ### Checkpoint: Shelf CRUD
 - [ ] Desktop + Simulator create/delete; persistence across restart
 - [ ] `bun run validate:install` still passes
 
 ### Phase 4: Sign-off
-- [ ] Task 7 (optional): Desktop integration test
+- [x] Task 7 (optional): Desktop integration test
 - [ ] Task 8: Human sign-off
 
 ### Checkpoint: Complete

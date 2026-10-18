@@ -98,13 +98,13 @@ Sizing: **S** = 1–2 files, **M** = 3–5 files.
 **Description:** Add `packages/ui/src/shelf/`: empty state, **New book**, card grid with title + delete; `window.confirm` with spec English strings; bridge list/create/delete; `data-platform` on `#app`. Wire mount/bootstrap to shelf. Vitest with mocked bridge.
 
 **Acceptance criteria:**
-- [ ] No title/sort/manifest logic in UI beyond display and confirm copy
-- [ ] Cards are not navigation links (slice 1)
-- [ ] `bun run build:ui` succeeds; shelf visible in `dev:desktop` and `desktop:prod`
+- [x] No title/sort/manifest logic in UI beyond display and confirm copy
+- [x] Cards are not navigation links (slice 1)
+- [x] `bun run build:ui` succeeds; shelf visible in `dev:desktop` and `desktop:prod`
 
 **Verification:**
-- [ ] `bun run test`
-- [ ] `bun run lint`
+- [x] `bun run test`
+- [x] `bun run lint`
 - [ ] Manual: create/delete; quit and reopen — persistence
 
 **Dependencies:** Tasks 2, 3, 4
@@ -120,11 +120,11 @@ Sizing: **S** = 1–2 files, **M** = 3–5 files.
 **Description:** Add **Library (slice 1)** subsection to `docs/install-macos.md`: empty shelf, New book, Untitled titles, delete confirm, restart persistence on desktop and Simulator. Note `validate:install` remains shell-only.
 
 **Acceptance criteria:**
-- [ ] Contributor can verify library without reading `tasks/plan.md`
-- [ ] English UI strings match spec table
+- [x] Contributor can verify library without reading `tasks/plan.md`
+- [x] English UI strings match spec table
 
 **Verification:**
-- [ ] Manual read-through
+- [x] Manual read-through
 
 **Dependencies:** Task 5
 
@@ -139,10 +139,10 @@ Sizing: **S** = 1–2 files, **M** = 3–5 files.
 **Description:** Vitest (Node, temp dir): create → list → delete one book; assert on-disk layout and sorted list. Skip with documented reason if too costly.
 
 **Acceptance criteria:**
-- [ ] Test passes locally or skip documented
+- [x] Test passes locally or skip documented
 
 **Verification:**
-- [ ] `bun run test`
+- [x] `bun run test`
 
 **Dependencies:** Task 3
 
