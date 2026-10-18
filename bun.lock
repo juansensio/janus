@@ -1,5 +1,6 @@
 {
   "lockfileVersion": 1,
+  "configVersion": 0,
   "workspaces": {
     "": {
       "name": "janus",
@@ -47,6 +48,7 @@
       "dependencies": {
         "@janus/languages": "workspace:*",
         "@janus/manuscript": "workspace:*",
+        "@janus/zoom": "workspace:*",
       },
     },
     "packages/ui": {
@@ -87,6 +89,10 @@
       "dependencies": {
         "node-html-parser": "^9.0.4",
       },
+    },
+    "services/zoom": {
+      "name": "@janus/zoom",
+      "version": "0.0.0",
     },
   },
   "packages": {
@@ -199,6 +205,8 @@
     "@janus/mobile": ["@janus/mobile@workspace:apps/mobile"],
 
     "@janus/ui": ["@janus/ui@workspace:packages/ui"],
+
+    "@janus/zoom": ["@janus/zoom@workspace:services/zoom"],
 
     "@jridgewell/sourcemap-codec": ["@jridgewell/sourcemap-codec@1.6.0", "", {}, "sha512-T7jf+5zgsZHwNJ4lvQ7/aezbyk0nNX+zJVWpmHA7VYsEx7a7qr5Rg5IbtJFqkgze5Y2sruq1RUY8Q837Od7iFw=="],
 

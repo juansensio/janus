@@ -25,4 +25,13 @@ describe("normalizeJanusSettings", () => {
             }),
         ).toEqual({});
     });
+
+    it("normalizes editorZoomPercent to a supported level", () => {
+        expect(
+            normalizeJanusSettings({ editorZoomPercent: 125 }),
+        ).toEqual({ editorZoomPercent: 125 });
+        expect(
+            normalizeJanusSettings({ editorZoomPercent: 80 }),
+        ).toEqual({ editorZoomPercent: 100 });
+    });
 });
