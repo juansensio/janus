@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { JanusBridge } from "@janus/bridge";
+import { createMockJanusBridge, type JanusBridge } from "@janus/bridge";
 import { resolveJanusBridge, startShell } from "./bootstrap";
 
 const originalUserAgent = navigator.userAgent;
@@ -12,7 +12,7 @@ afterEach(() => {
 
 describe("resolveJanusBridge", () => {
     it("returns existing window.janus", async () => {
-        const bridge: JanusBridge = { platform: () => "desktop" };
+        const bridge = createMockJanusBridge({ platform: () => "desktop" });
         window.janus = bridge;
         await expect(resolveJanusBridge()).resolves.toBe(bridge);
     });
@@ -25,7 +25,7 @@ describe("resolveJanusBridge", () => {
     });
 
     it("installs mobile bridge when not Electron and janus is missing", async () => {
-        const bridge: JanusBridge = { platform: () => "mobile" };
+        const bridge = createMockJanusBridge({ platform: () => "mobile" });
         const install = vi.fn(async () => {
             window.janus = bridge;
         });
@@ -51,7 +51,7 @@ describe("resolveJanusBridge", () => {
 
 describe("startShell", () => {
     it("throws Missing #app when root element is absent", async () => {
-        window.janus = { platform: () => "desktop" };
+        window.janus = createMockJanusBridge({ platform: () => "desktop" });
         await expect(startShell()).rejects.toThrow("Missing #app");
     });
 });

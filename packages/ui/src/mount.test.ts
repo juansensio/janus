@@ -1,9 +1,9 @@
+import { createMockJanusBridge } from "@janus/bridge";
 import { describe, expect, it } from "vitest";
-import type { JanusBridge } from "@janus/bridge";
 import { mountJanusShell } from "./mount";
 
-function mockBridge(platform: "desktop" | "mobile"): JanusBridge {
-    return { platform: () => platform };
+function mockBridge(platform: "desktop" | "mobile") {
+    return createMockJanusBridge({ platform: () => platform });
 }
 
 describe("mountJanusShell", () => {

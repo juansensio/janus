@@ -43,10 +43,10 @@ Full acceptance criteria: **`tasks/todo.md`** Tasks **1–8**.
 
 ### Phase 1: Foundation
 - [x] Task 1: `@janus/library` domain package
-- [ ] Task 2: Extend `JanusBridge` contract
+- [x] Task 2: Extend `JanusBridge` contract
 
 ### Checkpoint: Foundation
-- [ ] `bun run test` includes `services/library/`; bridge mocks updated
+- [x] `bun run test` includes `services/library/`; bridge mocks updated
 
 ### Phase 2: Shell I/O
 - [ ] Task 3: Desktop library IPC and FS

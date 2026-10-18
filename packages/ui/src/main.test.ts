@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
-import type { JanusBridge } from "@janus/bridge";
+import { createMockJanusBridge, type JanusBridge } from "@janus/bridge";
 import { startShell } from "./bootstrap";
 
 const originalUserAgent = navigator.userAgent;
@@ -15,7 +15,7 @@ afterEach(() => {
 
 describe("shell entry (main bootstrap)", () => {
     it("mounts Janus when window.janus and #app exist", async () => {
-        window.janus = { platform: () => "desktop" };
+        window.janus = createMockJanusBridge({ platform: () => "desktop" });
         const root = document.createElement("main");
         root.id = "app";
         document.body.append(root);
@@ -27,7 +27,7 @@ describe("shell entry (main bootstrap)", () => {
     });
 
     it("throws Missing #app when root element is absent", async () => {
-        window.janus = { platform: () => "desktop" };
+        window.janus = createMockJanusBridge({ platform: () => "desktop" });
         await expect(startShell()).rejects.toThrow("Missing #app");
     });
 });

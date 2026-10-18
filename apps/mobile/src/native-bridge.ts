@@ -1,4 +1,4 @@
-import type { JanusBridge } from "@janus/bridge";
+import { createMockJanusBridge, type JanusBridge } from "@janus/bridge";
 
 declare global {
     interface Window {
@@ -7,8 +7,5 @@ declare global {
 }
 
 export function installMobileBridge(): void {
-    const bridge: JanusBridge = {
-        platform: () => "mobile",
-    };
-    window.janus = bridge;
+    window.janus = createMockJanusBridge({ platform: () => "mobile" });
 }

@@ -36,12 +36,12 @@ Sizing: **S** = 1–2 files, **M** = 3–5 files.
 **Description:** Add `BookSummary` type and async `listBooks()`, `createBook()`, `deleteBook(id: string)` to `@janus/bridge` `JanusBridge`. Document error `code` convention. Update all Vitest mocks with minimal async stubs so the suite stays green.
 
 **Acceptance criteria:**
-- [ ] UI and shells import types from `@janus/bridge` only (not from `services/library` in `packages/ui`)
-- [ ] `bun run test` and `bun run lint` pass
+- [x] UI and shells import types from `@janus/bridge` only (not from `services/library` in `packages/ui`)
+- [x] `bun run test` and `bun run lint` pass
 
 **Verification:**
-- [ ] `bun run test`
-- [ ] `bun run lint`
+- [x] `bun run test`
+- [x] `bun run lint`
 
 **Dependencies:** Task 1
 
@@ -174,7 +174,7 @@ Sizing: **S** = 1–2 files, **M** = 3–5 files.
 
 ## Checkpoint: Foundation (after Tasks 1–2)
 
-- [ ] Domain and bridge contract tested
+- [x] Domain and bridge contract tested
 
 ## Checkpoint: Adapters (after Tasks 3–4)
 
