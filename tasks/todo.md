@@ -70,9 +70,9 @@ Sizing: **S** = 1–2 files, **M** = 3–5 files. No task should exceed ~5 files
 **Description:** `packages/ui` package with `index.html` (`<main id="app">`), `mountJanusShell(root, bridge)` per spec, Vitest + jsdom/happy-dom tests for heading text and `data-platform`. Depends on `@janus/bridge` only—no Vite build yet.
 
 **Acceptance criteria:**
-- [ ] Mount helper matches spec behavior
-- [ ] Tests cover `platform()` `"desktop"` and `"mobile"`
-- [ ] No `services/` imports
+- [x] Mount helper matches spec behavior
+- [x] Tests cover `platform()` `"desktop"` and `"mobile"`
+- [x] No `services/` imports
 
 **Verification:**
 - [ ] `bun run test`

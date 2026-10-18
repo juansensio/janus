@@ -1,0 +1,19 @@
+{
+    "name": "@janus/ui",
+    "version": "0.0.0",
+    "private": true,
+    "type": "module",
+    "exports": {
+        ".": "./src/mount.ts",
+        "./mount": "./src/mount.ts"
+    },
+    "scripts": {
+        "build": "vite build"
+    },
+    "dependencies": {
+        "@janus/bridge": "workspace:*"
+    },
+    "devDependencies": {
+        "vite": "6.0.3"
+    }
+}

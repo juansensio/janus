@@ -40,7 +40,7 @@ Full acceptance criteria: **`tasks/todo.md`** (12 tasks, all **S** or **M**).
 - [ ] `bun install`; `bun run test`; `bun run lint`
 
 ### Phase 2: Shared presentation
-- [ ] Task 4: `mountJanusShell` + mount tests
+- [x] Task 4: `mountJanusShell` + mount tests
 - [ ] Task 5: Vite `build:ui` + output path
 
 ### Checkpoint: UI artifact
