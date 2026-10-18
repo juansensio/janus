@@ -85,7 +85,7 @@ After the shelf checks above:
 1. Open **Settings** from the shelf (desktop only).
 2. Confirm the displayed library path; use **Choose folder…** to pick a directory.
 3. Janus moves existing books into the new folder when possible; if the target already has a non-empty `books/` folder, you’ll see an error instead of merging libraries.
-4. After the window reloads, create or open a book and confirm files appear under `<chosen>/books/<id>/`.
+4. After the window reloads, create or open a book and confirm files appear under `<chosen>/books/<Title>/` (folder name matches the book title; `book.json` still holds the uuid `id`).
 
 Mobile library location is unchanged (app sandbox).
 

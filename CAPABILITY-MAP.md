@@ -16,6 +16,10 @@ Build order (full Neo loop): shell → languages → manuscript → library, ai-
 
 **Library root slice 1** (`docs/specs/SPEC-library-root.md`, approved 2026-10-18): dev repo-local `.janus-library/` (+ `JANUS_LIBRARY_ROOT`, one-time move from `userData/library`); desktop Settings folder picker + `janus-settings.json`; mobile unchanged.
 
+**Library root slice 2** (same spec): relocate `books/` when choosing a new folder; saved `libraryRoot` wins over dev default; Choose folder in dev.
+
+**Library slice 1e** (`docs/specs/SPEC-library.md`): title-based `books/<Title>/` folders; uuid migration on list; rename moves folder; manuscript resolves by manifest id.
+
 `library` (full) and `ai-assist` can be specified in parallel after `manuscript` slice 1.
 
 **Module specs** live in `docs/specs/SPEC-<module-id>.md` (for example `docs/specs/SPEC-shell.md`). This map is the index; do not add module specs at the repo root.

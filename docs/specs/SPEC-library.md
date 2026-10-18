@@ -612,3 +612,36 @@ export function openBookNameDialog(options: {
 ---
 
 **Slice 1c next step:** **`/build`** from `tasks/todo.md` (plan in `tasks/plan.md`). Archive pair to `tasks/archive/library-slice-1c/` when complete.
+
+---
+
+## Slice 1e — title-based book folders (approved 2026-10-18)
+
+### Objective
+
+Under `<libraryRoot>/books/`, each book lives in a **directory named from its title** (sanitized for the filesystem). The stable **`id`** remains in `book.json` and on the bridge. Renaming a book on the shelf **renames the folder**. Legacy `books/<uuid>/` directories **migrate to title names** on `listBooks()`.
+
+### On-disk layout (slice 1e)
+
+```
+<libraryRoot>/
+  books/
+    <Title>/
+      book.json
+      manuscript.md
+```
+
+`bookDirectoryName(title)` in `services/library/` defines the folder name (strip `/\:*?"<>|`, collapse whitespace, fall back to `Untitled`).
+
+### Resolution
+
+- `resolveBookDirById(booksDir, id, fs)` scans book directories and matches manifest `id`.
+- `parseManifest` enforces directory/id match only when the directory name is a **uuid** (legacy layout).
+
+### Acceptance
+
+- New books create `books/<Title>/`.
+- Shelf rename updates folder name when the sanitized title changes.
+- Listing migrates uuid folders to title folders without data loss.
+- Manuscript read/write uses `resolveBookDirById` (desktop + mobile).
+- `bun run test` and `bun run lint` pass.
