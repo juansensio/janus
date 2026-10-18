@@ -374,8 +374,8 @@ Plan: `tasks/plan.md` § Shell ship-fixes. Do **not** start `languages` until Ch
 **Description:** In `apps/desktop/src/main.ts`, set explicit secure `webPreferences` (`nodeIntegration: false`, `sandbox: true`, `webSecurity: true`). Add `webContents.setWindowOpenHandler` and navigation handlers to deny opening or navigating to unexpected `http(s):` URLs (allow `file:` / loaded bundle only).
 
 **Acceptance criteria:**
-- [ ] `contextIsolation: true` unchanged; preload still sole bridge exposure
-- [ ] Popups and top-level navigation to arbitrary http(s) URLs denied (or opened via validated `shell.openExternal` if you add external link support later)
+- [x] `contextIsolation: true` unchanged; preload still sole bridge exposure
+- [x] Popups and top-level navigation to arbitrary http(s) URLs denied (or opened via validated `shell.openExternal` if you add external link support later)
 - [ ] `bun run dev:desktop` still loads Janus after Tasks 13–16
 
 **Verification:**
