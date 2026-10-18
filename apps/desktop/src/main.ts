@@ -12,6 +12,7 @@ import {
     registerSettingsIpc,
 } from "./settings-ipc";
 import { registerLibraryIpc } from "./library-ipc";
+import { registerAiIpc } from "./ai-ipc";
 import { registerManuscriptIpc } from "./manuscript-ipc";
 import {
     evaluateNavigationUrl,
@@ -139,14 +140,16 @@ app.whenReady().then(async () => {
         () => libraryContext.resolved.path,
         libraryFs,
     );
+    const manuscriptFs = {
+        ...libraryFs,
+        rename: (from: string, to: string) => fs.rename(from, to),
+    };
     registerManuscriptIpc(
         ipcMain,
         () => libraryContext.resolved.path,
-        {
-            ...libraryFs,
-            rename: (from, to) => fs.rename(from, to),
-        },
+        manuscriptFs,
     );
+    registerAiIpc(ipcMain, () => libraryContext.resolved.path, manuscriptFs);
     registerSettingsIpc(
         ipcMain,
         () => libraryContext,

@@ -14,14 +14,13 @@
     "apps/desktop": {
       "name": "@janus/desktop",
       "version": "0.1.2",
-      "dependencies": {
+      "devDependencies": {
+        "@janus/ai-assist": "workspace:*",
         "@janus/bridge": "workspace:*",
         "@janus/languages": "workspace:*",
         "@janus/library": "workspace:*",
         "@janus/manuscript": "workspace:*",
         "electron": "33.2.1",
-      },
-      "devDependencies": {
         "electron-builder": "25.1.8",
       },
     },
@@ -65,6 +64,10 @@
       "devDependencies": {
         "vite": "6.0.3",
       },
+    },
+    "services/ai-assist": {
+      "name": "@janus/ai-assist",
+      "version": "0.0.0",
     },
     "services/languages": {
       "name": "@janus/languages",
@@ -176,6 +179,8 @@
     "@ionic/utils-terminal": ["@ionic/utils-terminal@2.3.5", "", { "dependencies": { "@types/slice-ansi": "^4.0.0", "debug": "^4.0.0", "signal-exit": "^3.0.3", "slice-ansi": "^4.0.0", "string-width": "^4.1.0", "strip-ansi": "^6.0.0", "tslib": "^2.0.1", "untildify": "^4.0.0", "wrap-ansi": "^7.0.0" } }, "sha512-3cKScz9Jx2/Pr9ijj1OzGlBDfcmx7OMVBt4+P1uRR0SSW4cm1/y3Mo4OY3lfkuaYifMNBW8Wz6lQHbs1bihr7A=="],
 
     "@isaacs/cliui": ["@isaacs/cliui@8.0.2", "", { "dependencies": { "string-width": "^5.1.2", "string-width-cjs": "npm:string-width@^4.2.0", "strip-ansi": "^7.0.1", "strip-ansi-cjs": "npm:strip-ansi@^6.0.1", "wrap-ansi": "^8.1.0", "wrap-ansi-cjs": "npm:wrap-ansi@^7.0.0" } }, "sha512-O8jcjabXaleOG9DQ0+ARXWZBTfnP4WNAqzuiJK7ll44AmxGKv/J2M4TPjxjY3znBCfvBXFzucm1twdyFybFqEA=="],
+
+    "@janus/ai-assist": ["@janus/ai-assist@workspace:services/ai-assist"],
 
     "@janus/bridge": ["@janus/bridge@workspace:packages/bridge"],
 

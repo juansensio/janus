@@ -192,13 +192,13 @@
 
 **Acceptance criteria:**
 
-- [ ] Unit tests with mocked `fetch` for successful draft text response
-- [ ] `AI_CONTEXT_TOO_LARGE` when over limit
-- [ ] No Electron imports in package
+- [x] Unit tests with mocked `fetch` for successful draft text response
+- [x] `AI_CONTEXT_TOO_LARGE` when over limit
+- [x] No Electron imports in package
 
 **Verification:**
 
-- [ ] `bun run test services/ai-assist`
+- [x] `bun run test services/ai-assist`
 
 **Dependencies:** Task 4 (insert contract known)
 
@@ -214,15 +214,15 @@
 
 **Acceptance criteria:**
 
-- [ ] Renderer never receives refresh token
-- [ ] `getAiProviderStatus()` reflects connected/disconnected across restart (when connected)
-- [ ] Connect flow opens OAuth UI shell (can use placeholder URL until Task 10)
-- [ ] IPC tests with fakes
+- [x] Renderer never receives refresh token
+- [x] `getAiProviderStatus()` reflects connected/disconnected across restart (when connected)
+- [x] Connect flow opens OAuth UI shell (can use placeholder URL until Task 10)
+- [x] IPC tests with fakes
 
 **Verification:**
 
-- [ ] `bun run test apps/desktop` (or targeted IPC tests)
-- [ ] `bun run lint`
+- [x] `bun run test apps/desktop` (or targeted IPC tests)
+- [x] `bun run lint`
 
 **Dependencies:** Task 1 (**go**), Task 8
 
@@ -238,13 +238,13 @@
 
 **Acceptance criteria:**
 
-- [ ] Provider implements `generateDraft` with session access token from shell
-- [ ] Tests use mocked HTTP only (no CI secrets)
-- [ ] Documented env vars / client id location (no secrets committed)
+- [x] Provider implements `generateDraft` with session access token from shell
+- [x] Tests use mocked HTTP only (no CI secrets)
+- [x] Documented env vars / client id location (no secrets committed)
 
 **Verification:**
 
-- [ ] `bun run test services/ai-assist`
+- [x] `bun run test services/ai-assist`
 - [ ] Optional manual call with dev credentials (local only)
 
 **Dependencies:** Task 1 (**go**), Task 8, Task 9
@@ -261,14 +261,14 @@
 
 **Acceptance criteria:**
 
-- [ ] `writeForComment(bookId, commentId)` updates manuscript with `janus-ai-draft`
-- [ ] Second Write replaces draft for same comment
-- [ ] `AI_NOT_CONNECTED` when disconnected
-- [ ] `AI_COMMENT_NOT_FOUND` for bad id
+- [x] `writeForComment(bookId, commentId)` updates manuscript with `janus-ai-draft`
+- [x] Second Write replaces draft for same comment
+- [x] `AI_NOT_CONNECTED` when disconnected
+- [x] `AI_COMMENT_NOT_FOUND` for bad id
 
 **Verification:**
 
-- [ ] Integration test with mock provider + real transforms
+- [x] Integration test with mock provider + real transforms
 - [ ] Manual desktop with Task 10 provider
 
 **Dependencies:** Task 7, Task 9, Task 10
@@ -285,14 +285,14 @@
 
 **Acceptance criteria:**
 
-- [ ] Settings shows connection status (desktop only)
-- [ ] Write disabled when not connected or while in-flight
-- [ ] All new user-facing strings in both catalogs
-- [ ] Mobile: AI entry points hidden or show unavailable; bridge rejects
+- [x] Settings shows connection status (desktop only)
+- [x] Write disabled when not connected or while in-flight
+- [x] All new user-facing strings in both catalogs
+- [x] Mobile: AI entry points hidden or show unavailable; bridge rejects
 
 **Verification:**
 
-- [ ] `bun run test`
+- [x] `bun run test`
 - [ ] Manual: Connect → Write → draft highlight
 
 **Dependencies:** Task 11
@@ -309,9 +309,9 @@
 
 **Acceptance criteria:**
 
-- [ ] `SPEC-manuscript-slice-2.md` and `SPEC-ai-assist.md` status → approved with date
+- [x] `SPEC-manuscript-slice-2.md` and `SPEC-ai-assist.md` status → approved with date
 - [ ] Manual smoke: legacy migration, comment, Write, Accept, Shelf, reopen
-- [ ] `bun run test` && `bun run lint` && `bun run validate:install`
+- [x] `bun run test` && `bun run lint` && `bun run validate:install`
 
 **Verification:**
 
@@ -328,5 +328,5 @@
 ## Checkpoint: MVP complete (after Task 13)
 
 - [ ] Desktop AI loop works on maintainer Mac
-- [ ] Specs approved; plan tasks 1–13 checked
+- [x] Specs approved; plan tasks 1–13 checked
 - [ ] Ready to archive plan to `tasks/archive/html-manuscript-ai-assist/` when done

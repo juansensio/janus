@@ -77,6 +77,48 @@ export async function renderSettings(
     });
     host.append(languageLabel, languageSelect);
 
+    const isDesktop = bridge.platform() === "desktop";
+    if (isDesktop) {
+        const aiTitle = document.createElement("p");
+        aiTitle.className = "settings-label";
+        aiTitle.textContent = t("ai.settingsTitle");
+        const aiStatus = document.createElement("p");
+        aiStatus.className = "settings-source";
+        const aiActions = document.createElement("div");
+        aiActions.className = "settings-ai-actions";
+        try {
+            const status = await bridge.getAiProviderStatus();
+            aiStatus.textContent = status.connected
+                ? t("ai.connected")
+                : t("ai.notConnected");
+            const toggle = document.createElement("button");
+            toggle.type = "button";
+            toggle.className = "settings-choose";
+            toggle.textContent = status.connected
+                ? t("ai.disconnect")
+                : t("ai.connect");
+            toggle.addEventListener("click", () => {
+                void (async () => {
+                    error.textContent = "";
+                    try {
+                        if (status.connected) {
+                            await bridge.disconnectOpenAiCodex();
+                        } else {
+                            await bridge.connectOpenAiCodex();
+                        }
+                        await renderSettings(host, bridge, options);
+                    } catch {
+                        error.textContent = t("ai.connectFailed");
+                    }
+                })();
+            });
+            aiActions.append(toggle);
+        } catch {
+            aiStatus.textContent = t("ai.notConnected");
+        }
+        host.append(aiTitle, aiStatus, aiActions);
+    }
+
     let rootInfo: Awaited<ReturnType<JanusBridge["getLibraryRoot"]>>;
     try {
         rootInfo = await bridge.getLibraryRoot();
@@ -101,7 +143,6 @@ export async function renderSettings(
 
     host.append(locationLabel, pathEl, sourceEl);
 
-    const isDesktop = bridge.platform() === "desktop";
     const canChoose = isDesktop && rootInfo.source !== "env";
 
     if (rootInfo.source === "dev-default") {

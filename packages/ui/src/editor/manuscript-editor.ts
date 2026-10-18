@@ -1,7 +1,6 @@
 import { baseKeymap } from "prosemirror-commands";
 import { history, redo, undo } from "prosemirror-history";
 import { keymap } from "prosemirror-keymap";
-import type { Node as PmNode } from "prosemirror-model";
 import { EditorState, Plugin } from "prosemirror-state";
 import { EditorView } from "prosemirror-view";
 import { t } from "../i18n";
@@ -10,7 +9,9 @@ import { parseManuscriptHtml, serializeManuscriptHtml } from "./manuscript-html"
 
 export type ManuscriptEditorOptions = {
     lang: string;
+    showAiChrome: boolean;
     onDocChange: () => void;
+    onWriteComment: (commentId: string) => Promise<void>;
     onAcceptDraft: (draftId: string) => Promise<void>;
     onRejectDraft: (draftId: string) => Promise<void>;
     onTransformError: (message: string) => void;
@@ -60,10 +61,27 @@ export function createManuscriptEditor(
             janus_ai_comment(node) {
                 const dom = document.createElement("div");
                 dom.className = "editor-ai-comment";
-                dom.setAttribute("data-comment-id", String(node.attrs.id));
+                const commentId = String(node.attrs.id);
+                dom.setAttribute("data-comment-id", commentId);
                 const contentDOM = document.createElement("div");
                 contentDOM.className = "editor-ai-comment-body";
-                dom.append(contentDOM);
+                if (options.showAiChrome) {
+                    const actions = document.createElement("div");
+                    actions.className = "editor-ai-comment-actions";
+                    const write = document.createElement("button");
+                    write.type = "button";
+                    write.className = "editor-ai-comment-write";
+                    write.textContent = t("manuscript.writeAi");
+                    write.addEventListener("click", () => {
+                        void options.onWriteComment(commentId).catch(() => {
+                            options.onTransformError(t("ai.writeFailed"));
+                        });
+                    });
+                    actions.append(write);
+                    dom.append(actions, contentDOM);
+                } else {
+                    dom.append(contentDOM);
+                }
                 return { dom, contentDOM };
             },
             janus_ai_draft(node) {

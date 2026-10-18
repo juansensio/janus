@@ -37,6 +37,10 @@ export type ChooseLibraryRootResult = {
     needsReload: boolean;
 };
 
+export type AiProviderStatus = {
+    connected: boolean;
+};
+
 export type JanusBridgeErrorCode =
     | "BOOK_NOT_FOUND"
     | "INVALID_BOOK_ID"
@@ -51,7 +55,13 @@ export type JanusBridgeErrorCode =
     | "LIBRARY_ROOT_CANCELLED"
     | "LIBRARY_ROOT_NOT_EMPTY"
     | "LIBRARY_ROOT_NOT_SUPPORTED"
-    | "UNSUPPORTED_LANGUAGE";
+    | "UNSUPPORTED_LANGUAGE"
+    | "AI_NOT_SUPPORTED"
+    | "AI_NOT_CONNECTED"
+    | "AI_COMMENT_NOT_FOUND"
+    | "AI_CONTEXT_TOO_LARGE"
+    | "AI_PROVIDER_ERROR"
+    | "AI_AUTH_FAILED";
 
 export type { UiLanguageResult } from "./ui-language";
 export { buildUiLanguage, buildUiLanguageForCode } from "./ui-language";
@@ -77,6 +87,14 @@ export interface JanusBridge {
         commentId: string,
         draftHtml: string,
         draftId: string,
+    ): Promise<string>;
+    getAiProviderStatus(): Promise<AiProviderStatus>;
+    connectOpenAiCodex(): Promise<void>;
+    disconnectOpenAiCodex(): Promise<void>;
+    writeForComment(
+        id: string,
+        commentId: string,
+        locale: string,
     ): Promise<string>;
     getLibraryRoot(): Promise<LibraryRootInfo>;
     chooseLibraryRoot(): Promise<ChooseLibraryRootResult>;

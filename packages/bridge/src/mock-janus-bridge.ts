@@ -85,6 +85,18 @@ export function createMockJanusBridge(
             mockSavedLocale = code;
             return buildUiLanguageForCode(code);
         },
+        getAiProviderStatus: async () => ({ connected: false }),
+        connectOpenAiCodex: async () => {
+            throw Object.assign(new Error("Not supported in mock"), {
+                code: "AI_NOT_SUPPORTED",
+            });
+        },
+        disconnectOpenAiCodex: async () => {},
+        writeForComment: async () => {
+            throw Object.assign(new Error("Not supported in mock"), {
+                code: "AI_NOT_SUPPORTED",
+            });
+        },
         ...overrides,
     };
 }

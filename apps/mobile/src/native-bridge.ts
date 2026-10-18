@@ -45,6 +45,22 @@ export function installMobileBridge(): void {
                 draftHtml,
                 draftId,
             ),
+        getAiProviderStatus: async () => ({ connected: false }),
+        connectOpenAiCodex: async () => {
+            throw Object.assign(new Error("AI is not supported on mobile"), {
+                code: "AI_NOT_SUPPORTED",
+            });
+        },
+        disconnectOpenAiCodex: async () => {
+            throw Object.assign(new Error("AI is not supported on mobile"), {
+                code: "AI_NOT_SUPPORTED",
+            });
+        },
+        writeForComment: async () => {
+            throw Object.assign(new Error("AI is not supported on mobile"), {
+                code: "AI_NOT_SUPPORTED",
+            });
+        },
         getLibraryRoot: async () => ({
             path: MOBILE_LIBRARY_ROOT,
             source: "user-data",

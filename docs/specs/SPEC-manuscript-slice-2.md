@@ -1,6 +1,6 @@
 # Spec: manuscript — slice 2 (HTML)
 
-> Status: **Proposed** (2026-10-18). Module id `manuscript` from [`CAPABILITY-MAP.md`](../../CAPABILITY-MAP.md). Depends on shipped **manuscript slice 1**, **languages slice 1**, and **library** open-book flow. **Blocks** `ai-assist` slice 1. Intent: [`docs/intent/ai-assist-mvp.md`](../intent/ai-assist-mvp.md).
+> Status: **Approved** (2026-10-18). Module id `manuscript` from [`CAPABILITY-MAP.md`](../../CAPABILITY-MAP.md). Depends on shipped **manuscript slice 1**, **languages slice 1**, and **library** open-book flow. **Blocks** `ai-assist` slice 1. Intent: [`docs/intent/ai-assist-mvp.md`](../intent/ai-assist-mvp.md).
 
 Slice 1 (`manuscript.md` textarea) remains documented in [`SPEC-manuscript.md`](SPEC-manuscript.md). This slice **replaces** the on-disk format and editor for new saves; it does not add AI generation (that is `ai-assist`).
 

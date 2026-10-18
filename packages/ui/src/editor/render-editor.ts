@@ -51,7 +51,11 @@ export async function renderEditor(
     addCommentButton.className = "editor-add-comment";
     addCommentButton.textContent = t("manuscript.addAiComment");
 
-    header.append(backButton, addCommentButton);
+    const showAiChrome = bridge.platform() === "desktop";
+    header.append(backButton);
+    if (showAiChrome) {
+        header.append(addCommentButton);
+    }
     chrome.append(header);
 
     const status = document.createElement("p");
@@ -98,25 +102,56 @@ export async function renderEditor(
     page.append(title, field);
     host.append(page);
 
-    const autosaveRef: { current: ReturnType<typeof createAutosaveController> | null } =
-        { current: null };
+    const autosaveRef: {
+        current: ReturnType<typeof createAutosaveController> | null;
+    } = { current: null };
+    let writeInFlight = false;
 
-    let editor = createManuscriptEditor(field, loadedHtml, {
+    const editor = createManuscriptEditor(field, loadedHtml, {
         lang: locale,
+        showAiChrome,
         onDocChange: () => {
             autosaveRef.current?.onInput(editor.getHtml());
         },
+        onWriteComment: async (commentId) => {
+            if (writeInFlight) {
+                return;
+            }
+            writeInFlight = true;
+            transformError.textContent = "";
+            try {
+                const html = await bridge.writeForComment(
+                    book.id,
+                    commentId,
+                    locale,
+                );
+                editor.setHtml(html);
+                autosaveRef.current?.markLoaded(html);
+            } catch {
+                transformError.textContent = t("ai.writeFailed");
+            } finally {
+                writeInFlight = false;
+            }
+        },
         onAcceptDraft: async (draftId) => {
             transformError.textContent = "";
-            const html = await bridge.acceptAiDraft(book.id, draftId);
-            editor.setHtml(html);
-            autosave.markLoaded(html);
+            try {
+                const html = await bridge.acceptAiDraft(book.id, draftId);
+                editor.setHtml(html);
+                autosaveRef.current?.markLoaded(html);
+            } catch {
+                transformError.textContent = t("manuscript.transformFailed");
+            }
         },
         onRejectDraft: async (draftId) => {
             transformError.textContent = "";
-            const html = await bridge.rejectAiDraft(book.id, draftId);
-            editor.setHtml(html);
-            autosave.markLoaded(html);
+            try {
+                const html = await bridge.rejectAiDraft(book.id, draftId);
+                editor.setHtml(html);
+                autosaveRef.current?.markLoaded(html);
+            } catch {
+                transformError.textContent = t("manuscript.transformFailed");
+            }
         },
         onTransformError: (message) => {
             transformError.textContent = message;

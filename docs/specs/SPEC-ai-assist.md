@@ -1,6 +1,6 @@
 # Spec: ai-assist
 
-> Status: **Proposed** (2026-10-18). Module id `ai-assist` from [`CAPABILITY-MAP.md`](../../CAPABILITY-MAP.md). Depends on **manuscript slice 2** (HTML + `janus-ai-comment` / `janus-ai-draft`). Intent: [`docs/intent/ai-assist-mvp.md`](../intent/ai-assist-mvp.md).
+> Status: **Approved** (2026-10-18). Module id `ai-assist` from [`CAPABILITY-MAP.md`](../../CAPABILITY-MAP.md). Depends on **manuscript slice 2** (HTML + `janus-ai-comment` / `janus-ai-draft`). Intent: [`docs/intent/ai-assist-mvp.md`](../intent/ai-assist-mvp.md).
 
 Revises capability-map wording for v1: comment → **Write** → persisted **draft** tag → Accept/Reject/Modify (Accept/Reject transforms live in `manuscript`; this module owns **provider connection** and **generation**).
 
@@ -110,6 +110,8 @@ export interface AiProvider {
 ```
 
 Shell implements session load/save; domain receives token only as an argument to `generateDraft`.
+
+**Dev connect (until SIWC loop ships):** Desktop `connectOpenAiCodex` stores `process.env.JANUS_OPENAI_ACCESS_TOKEN` via `safeStorage` (manual gate only; not used in CI).
 
 ## Code Style
 

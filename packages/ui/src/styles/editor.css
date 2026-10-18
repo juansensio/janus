@@ -152,6 +152,21 @@
     font-size: 0.95rem;
 }
 
+.editor-ai-comment-actions {
+    margin-bottom: 0.35rem;
+}
+
+.editor-ai-comment-write {
+    font: inherit;
+    font-size: 0.75rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 0.25rem;
+    border: 1px solid rgba(184, 160, 102, 0.45);
+    background: transparent;
+    color: var(--editor-page-fg);
+    cursor: pointer;
+}
+
 .editor-ai-draft {
     margin: 0 0 1rem;
     padding: 0.75rem;
