@@ -9,10 +9,19 @@ export default defineConfig({
     build: {
         outDir: path.resolve(__dirname, "../../dist/ui"),
         emptyOutDir: true,
+        rollupOptions: {
+            input: {
+                index: path.resolve(__dirname, "index.html"),
+                mobile: path.resolve(__dirname, "mobile.html"),
+            },
+        },
     },
     resolve: {
         alias: {
-            "@janus/mobile": path.resolve(__dirname, "../../apps/mobile/src"),
+            "@janus/mobile-entry": path.resolve(
+                __dirname,
+                "../../apps/mobile/src/entry.ts",
+            ),
         },
     },
 });

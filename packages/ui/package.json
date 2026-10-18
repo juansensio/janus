@@ -5,7 +5,8 @@
     "type": "module",
     "exports": {
         ".": "./src/mount.ts",
-        "./mount": "./src/mount.ts"
+        "./mount": "./src/mount.ts",
+        "./bootstrap": "./src/bootstrap.ts"
     },
     "scripts": {
         "build": "vite build"

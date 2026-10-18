@@ -332,7 +332,7 @@ Plan: `tasks/plan.md` § Shell ship-fixes. Do **not** start `languages` until Ch
 **Acceptance criteria:**
 - [x] Missing `#app` still throws `Missing #app`
 - [x] Missing `window.janus` on desktop path throws explicit error (not obscure `platform()` on undefined)
-- [ ] Capacitor/mobile path still mounts with `data-platform="mobile"` after Task 16 (or interim mobile install until 16 lands)
+- [x] Capacitor/mobile path still mounts with `data-platform="mobile"` after Task 16 (or interim mobile install until 16 lands)
 
 **Verification:**
 - [ ] `bun run test`
@@ -351,8 +351,8 @@ Plan: `tasks/plan.md` § Shell ship-fixes. Do **not** start `languages` until Ch
 **Description:** Remove `@janus/mobile` Vite alias and dynamic import from `packages/ui`. Mobile shell sets `window.janus` before loading the shared bundle (e.g. `apps/mobile` entry that calls `installMobileBridge()` then imports shared `main`, or Vite multi-page `index` + `mobile.html`). Desktop build must not emit unused `native-bridge` chunk if avoidable.
 
 **Acceptance criteria:**
-- [ ] `packages/ui` depends only on `@janus/bridge` (no import path into `apps/mobile`)
-- [ ] `packages/ui/vite.config.ts` has no `apps/mobile` alias
+- [x] `packages/ui` depends only on `@janus/bridge` (no import path into `apps/mobile`)
+- [x] `packages/ui/vite.config.ts` has no `apps/mobile` alias
 - [ ] Simulator still shows Janus with `data-platform="mobile"`
 - [ ] Desktop still shows Janus with `data-platform="desktop"`
 

@@ -10,7 +10,8 @@
     "dependencies": {
         "@capacitor/core": "6.2.0",
         "@capacitor/ios": "6.2.0",
-        "@janus/bridge": "workspace:*"
+        "@janus/bridge": "workspace:*",
+        "@janus/ui": "workspace:*"
     },
     "devDependencies": {
         "@capacitor/cli": "6.2.0"

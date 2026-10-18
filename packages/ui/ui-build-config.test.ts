@@ -5,4 +5,17 @@ describe("vite UI build config", () => {
     it("uses a relative base so Electron file:// can load assets", () => {
         expect(config.base).toBe("./");
     });
+
+    it("does not import mobile shell via @janus/mobile package alias", () => {
+        const alias = config.resolve?.alias;
+        const entries = Array.isArray(alias)
+            ? alias
+            : alias
+              ? Object.entries(alias)
+              : [];
+        const keys = entries.map(([key]) =>
+            typeof key === "string" ? key : String(key),
+        );
+        expect(keys).not.toContain("@janus/mobile");
+    });
 });
