@@ -9,7 +9,7 @@ afterEach(() => {
 });
 
 describe("renderShelf", () => {
-    it("shows empty state and New book control", async () => {
+    it("shows add tile and screen-reader empty state when there are no books", async () => {
         const host = document.createElement("div");
         document.body.append(host);
         const bridge = createMockJanusBridge({
@@ -18,13 +18,17 @@ describe("renderShelf", () => {
 
         await renderShelf(host, bridge);
 
-        expect(host.querySelector("button")?.textContent).toBe(
-            SHELF_STRINGS.newBook,
-        );
+        expect(host.querySelector(".shelf-add")).not.toBeNull();
         expect(host.querySelector(".shelf-empty")?.textContent).toBe(
             SHELF_STRINGS.empty,
         );
+        expect(host.querySelector(".shelf-empty")?.classList).toContain(
+            "shelf-sr-only",
+        );
         expect(host.querySelectorAll(".shelf-card")).toHaveLength(0);
+        expect(host.querySelector(".shelf-wordmark")?.textContent).toBe(
+            "Janus",
+        );
     });
 
     it("renders a card per book without links", async () => {
@@ -46,10 +50,11 @@ describe("renderShelf", () => {
         expect(host.querySelector(".shelf-card-title")?.textContent).toBe(
             "Draft",
         );
+        expect(host.querySelector(".shelf-add")).not.toBeNull();
         expect(host.querySelector("a")).toBeNull();
     });
 
-    it("calls createBook when New book is pressed", async () => {
+    it("calls createBook when add tile is pressed", async () => {
         const createBook = vi.fn(async () => ({
             id: "550e8400-e29b-41d4-a716-446655440001",
             title: "Untitled",
@@ -69,7 +74,7 @@ describe("renderShelf", () => {
         const bridge = createMockJanusBridge({ createBook, listBooks });
 
         await renderShelf(host, bridge);
-        host.querySelector("button")?.click();
+        (host.querySelector(".shelf-add") as HTMLButtonElement).click();
         await vi.waitFor(() => expect(createBook).toHaveBeenCalledOnce());
         await vi.waitFor(() =>
             expect(host.querySelectorAll(".shelf-card")).toHaveLength(1),
@@ -93,7 +98,7 @@ describe("renderShelf", () => {
 
         await renderShelf(host, bridge);
         const deleteButton = host.querySelector(
-            ".shelf-card button",
+            ".shelf-card-delete",
         ) as HTMLButtonElement;
         deleteButton.click();
         await vi.waitFor(() => expect(deleteBook).toHaveBeenCalledWith(book.id));
@@ -119,7 +124,7 @@ describe("renderShelf", () => {
 
         await renderShelf(host, bridge);
         const deleteButton = host.querySelector(
-            ".shelf-card button",
+            ".shelf-card-delete",
         ) as HTMLButtonElement;
         deleteButton.click();
 
@@ -153,7 +158,7 @@ describe("renderShelf", () => {
         });
 
         await renderShelf(host, bridge);
-        host.querySelector("button")?.click();
+        (host.querySelector(".shelf-add") as HTMLButtonElement).click();
         await vi.waitFor(() =>
             expect(host.querySelector(".shelf-error")?.textContent).toBe(
                 SHELF_STRINGS.createFailed,
