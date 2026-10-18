@@ -1,6 +1,6 @@
 # @janus/languages
 
-Interface locale registry and string catalogs for Janus. The web UI never imports this package; shells load catalogs and pass `{ locale, messages }` through `JanusBridge` (`getUiLanguage` / `setUiLanguage`). Full module contract: [`docs/specs/SPEC-languages.md`](../../docs/specs/SPEC-languages.md).
+Interface locale registry and string catalogs for Janus. The web UI never imports this package; shells load catalogs and pass `{ locale, messages }` through `JanusBridge` (`getUiLanguage` / `setUiLanguage`). Placeholder substitution in the UI uses `formatMessage` re-exported from `@janus/bridge`. Full module contract: [`docs/specs/SPEC-languages.md`](../../docs/specs/SPEC-languages.md).
 
 ## Shipped languages
 
