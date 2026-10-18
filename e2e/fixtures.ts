@@ -20,7 +20,8 @@ type JanusFixtures = {
 };
 
 export const test = base.extend<JanusFixtures>({
-    janus: async (_fixtures, use, testInfo) => {
+    // Playwright requires object-destructured fixture deps even when empty.
+    janus: async ({}, use, testInfo) => {
         const dirs = await makeIsolatedJanusDirs();
         let app: ElectronApplication = await launchJanusApp(dirs);
         let page = await firstWindow(app);
