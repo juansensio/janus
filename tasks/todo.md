@@ -492,9 +492,9 @@ Plan: `tasks/plan.md` § Ship NO-GO follow-ups. Complete **before** calling shel
 **Description:** Extract URL allow/deny logic to `apps/desktop/src/navigation-policy.ts` with Vitest coverage. Register policy on **`app.on('web-contents-created')`** so child windows inherit blocks. Restrict top-level `file:` navigation to the UI bundle directory **and** default `setWindowOpenHandler` to **`deny`** (unless opening bundle-scoped `file:` is explicitly required later).
 
 **Acceptance criteria:**
-- [ ] `https://` / `http://` navigation and `window.open` denied (unit-tested policy functions)
-- [ ] Handlers attached for every `webContents`, not only the first `BrowserWindow`
-- [ ] `bun run dev:desktop` still shows Janus after `build:ui`
+- [x] `https://` / `http://` navigation and `window.open` denied (unit-tested policy functions)
+- [x] Handlers attached for every `webContents`, not only the first `BrowserWindow`
+- [x] `bun run dev:desktop` still shows Janus after `build:ui`
 
 **Verification:**
 - [ ] `bun run test` (include new desktop policy tests in vitest include if needed)

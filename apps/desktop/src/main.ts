@@ -1,27 +1,38 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { app, BrowserWindow } from "electron";
+import {
+    evaluateNavigationUrl,
+    evaluateWindowOpen,
+    type NavigationPolicyOptions,
+} from "./navigation-policy";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+const uiBundleDir = path.resolve(__dirname, "../../../dist/ui");
+
 function uiIndexPath(): string {
-    return path.resolve(__dirname, "../../../dist/ui/index.html");
+    return path.join(uiBundleDir, "index.html");
 }
 
-function isAllowedNavigation(url: string): boolean {
-    try {
-        const parsed = new URL(url);
-        return parsed.protocol === "file:";
-    } catch {
-        return false;
-    }
+function isJanusDevMode(): boolean {
+    return process.env.JANUS_DEV === "1";
 }
 
-function attachSecureNavigationPolicy(win: BrowserWindow): void {
-    const contents = win.webContents;
+function navigationOptions(): NavigationPolicyOptions {
+    return {
+        uiBundleDir,
+        devMode: isJanusDevMode(),
+    };
+}
+
+function attachSecureNavigationPolicy(
+    contents: Electron.WebContents,
+): void {
+    const options = navigationOptions();
 
     contents.setWindowOpenHandler(({ url }) => {
-        if (!isAllowedNavigation(url)) {
+        if (evaluateWindowOpen(url, options) === "deny") {
             console.warn(
                 `[desktop] blocked window.open to disallowed URL: ${url}`,
             );
@@ -31,7 +42,7 @@ function attachSecureNavigationPolicy(win: BrowserWindow): void {
     });
 
     contents.on("will-navigate", (event, url) => {
-        if (!isAllowedNavigation(url)) {
+        if (evaluateNavigationUrl(url, options) === "deny") {
             console.warn(
                 `[desktop] blocked navigation to disallowed URL: ${url}`,
             );
@@ -53,12 +64,14 @@ function createWindow(): void {
         },
     });
 
-    attachSecureNavigationPolicy(win);
-
     void win.loadFile(uiIndexPath());
 }
 
 app.whenReady().then(() => {
+    app.on("web-contents-created", (_event, contents) => {
+        attachSecureNavigationPolicy(contents);
+    });
+
     createWindow();
 
     app.on("activate", () => {
