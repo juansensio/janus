@@ -9,6 +9,7 @@ import {
     MAX_BOOK_TITLE_LENGTH,
     ManifestParseError,
     normalizeBookTitle,
+    bookDirectoryName,
     parseManifest,
     serializeManifest,
     sortBooksForShelf,
@@ -121,6 +122,18 @@ describe("libraryBooksDir", () => {
     });
 });
 
+describe("bookDirectoryName", () => {
+    it("uses the title when characters are safe", () => {
+        expect(bookDirectoryName("My Novel")).toBe("My Novel");
+    });
+
+    it("strips characters unsafe on common filesystems", () => {
+        expect(bookDirectoryName('Part 1: "Prologue" / draft')).toBe(
+            "Part 1 Prologue draft",
+        );
+    });
+});
+
 describe("book manifest", () => {
     const valid = {
         version: 1,
@@ -144,11 +157,16 @@ describe("book manifest", () => {
         ).toThrow(ManifestParseError);
     });
 
-    it("rejects id mismatch with directory name", () => {
+    it("rejects id mismatch with uuid directory name", () => {
         const json = serializeManifest(valid);
         expect(() =>
             parseManifest(json, "00000000-0000-4000-8000-000000000001"),
         ).toThrow(ManifestParseError);
+    });
+
+    it("allows manifest id when directory name is a title", () => {
+        const json = serializeManifest(valid);
+        expect(parseManifest(json, "My Novel")).toEqual(valid);
     });
 
     it("marks manifest parse errors as skippable when listing", () => {

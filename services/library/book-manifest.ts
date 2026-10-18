@@ -1,5 +1,9 @@
 import { validateBookId } from "./validate-book-id";
 
+function directoryNameImpliesBookId(dirName: string): boolean {
+    return validateBookId(dirName);
+}
+
 export const MANIFEST_VERSION = 1;
 
 export type BookManifest = {
@@ -67,7 +71,11 @@ export function parseManifest(
         throw new ManifestParseError("book.json id is invalid");
     }
 
-    if (bookIdFromDir !== undefined && id !== bookIdFromDir) {
+    if (
+        bookIdFromDir !== undefined &&
+        directoryNameImpliesBookId(bookIdFromDir) &&
+        id !== bookIdFromDir
+    ) {
         throw new ManifestParseError("book.json id does not match directory");
     }
 

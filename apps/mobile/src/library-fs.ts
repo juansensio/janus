@@ -71,6 +71,13 @@ export function createCapacitorShelfFs(): ShelfFs {
                 recursive: options?.recursive ?? false,
             });
         },
+        async rename(from, to) {
+            await Filesystem.rename({
+                from,
+                to,
+                directory: DATA_DIRECTORY,
+            });
+        },
         async stat(path) {
             const result = await Filesystem.stat({
                 path,

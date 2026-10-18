@@ -15,6 +15,7 @@ function nodeLibraryFs(): LibraryFs {
         readFile: (p, encoding) => fs.readFile(p, encoding),
         writeFile: (p, data, encoding) => fs.writeFile(p, data, encoding),
         rm: (p, options) => fs.rm(p, options),
+        rename: (from, to) => fs.rename(from, to),
         stat: (p) => fs.stat(p),
         realpath: (p) => fs.realpath(p),
     };
@@ -36,12 +37,7 @@ describe("createLibraryService", () => {
             createdAt: created.createdAt,
         });
 
-        const manifestPath = path.join(
-            root,
-            "books",
-            created.id,
-            "book.json",
-        );
+        const manifestPath = path.join(root, "books", "Untitled", "book.json");
         const manifestRaw = await fs.readFile(manifestPath, "utf8");
         expect(manifestRaw).toContain('"title": "Untitled"');
 

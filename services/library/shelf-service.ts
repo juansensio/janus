@@ -15,6 +15,10 @@ import { validateBookId } from "./validate-book-id";
 import { isResolvedPathInsideRoot } from "./path-containment";
 import { libraryBooksDir, sortBooksForShelf } from "./shelf-utils";
 import { isSkippableListError } from "./list-errors";
+import { bookDirectoryName } from "./book-directory-name";
+import { migrateLegacyUuidBookDirectories } from "./migrate-legacy-uuid-dirs";
+import { resolveBookDirById } from "./resolve-book-dir";
+import { ShelfServiceError } from "./shelf-errors";
 
 export type ShelfFsDirent = {
     name: string;
@@ -30,26 +34,13 @@ export type ShelfFs = {
     readFile(path: string, encoding: "utf8"): Promise<string>;
     writeFile(path: string, data: string, encoding: "utf8"): Promise<void>;
     rm(path: string, options?: { recursive?: boolean }): Promise<void>;
+    rename(from: string, to: string): Promise<void>;
     stat(path: string): Promise<{ isDirectory(): boolean }>;
     realpath(path: string): Promise<string>;
     join(...parts: string[]): string;
 };
 
-export type ShelfServiceErrorCode =
-    | "BOOK_NOT_FOUND"
-    | "INVALID_BOOK_ID"
-    | "INVALID_BOOK_TITLE"
-    | "DUPLICATE_BOOK_TITLE";
-
-export class ShelfServiceError extends Error {
-    readonly code: ShelfServiceErrorCode;
-
-    constructor(code: ShelfServiceErrorCode, message: string) {
-        super(message);
-        this.name = "ShelfServiceError";
-        this.code = code;
-    }
-}
+export { ShelfServiceError, type ShelfServiceErrorCode } from "./shelf-errors";
 
 function toShelfServiceError(error: unknown): ShelfServiceError {
     if (error instanceof InvalidBookTitleError) {
@@ -70,6 +61,12 @@ function normalizeTitleForService(titleRaw: string): string {
     } catch (error) {
         throw toShelfServiceError(error);
     }
+}
+
+function basenameFromPath(dirPath: string): string {
+    const trimmed = dirPath.replace(/\/+$/, "");
+    const idx = trimmed.lastIndexOf("/");
+    return idx === -1 ? trimmed : trimmed.slice(idx + 1);
 }
 
 function ensureTitleUnique(
@@ -103,23 +100,14 @@ export function createShelfService(
         await fs.mkdir(booksDir, { recursive: true });
     }
 
-    function bookDir(id: string): string {
-        if (!validateBookId(id)) {
-            throw new ShelfServiceError("INVALID_BOOK_ID", "Invalid book id");
-        }
-        return fs.join(booksDir, id);
-    }
-
     async function readSummaryForDir(
         entryName: string,
     ): Promise<BookSummary | null> {
-        if (!validateBookId(entryName)) {
-            return null;
-        }
         const manifestPath = fs.join(booksDir, entryName, "book.json");
         try {
             const raw = await fs.readFile(manifestPath, "utf8");
-            const manifest = parseManifest(raw, entryName);
+            const dirHint = validateBookId(entryName) ? entryName : undefined;
+            const manifest = parseManifest(raw, dirHint);
             return manifestToSummary(manifest);
         } catch (error) {
             if (isSkippableListError(error)) {
@@ -132,6 +120,7 @@ export function createShelfService(
     return {
         async listBooks(): Promise<BookSummary[]> {
             await ensureBooksDir();
+            await migrateLegacyUuidBookDirectories(booksDir, fs);
             let entries: string[] | ShelfFsDirent[];
             try {
                 entries = await fs.readdir(booksDir, { withFileTypes: true });
@@ -143,9 +132,6 @@ export function createShelfService(
             for (const entry of entries) {
                 const name =
                     typeof entry === "string" ? entry : entry.name;
-                if (!validateBookId(name)) {
-                    continue;
-                }
                 const isDir =
                     typeof entry === "string"
                         ? (await fs.stat(fs.join(booksDir, name))).isDirectory()
@@ -182,7 +168,8 @@ export function createShelfService(
                 title,
                 createdAt,
             };
-            const dir = bookDir(id);
+            const dirName = bookDirectoryName(title);
+            const dir = fs.join(booksDir, dirName);
             await fs.mkdir(dir, { recursive: true });
             await fs.writeFile(
                 fs.join(dir, "book.json"),
@@ -194,12 +181,14 @@ export function createShelfService(
 
         async renameBook(id: string, titleRaw: string): Promise<BookSummary> {
             const title = normalizeTitleForService(titleRaw);
-            const dir = bookDir(id);
+            const dir = await resolveBookDirById(booksDir, id, fs);
             const manifestPath = fs.join(dir, "book.json");
             let manifest;
             try {
                 const raw = await fs.readFile(manifestPath, "utf8");
-                manifest = parseManifest(raw, id);
+                const dirName = basenameFromPath(dir);
+                const dirHint = validateBookId(dirName) ? dirName : undefined;
+                manifest = parseManifest(raw, dirHint);
             } catch (error) {
                 if (isSkippableListError(error)) {
                     throw new ShelfServiceError(
@@ -220,11 +209,19 @@ export function createShelfService(
                 serializeManifest(updated),
                 "utf8",
             );
+            const newDirName = bookDirectoryName(title);
+            const currentDirName = basenameFromPath(dir);
+            if (newDirName !== currentDirName) {
+                const targetDir = fs.join(booksDir, newDirName);
+                if (targetDir !== dir) {
+                    await fs.rename(dir, targetDir);
+                }
+            }
             return manifestToSummary(updated);
         },
 
         async deleteBook(id: string): Promise<void> {
-            const dir = bookDir(id);
+            const dir = await resolveBookDirById(booksDir, id, fs);
             try {
                 const info = await fs.stat(dir);
                 if (!info.isDirectory()) {
