@@ -23,6 +23,15 @@ describe("evaluateNavigationUrl", () => {
         ).toBe("deny");
     });
 
+    it("denies localhost http when dev mode is off", () => {
+        expect(
+            evaluateNavigationUrl("http://localhost:5173/", {
+                uiBundleDir: bundleDir,
+                devMode: false,
+            }),
+        ).toBe("deny");
+    });
+
     it("denies http and https navigation in production mode", () => {
         expect(
             evaluateNavigationUrl("https://example.com", {
