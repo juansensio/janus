@@ -67,6 +67,86 @@ Full acceptance criteria: **`tasks/todo.md`** (12 tasks, all **S** or **M**).
 - [ ] Manual Simulator step in install doc succeeds
 - [x] Human review before `/build` on `languages` or manuscript specs
 
+---
+
+## Shell ship-fixes (`/ship` NO-GO, 2026-10-18)
+
+### Overview
+
+Shell Tasks 1–11 are implemented and `validate:install` passes, but **`/ship` returned NO-GO**: Vite emits absolute `/assets/…` URLs, so Electron `loadFile(file://…)` does not load the bundle and `#app` stays empty. Automated checks did not catch this. This phase closes that gap and addresses follow-ups from parallel **code-reviewer**, **security-auditor**, and **test-engineer** reports without starting `languages`.
+
+**Source:** `docs/specs/SPEC-shell.md` acceptance (Janus visible in `#app` on desktop); install journey in `docs/install-macos.md`.
+
+### Architecture decisions (fixes)
+
+- **Relative asset base:** Vite `base: './'` so one `dist/ui` works for **Electron `file://`** and **Capacitor** (verify Simulator after Task 13).
+- **Install gate owns regression:** `validate:install` asserts built HTML uses relative asset URLs (not `/assets/`); optional assertion that built JS contains the shell label string.
+- **Bridge bootstrap:** Shared `packages/ui` entry must not silently install the **mobile** bridge on desktop if preload fails; fail fast with a clear error (Capacitor-only path sets `window.janus` before mount).
+- **Decouple `packages/ui` from `apps/mobile`:** Remove Vite alias `@janus/mobile` from `packages/ui`; mobile bootstrap lives under `apps/mobile` (second entry or pre-mount script), per `AGENTS.md` invariant 10.
+- **Electron defense in depth:** Explicit `webPreferences`; deny unexpected navigation and `window.open` to non-file origins (preventive; no user content yet).
+- **Tests:** Colocated Vitest for `main.ts` bootstrap, `native-bridge`, and mount edge cases; optional `test:smoke:desktop` reopens Task 12 if cheap after Task 13.
+
+### Dependency graph (ship-fixes)
+
+```
+Task 13 Vite base './'
+    → Task 14 validate:install asset checks
+        → Checkpoint: minimum ship GO (manual dev:desktop)
+Task 13
+    → Task 16 mobile bootstrap decouple (can run after 14)
+Task 15 bootstrap fail-fast (after 13; parallel with 14)
+Task 17 Electron hardening (parallel with 14–16; only apps/desktop)
+Task 13 + 15/16
+    → Task 18 unit tests (bootstrap + bridge + mount edges)
+Task 13 + 14
+    → Task 19 (optional) desktop smoke
+```
+
+### Task list (ship-fixes)
+
+Full acceptance criteria: **`tasks/todo.md`** Tasks 13–19.
+
+| Phase | Tasks | Outcome |
+|-------|-------|---------|
+| **A — Unblock ship** | 13 → 14 | Desktop loads built UI; CI-style gate catches absolute URLs |
+| **B — Boundaries & trust** | 15 → 16 | Clear errors; UI package no longer imports `apps/mobile` |
+| **C — Hardening & proof** | 17 → 18 | Electron navigation policy; automated bootstrap/bridge tests |
+| **D — Optional** | 19 | `test:smoke:desktop` if Playwright/Electron driver is acceptable |
+
+### Checkpoint: Minimum ship GO (after Tasks 13–14)
+
+- [x] `dist/ui/index.html` references `./assets/…` (not `/assets/…`)
+- [x] `bun run validate:install` passes including new checks
+- [ ] Manual: `bun run build:ui` then `bun run dev:desktop` — **Janus** in `#app`, `data-platform="desktop"`
+- [ ] Manual: `bun run cap:sync:ios` + Simulator — still shows Janus (Capacitor regression check)
+
+### Checkpoint: Ship-fixes complete (after Tasks 13–18)
+
+- [x] No `@janus/mobile` alias in `packages/ui/vite.config.ts`
+- [x] `bun run test` green with new bootstrap/bridge tests
+- [x] Electron main sets explicit secure `webPreferences` and blocks stray navigation
+- [ ] Re-run `/ship` — expect **GO** on blockers (acknowledged risks may remain for CI CVE scan)
+
+### Risks and mitigations (ship-fixes)
+
+| Risk | Impact | Mitigation |
+|------|--------|------------|
+| `base: './'` breaks Capacitor asset resolution | High | Task 13 verification includes Simulator step in checkpoint |
+| Splitting mobile entry duplicates small amount of boot code | Low | Keep `installMobileBridge` in `apps/mobile`; UI only calls `mountJanusShell` |
+| Playwright + Electron flaky in CI | Med | Task 19 optional; Task 14 required gate suffices for GO |
+| Two vite entries drift | Med | Task 16 documents single shared `mount` import; one `build:ui` output |
+
+### Open questions
+
+- **Task 19:** Approve adding Playwright (or Electron driver) devDependency for smoke, or keep manual desktop gate only?
+- **Task 17 scope:** Block all `http(s):` navigation now, or only `setWindowOpenHandler` until external links exist?
+
+### After ship-fixes
+
+1. Re-run `/ship` on `main`.
+2. Execute manual Simulator gate once if not already done.
+3. Proceed to `/spec` + `/plan` for **`languages`** when `SPEC-languages.md` is approved.
+
 ## Parallelization opportunities
 
 Per the planning skill, this section records where multiple agents or sessions can work at once. **`tasks/todo.md` stays sequential** (dependencies only); use this section when splitting work across people or worktrees.

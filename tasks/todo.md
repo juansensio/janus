@@ -319,7 +319,7 @@ Plan: `tasks/plan.md` § Shell ship-fixes. Do **not** start `languages` until Ch
 
 ## Checkpoint: Minimum ship GO (after Tasks 13–14)
 
-- [ ] `bun run validate:install` passes with new guards
+- [x] `bun run validate:install` passes with new guards
 - [ ] Manual desktop: Janus in `#app`
 - [ ] Manual Simulator: `cap:sync:ios` + Run — Janus still visible (`data-platform="mobile"`)
 
@@ -416,7 +416,7 @@ Plan: `tasks/plan.md` § Shell ship-fixes. Do **not** start `languages` until Ch
 **Description:** Wire `bun run test:smoke:desktop` (Playwright Electron or headless load of `dist/ui` with injected bridge) asserting `#app` contains **Janus** and `data-platform="desktop"`. Update `docs/install-macos.md` if implemented. Skip if dependency cost is too high — document skip.
 
 **Acceptance criteria:**
-- [ ] Script exists and passes locally after Task 13, or install doc states skipped with reason
+- [x] Script exists and passes locally after Task 13, or install doc states skipped with reason
 
 **Verification:**
 - [ ] `bun run test:smoke:desktop` when implemented
@@ -432,8 +432,8 @@ Plan: `tasks/plan.md` § Shell ship-fixes. Do **not** start `languages` until Ch
 
 ## Checkpoint: Ship-fixes complete
 
-- [ ] Tasks 13–14 checkpoint passed (`/ship` minimum GO)
-- [ ] Tasks 15–18 acceptance criteria met (or 16/17 explicitly deferred with user approval)
-- [ ] `bun run validate:install` and `bun run test` green
+- [x] Tasks 13–14 checkpoint passed (`/ship` minimum GO) except manual desktop/Simulator gates
+- [x] Tasks 15–18 acceptance criteria met (or 16/17 explicitly deferred with user approval)
+- [x] `bun run validate:install` and `bun run test` green
 - [ ] Re-run `/ship` — no Critical blockers
 - [ ] Then: manual Simulator gate + `languages` spec approval before next module `/build`

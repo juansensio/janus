@@ -59,4 +59,4 @@ Shared UI is built to **`dist/ui`** at the repo root. Electron loads it from dis
 
 ## Optional desktop smoke test
 
-`bun run test:smoke:desktop` is not wired yet; desktop verification is manual via `bun run dev:desktop`.
+`bun run test:smoke:desktop` is intentionally not wired (Playwright/Electron driver cost); use `bun run validate:install` plus `bun run dev:desktop` for desktop verification.
