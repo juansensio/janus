@@ -200,6 +200,20 @@ export function createEmptyManuscriptHtml(): string {
     return `<${ROOT_TAG} version="1"></${ROOT_TAG}>`;
 }
 
+/** One-time migration from slice 1 plain `manuscript.md` to HTML. */
+export function migrateLegacyMarkdownToHtml(markdown: string): string {
+    const text = markdown.replace(/\r\n/g, "\n");
+    if (text === "") {
+        return createEmptyManuscriptHtml();
+    }
+    const paragraphs = text.split(/\n\n+/);
+    const blocks: ManuscriptBlock[] = paragraphs.map((paragraph) => ({
+        kind: "p",
+        text: paragraph,
+    }));
+    return serializeBlocks(blocks);
+}
+
 export function parseManuscriptHtml(html: string): ManuscriptDocument {
     const blocks = parseRoot(html);
     return { version: 1, html: serializeBlocks(blocks) };

@@ -1,5 +1,6 @@
 export {
     createManuscriptService,
+    LEGACY_MANUSCRIPT_FILENAME,
     MANUSCRIPT_FILENAME,
     ManuscriptServiceError,
     type ManuscriptErrorCode,
@@ -7,6 +8,7 @@ export {
 } from "./manuscript-service";
 export {
     createEmptyManuscriptHtml,
+    migrateLegacyMarkdownToHtml,
     parseManuscriptHtml,
     serializeManuscriptDocument,
     type ManuscriptDocument,

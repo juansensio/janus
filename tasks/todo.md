@@ -60,14 +60,14 @@
 
 **Acceptance criteria:**
 
-- [ ] Missing both files → empty HTML in memory; file created on first save
-- [ ] Legacy `.md` → `.html` with `janus-p` paragraphs; subsequent reads use `.html` only
-- [ ] Desktop + mobile bridge `readManuscript` / `writeManuscript` still work; IPC tests updated
-- [ ] Existing manuscript slice 1 tests updated or superseded
+- [x] Missing both files → empty HTML in memory; file created on first save
+- [x] Legacy `.md` → `.html` with `janus-p` paragraphs; subsequent reads use `.html` only
+- [x] Desktop + mobile bridge `readManuscript` / `writeManuscript` still work; IPC tests updated
+- [x] Existing manuscript slice 1 tests updated or superseded
 
 **Verification:**
 
-- [ ] `bun run test`
+- [x] `bun run test`
 - [ ] Manual: open book with old `.md`, edit, Shelf — `manuscript.html` present
 
 **Dependencies:** Task 2

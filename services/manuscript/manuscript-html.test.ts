@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { MANUSCRIPT_FILENAME } from "./manuscript-service";
 import {
     createEmptyManuscriptHtml,
+    migrateLegacyMarkdownToHtml,
     parseManuscriptHtml,
     serializeManuscriptDocument,
 } from "./manuscript-html";
@@ -10,6 +11,20 @@ import { ManuscriptServiceError } from "./manuscript-service";
 describe("MANUSCRIPT_FILENAME", () => {
     it("points to manuscript.html in domain", () => {
         expect(MANUSCRIPT_FILENAME).toBe("manuscript.html");
+    });
+});
+
+describe("migrateLegacyMarkdownToHtml", () => {
+    it("maps blank lines to janus-p paragraphs", () => {
+        const html = migrateLegacyMarkdownToHtml("Line one\n\nCafé ☕\n");
+        expect(html).toBe(
+            '<janus-manuscript version="1"><janus-p>Line one</janus-p><janus-p>Café ☕\n</janus-p></janus-manuscript>',
+        );
+        expect(() => parseManuscriptHtml(html)).not.toThrow();
+    });
+
+    it("returns empty document for empty markdown", () => {
+        expect(migrateLegacyMarkdownToHtml("")).toBe(createEmptyManuscriptHtml());
     });
 });
 

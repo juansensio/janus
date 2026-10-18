@@ -8,7 +8,11 @@ import {
     MANUSCRIPT_IPC_CHANNELS,
     registerManuscriptIpc,
 } from "./manuscript-ipc";
-import { MANUSCRIPT_FILENAME } from "@janus/manuscript";
+import {
+    createEmptyManuscriptHtml,
+    LEGACY_MANUSCRIPT_FILENAME,
+    MANUSCRIPT_FILENAME,
+} from "@janus/manuscript";
 
 function nodeFs(): LibraryFs & {
     rename(from: string, to: string): Promise<void>;
@@ -27,7 +31,7 @@ function nodeFs(): LibraryFs & {
 }
 
 describe("createManuscriptBridgeService", () => {
-    it("reads and writes manuscript.md for an existing book", async () => {
+    it("reads and writes manuscript.html for an existing book", async () => {
         const root = await fs.mkdtemp(path.join(os.tmpdir(), "janus-ms-"));
         const library = createLibraryService(
             root,
@@ -36,12 +40,15 @@ describe("createManuscriptBridgeService", () => {
         );
         const created = await library.createBook("Draft");
         const manuscript = createManuscriptBridgeService(root, nodeFs());
+        const emptyHtml = createEmptyManuscriptHtml();
+        const html =
+            '<janus-manuscript version="1"><janus-p>Hello</janus-p><janus-p>Café</janus-p></janus-manuscript>';
 
-        await expect(manuscript.readManuscript(created.id)).resolves.toBe("");
-        await manuscript.writeManuscript(created.id, "Hello\n\nCafé");
         await expect(manuscript.readManuscript(created.id)).resolves.toBe(
-            "Hello\n\nCafé",
+            emptyHtml,
         );
+        await manuscript.writeManuscript(created.id, html);
+        await expect(manuscript.readManuscript(created.id)).resolves.toBe(html);
 
         const filePath = path.join(
             root,
@@ -49,9 +56,37 @@ describe("createManuscriptBridgeService", () => {
             "Draft",
             MANUSCRIPT_FILENAME,
         );
-        await expect(fs.readFile(filePath, "utf8")).resolves.toBe(
-            "Hello\n\nCafé",
+        await expect(fs.readFile(filePath, "utf8")).resolves.toBe(html);
+
+        await fs.rm(root, { recursive: true });
+    });
+
+    it("migrates legacy manuscript.md on first read", async () => {
+        const root = await fs.mkdtemp(path.join(os.tmpdir(), "janus-ms-"));
+        const library = createLibraryService(
+            root,
+            nodeFs(),
+            () => "550e8400-e29b-41d4-a716-446655440000",
         );
+        const created = await library.createBook("Legacy");
+        const bookDir = path.join(root, "books", "Legacy");
+        await fs.writeFile(
+            path.join(bookDir, LEGACY_MANUSCRIPT_FILENAME),
+            "One\n\nTwo",
+            "utf8",
+        );
+
+        const manuscript = createManuscriptBridgeService(root, nodeFs());
+        const migrated = await manuscript.readManuscript(created.id);
+        expect(migrated).toBe(
+            '<janus-manuscript version="1"><janus-p>One</janus-p><janus-p>Two</janus-p></janus-manuscript>',
+        );
+        await expect(
+            fs.readFile(path.join(bookDir, MANUSCRIPT_FILENAME), "utf8"),
+        ).resolves.toBe(migrated);
+        await expect(
+            fs.readFile(path.join(bookDir, LEGACY_MANUSCRIPT_FILENAME), "utf8"),
+        ).resolves.toBe("One\n\nTwo");
 
         await fs.rm(root, { recursive: true });
     });
