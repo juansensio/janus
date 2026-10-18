@@ -70,8 +70,14 @@ export async function renderSettings(
     host.append(locationLabel, pathEl, sourceEl);
 
     const isDesktop = bridge.platform() === "desktop";
-    const canChoose =
-        isDesktop && rootInfo.source !== "env" && rootInfo.source !== "dev-default";
+    const canChoose = isDesktop && rootInfo.source !== "env";
+
+    if (rootInfo.source === "dev-default") {
+        const note = document.createElement("p");
+        note.className = "settings-note";
+        note.textContent = SETTINGS_STRINGS.devDefaultNote;
+        host.append(note);
+    }
 
     if (canChoose) {
         const chooseButton = document.createElement("button");
@@ -94,6 +100,10 @@ export async function renderSettings(
                             ? String((err as { code: unknown }).code)
                             : "";
                     if (code === "LIBRARY_ROOT_CANCELLED") {
+                        return;
+                    }
+                    if (code === "LIBRARY_ROOT_NOT_EMPTY") {
+                        error.textContent = SETTINGS_STRINGS.libraryRootNotEmpty;
                         return;
                     }
                     error.textContent = SETTINGS_STRINGS.chooseFailed;

@@ -2,6 +2,7 @@ import { createMockJanusBridge } from "@janus/bridge";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { mountJanusShell } from "../mount";
 import { renderSettings } from "./render-settings";
+import { SETTINGS_STRINGS } from "./strings";
 
 afterEach(() => {
     document.body.innerHTML = "";
@@ -20,6 +21,19 @@ describe("renderSettings", () => {
         await renderSettings(host, bridge, { onBack: () => {} });
         expect(host.textContent).toContain("/data/custom-library");
         expect(host.textContent).toContain("Custom folder");
+    });
+
+    it("shows Choose folder when library uses dev default", async () => {
+        const host = document.createElement("div");
+        const bridge = createMockJanusBridge({
+            getLibraryRoot: async () => ({
+                path: "/repo/.janus-library",
+                source: "dev-default",
+            }),
+        });
+        await renderSettings(host, bridge, { onBack: () => {} });
+        expect(host.querySelector(".settings-choose")).not.toBeNull();
+        expect(host.textContent).toContain(SETTINGS_STRINGS.devDefaultNote);
     });
 
     it("opens settings from shelf on desktop", async () => {

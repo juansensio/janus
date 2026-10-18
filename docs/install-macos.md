@@ -75,15 +75,17 @@ After the shelf checks above:
 
 **Development (`bun run dev:desktop`):**
 
-1. Books are stored under **`.janus-library/books/`** at the repo root (gitignored).
+1. Books are stored under **`.janus-library/books/`** at the repo root (gitignored) unless you pick another folder in Settings.
 2. On first run after this change, if you previously used Electron’s default library under Application Support, Janus **moves** that folder into `.janus-library` so existing books stay with you.
-3. Optional override: `JANUS_LIBRARY_ROOT=/absolute/path bun run dev:desktop`.
+3. **Settings → Choose folder…** is available in dev. Janus **moves** your existing `books/` tree into the chosen folder, saves the path, and reloads. A saved path overrides `.janus-library` on later runs (still below `JANUS_LIBRARY_ROOT`).
+4. Optional override: `JANUS_LIBRARY_ROOT=/absolute/path bun run dev:desktop`.
 
 **Production desktop (`bun run desktop:prod`):**
 
 1. Open **Settings** from the shelf (desktop only).
 2. Confirm the displayed library path; use **Choose folder…** to pick a directory.
-3. After the window reloads, create or open a book and confirm files appear under `<chosen>/books/<id>/`.
+3. Janus moves existing books into the new folder when possible; if the target already has a non-empty `books/` folder, you’ll see an error instead of merging libraries.
+4. After the window reloads, create or open a book and confirm files appear under `<chosen>/books/<id>/`.
 
 Mobile library location is unchanged (app sandbox).
 

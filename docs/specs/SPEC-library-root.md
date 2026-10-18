@@ -191,3 +191,47 @@ Manual (add to `docs/install-macos.md`):
 On approval, add a footnote to `CAPABILITY-MAP.md` and run **`/plan`** for this spec only (fresh `tasks/plan.md` + `tasks/todo.md`).
 
 **Supersedes:** `SPEC-library.md` decision item “Library root: App user-data for slice 1; no Choose folder UI yet” for **desktop production** only; mobile default unchanged.
+
+---
+
+## Slice 2 — relocate on choose + dev Settings (approved 2026-10-18)
+
+### Objective
+
+When the writer picks a new library folder, **books move with them**. Settings **Choose folder…** is available during `dev:desktop` (when root is not locked by `JANUS_LIBRARY_ROOT`). Saved `libraryRoot` in settings **wins over** the `.janus-library` dev default (still below env override).
+
+### Resolution order (desktop) — slice 2
+
+1. `process.env.JANUS_LIBRARY_ROOT` (absolute).
+2. Else if settings contain `libraryRoot`: that absolute path (dev and prod).
+3. Else if `JANUS_DEV=1`: `<repoRoot>/.janus-library`.
+4. Else: `path.join(app.getPath("userData"), "library")`.
+
+### Relocate on `chooseLibraryRoot()`
+
+1. Read the **current active** root from shell context (not only the newly typed path).
+2. If chosen path equals current root → no-op; return `{ path, needsReload: false }`.
+3. Validate chosen folder writable; ensure `books/` can be created.
+4. If `<chosen>/books` exists and is **non-empty**, reject with `LIBRARY_ROOT_NOT_EMPTY` (no merge).
+5. Move all book directories from `<current>/books/` into `<chosen>/books/` (create `books/` as needed).
+6. Persist `libraryRoot` in `janus-settings.json`; return `{ path, needsReload: true }` and reload web contents.
+
+### Settings UI (slice 2)
+
+- **Choose folder…** when `platform() === "desktop"` and `source !== "env"`.
+- When `source === "dev-default"`, show note: saved folder overrides development default after reload.
+- Map `LIBRARY_ROOT_NOT_EMPTY` to explicit English copy (folder already has books).
+
+### Bridge error codes (added)
+
+| Code | When |
+|------|------|
+| `LIBRARY_ROOT_NOT_EMPTY` | Target `books/` exists with entries |
+| `LIBRARY_ROOT_CANCELLED` | Picker cancelled (unchanged) |
+| `INVALID_LIBRARY_ROOT` | Not absolute / not writable (unchanged) |
+
+### Acceptance (slice 2)
+
+- Dev: Choose visible; after pick + reload, shelf shows same books from new path; `manuscript.md` files moved with book dirs.
+- Prod: same relocate behavior.
+- `bun run test` and `bun run lint` pass.
