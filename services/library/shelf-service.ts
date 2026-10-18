@@ -15,7 +15,7 @@ import { validateBookId } from "./validate-book-id";
 import { isResolvedPathInsideRoot } from "./path-containment";
 import { libraryBooksDir, sortBooksForShelf } from "./shelf-utils";
 import { isSkippableListError } from "./list-errors";
-import { bookDirectoryName } from "./book-directory-name";
+import { allocateBookDirectoryName } from "./book-directory-name";
 import { migrateLegacyUuidBookDirectories } from "./migrate-legacy-uuid-dirs";
 import { resolveBookDirById } from "./resolve-book-dir";
 import { ShelfServiceError } from "./shelf-errors";
@@ -100,6 +100,27 @@ export function createShelfService(
         await fs.mkdir(booksDir, { recursive: true });
     }
 
+    async function collectTakenBookDirectoryNames(): Promise<Set<string>> {
+        const taken = new Set<string>();
+        let entries: string[] | ShelfFsDirent[];
+        try {
+            entries = await fs.readdir(booksDir, { withFileTypes: true });
+        } catch {
+            return taken;
+        }
+        for (const entry of entries) {
+            const name = typeof entry === "string" ? entry : entry.name;
+            const isDir =
+                typeof entry === "string"
+                    ? (await fs.stat(fs.join(booksDir, name))).isDirectory()
+                    : entry.isDirectory();
+            if (isDir) {
+                taken.add(name);
+            }
+        }
+        return taken;
+    }
+
     async function readSummaryForDir(
         entryName: string,
     ): Promise<BookSummary | null> {
@@ -168,7 +189,8 @@ export function createShelfService(
                 title,
                 createdAt,
             };
-            const dirName = bookDirectoryName(title);
+            const taken = await collectTakenBookDirectoryNames();
+            const dirName = allocateBookDirectoryName(title, taken);
             const dir = fs.join(booksDir, dirName);
             await fs.mkdir(dir, { recursive: true });
             await fs.writeFile(
@@ -209,10 +231,12 @@ export function createShelfService(
                 serializeManifest(updated),
                 "utf8",
             );
-            const newDirName = bookDirectoryName(title);
             const currentDirName = basenameFromPath(dir);
-            if (newDirName !== currentDirName) {
-                const targetDir = fs.join(booksDir, newDirName);
+            const taken = await collectTakenBookDirectoryNames();
+            taken.delete(currentDirName);
+            const targetDirName = allocateBookDirectoryName(title, taken);
+            if (targetDirName !== currentDirName) {
+                const targetDir = fs.join(booksDir, targetDirName);
                 if (targetDir !== dir) {
                     await fs.rename(dir, targetDir);
                 }

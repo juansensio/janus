@@ -16,3 +16,25 @@ export function bookDirectoryName(title: string): string {
     }
     return name;
 }
+
+/** Picks a directory name under `books/` that is not already in `taken`. */
+export function uniqueDirectoryName(
+    base: string,
+    taken: ReadonlySet<string>,
+): string {
+    if (!taken.has(base)) {
+        return base;
+    }
+    let n = 2;
+    while (taken.has(`${base} ${n}`)) {
+        n += 1;
+    }
+    return `${base} ${n}`;
+}
+
+export function allocateBookDirectoryName(
+    title: string,
+    taken: ReadonlySet<string>,
+): string {
+    return uniqueDirectoryName(bookDirectoryName(title), taken);
+}

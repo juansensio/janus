@@ -1,4 +1,4 @@
-import { bookDirectoryName } from "./book-directory-name";
+import { bookDirectoryName, uniqueDirectoryName } from "./book-directory-name";
 import { parseManifest } from "./book-manifest";
 import { isSkippableListError } from "./list-errors";
 import { validateBookId } from "./validate-book-id";
@@ -14,20 +14,6 @@ export type MigrateLegacyUuidDirsFs = {
     stat(path: string): Promise<{ isDirectory(): boolean }>;
     rename(from: string, to: string): Promise<void>;
 };
-
-function uniqueDirectoryName(
-    base: string,
-    taken: Set<string>,
-): string {
-    if (!taken.has(base)) {
-        return base;
-    }
-    let n = 2;
-    while (taken.has(`${base} ${n}`)) {
-        n += 1;
-    }
-    return `${base} ${n}`;
-}
 
 /** Renames `books/<uuid>/` folders to title-based names when safe. */
 export async function migrateLegacyUuidBookDirectories(

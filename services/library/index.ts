@@ -16,7 +16,11 @@ export {
     type BookSummary,
 } from "./book-manifest";
 export { validateBookId } from "./validate-book-id";
-export { bookDirectoryName } from "./book-directory-name";
+export {
+    allocateBookDirectoryName,
+    bookDirectoryName,
+    uniqueDirectoryName,
+} from "./book-directory-name";
 export { resolveBookDirById } from "./resolve-book-dir";
 export { migrateLegacyUuidBookDirectories } from "./migrate-legacy-uuid-dirs";
 export { libraryBooksDir, sortBooksForShelf } from "./shelf-utils";
@@ -28,3 +32,4 @@ export {
 export { ShelfServiceError, type ShelfServiceErrorCode } from "./shelf-errors";
 
 export { isSkippableListError } from "./list-errors";
+export { isResolvedPathInsideRoot } from "./path-containment";

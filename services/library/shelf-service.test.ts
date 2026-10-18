@@ -119,6 +119,31 @@ describe("createShelfService", () => {
         expect(manifest).toContain('"title": "My Novel"');
     });
 
+    it("createBook disambiguates folder when sanitized titles collide (foobar vs foo/bar)", async () => {
+        const fs = createMemoryFs();
+        const service = createShelfService(
+            "/lib",
+            fs,
+            (() => {
+                let n = 0;
+                return () =>
+                    n++ === 0
+                        ? "550e8400-e29b-41d4-a716-446655440000"
+                        : "660e8400-e29b-41d4-a716-446655440001";
+            })(),
+        );
+
+        await service.createBook("foobar");
+        const second = await service.createBook("foo/bar");
+        expect(second.title).toBe("foo/bar");
+        expect(fs.files.has("/lib/books/foobar/book.json")).toBe(true);
+        expect(fs.files.has("/lib/books/foobar 2/book.json")).toBe(true);
+        const secondManifest = fs.files.get("/lib/books/foobar 2/book.json");
+        expect(secondManifest).toContain(
+            '"id": "660e8400-e29b-41d4-a716-446655440001"',
+        );
+    });
+
     it("rejects empty titles on create", async () => {
         const fs = createMemoryFs();
         const service = createShelfService("/lib", fs);
@@ -189,6 +214,31 @@ describe("createShelfService", () => {
                 "/lib/books/660e8400-e29b-41d4-a716-446655440001/book.json",
             ),
         ).toBe(false);
+    });
+
+    it("renameBook disambiguates folder when sanitized title collides with another book", async () => {
+        const fs = createMemoryFs();
+        const idA = "550e8400-e29b-41d4-a716-446655440000";
+        const idB = "660e8400-e29b-41d4-a716-446655440001";
+        const service = createShelfService(
+            "/lib",
+            fs,
+            (() => {
+                let n = 0;
+                return () => (n++ === 0 ? idA : idB);
+            })(),
+        );
+        await service.createBook("foobar");
+        await service.createBook("Other");
+
+        const updated = await service.renameBook(idB, "foo/bar");
+        expect(updated.title).toBe("foo/bar");
+        expect(fs.files.get("/lib/books/foobar 2/book.json")).toContain(
+            `"id": "${idB}"`,
+        );
+        expect(fs.files.get("/lib/books/foobar/book.json")).toContain(
+            `"id": "${idA}"`,
+        );
     });
 
     it("rejects renameBook when title is taken by another book", async () => {
