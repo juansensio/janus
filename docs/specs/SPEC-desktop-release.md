@@ -194,21 +194,25 @@ Module is **done** when all of the following hold:
 6. `CAPABILITY-MAP.md` indexes this spec (done when spec is approved).
 7. `SPEC-desktop-release-command.md` is approved; `/release` command and skill are implemented in the same initiative (or immediately before first tag).
 
+## Release status (living)
+
+**User-facing summary:** [`docs/desktop-release-status.md`](../desktop-release-status.md) — shipped tags, Gatekeeper behavior, and what is required for open-without-Security-settings (notarization phase 2).
+
 ## Open Questions
 
-1. **Artifact format for v1:** ship **zip only** first, or require **dmg** on day one?
-2. **Architecture:** single **universal** binary vs **arm64-only** (GitHub `macos-latest` is Apple Silicon — document whether Intel Macs are supported in v1).
-3. **Version source:** tag-only vs enforce equality with `apps/desktop/package.json` (fail CI on mismatch)?
-4. **Release notes:** auto-generated from commits vs maintainer-edited body only?
-5. **Signing slice:** target milestone for notarized dmg (separate spec amendment vs same module phase 2)?
+1. **Notarization phase 2:** separate spec amendment vs extend this spec — pending Apple Developer credentials in CI.
 
-## Resolved decisions (pending human approval)
+## Resolved decisions
 
-| Topic | Proposed decision |
-|--------|-------------------|
+| Topic | Decision |
+|--------|----------|
 | Trigger | Tag push `v*` only |
-| Platforms | macOS CI only |
+| Platforms | macOS CI only (arm64) |
 | Mobile / Windows | Out of scope |
-| Signing v1 | Unsigned; document Gatekeeper |
-| UI source in package | Production `dist/ui` in app resources |
+| Artifacts | zip + dmg |
+| Version | Tag must match `apps/desktop/package.json` |
+| Release notes | Auto-generated in CI |
+| Signing v1 | Ad-hoc in CI; **not** notarized — Gatekeeper bypass documented |
+| UI in package | `dist/ui` → `Resources/ui` |
 | Release surface | GitHub Release assets |
+| Production library | `~/Documents/Janus` (packaged); `.janus-library` dev-only |

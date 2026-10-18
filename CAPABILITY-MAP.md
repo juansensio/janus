@@ -7,7 +7,7 @@
 | languages | Interface strings, and the set of languages a book may be written in. English and Spanish. | shell |
 | manuscript | One book: page, chapters, section breaks, autosave to plain files | languages |
 | library | Bookshelf: create, open, and arrange books | manuscript |
-| ai-assist | A comment on the text, assigned to the AI. A Write button fills that text from the comment. | manuscript |
+| ai-assist | AI comment in HTML; Write (full book context) → persisted draft; Accept/Reject; OpenAI Codex connect (desktop). | manuscript |
 
 Build order (full Neo loop): shell → languages → manuscript → library, ai-assist
 
@@ -23,9 +23,13 @@ Build order (full Neo loop): shell → languages → manuscript → library, ai-
 
 **Languages slice 1** (`docs/specs/SPEC-languages.md`, approved 2026-10-18): interface locale (`en`/`es`), catalogs, Settings language picker (desktop + mobile); persists `uiLocale` in `janus-settings.json`. Does **not** wait on `ai-assist`. Per-book writing language is a later slice.
 
-**Desktop release v1** (`docs/specs/SPEC-desktop-release.md`, approved 2026-10-18): push tag `v*` → macOS workflow → GitHub Release with downloadable Electron app; unsigned; no Windows, iOS, or auto-update. Agent workflow spec: `docs/specs/SPEC-desktop-release-command.md` (`/release` verify/setup — command files not added until implementation).
+**Desktop release v1** (`docs/specs/SPEC-desktop-release.md`, approved 2026-10-18): push tag `v*` → macOS workflow → GitHub Release (arm64 zip/dmg); ad-hoc signed, **not notarized** — users still need Gatekeeper bypass. Status: [`docs/desktop-release-status.md`](docs/desktop-release-status.md). Agent workflow: `docs/specs/SPEC-desktop-release-command.md`, `/release`.
 
-`library` (full) and `ai-assist` can be specified in parallel after `manuscript` slice 1.
+**Manuscript slice 2** (`docs/specs/SPEC-manuscript-slice-2.md`, proposed 2026-10-18): `manuscript.html`, Janus custom tags (`janus-ai-comment`, `janus-ai-draft`), structured editor, migrate legacy `manuscript.md`, accept/reject draft transforms. **Build before `ai-assist` slice 1.** Mobile edits HTML; no AI UI.
+
+**AI-assist slice 1** (`docs/specs/SPEC-ai-assist.md`, proposed 2026-10-18): desktop Connect OpenAI Codex (consumer subscription, in-app sign-in), Write → draft tag, integrates manuscript transforms. Intent: `docs/intent/ai-assist-mvp.md`. **Blocked on manuscript slice 2** and on OAuth spike (see spec Open Questions).
+
+`library` (full) and `ai-assist` can be specified in parallel after `manuscript` slice 1; **implementation order** for the HTML+AI MVP is manuscript slice 2 → ai-assist slice 1.
 
 **Module specs** live in `docs/specs/SPEC-<module-id>.md` (for example `docs/specs/SPEC-shell.md`). This map is the index; do not add module specs at the repo root.
 
@@ -40,7 +44,7 @@ Build order (full Neo loop): shell → languages → manuscript → library, ai-
 - Books will be plain files on disk. No accounts. Local-first.
 - The writing loop follows Neo: a shelf, a page, chapters, autosave. The code is original.
 - English and Spanish cover the interface and the language of a book. Those are two separate values. The interface language is chosen for the app. The book language is chosen per book. AI writes in the book language.
-- AI v1 is only the comment-and-Write action in the table. The writer marks a passage with a comment for the AI, then presses Write, and the model fills that text from the comment. More AI actions require a revision of this map.
+- AI v1 (proposed spec): comment tag → Write with full-book context → persisted `janus-ai-draft` → Accept/Reject/Modify; OpenAI Codex on desktop via in-app connect (API keys and Cursor connect are later). More AI actions require a map revision.
 
 **Withdrawn:** Python/Flask local web app on `127.0.0.1:5000` (see git history / prior shell spec if needed).
 

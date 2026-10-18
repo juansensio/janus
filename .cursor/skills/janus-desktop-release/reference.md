@@ -59,4 +59,5 @@ Workspace packages are **devDependencies**; main/preload are pre-bundled with Bu
 
 ## Install docs
 
-`docs/install-macos.md` — **Install from GitHub Release** (unsigned Gatekeeper, arm64).
+- `docs/desktop-release-status.md` — **current Release status**, Gatekeeper limits, notarization gap
+- `docs/install-macos.md` — **Install from GitHub Release** (workarounds, arm64)

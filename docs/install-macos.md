@@ -132,9 +132,11 @@ In Xcode, select an iPhone or iPad simulator and click **Run**. Confirm **Janus*
 
 ### Install from GitHub Release (macOS, Apple Silicon)
 
+**Release status (what works, what Gatekeeper still requires, roadmap to notarization):** [desktop-release-status.md](desktop-release-status.md).
+
 Use this when you want Janus **without** cloning the repo or installing Bun.
 
-1. Open the repository **Releases** page on GitHub and pick a tag (for example `v0.1.0`).
+1. Open **[Releases](https://github.com/juansensio/janus/releases)** and download the **latest** tag (prefer **`v0.1.2+`** for `~/Documents/Janus` library defaults).
 2. Download **`Janus-*-arm64-mac.zip`** or the **`.dmg`** (arm64 / Apple Silicon only in v1).
 3. **Zip:** unzip, then drag **Janus.app** into **Applications**.
 4. **First launch:** Releases from **v0.1.1** onward are ad-hoc signed in CI; macOS may still block downloads from Chrome. If you see **“Janus is damaged and can’t be opened”**, the app is usually fine — that message often means **quarantine**, not a corrupt file. Do **not** click **Move to Bin** until you try:
@@ -143,7 +145,9 @@ Use this when you want Janus **without** cloning the repo or installing Bun.
    ```bash
    xattr -cr /Applications/Janus.app
    ```
-   If it still fails: `codesign --force --deep --sign - /Applications/Janus.app` then open again. Full trust for strangers on the internet needs Apple **notarization** (not in v1).
+   If it still fails: `codesign --force --deep --sign - /Applications/Janus.app` then open again.
+
+   **“Apple could not verify … malware”** — click **Done**, then **System Settings → Privacy & Security → Open Anyway**, or use right-click **Open** as above. **Double-click install with no Security steps** requires **notarized** builds; see [desktop-release-status.md](desktop-release-status.md) § What is missing.
 5. Confirm the shelf appears (`data-platform="desktop"` on `<main id="app">`). Books default to **`~/Documents/Janus/books/`** (or a folder you choose in **Settings**). The repo’s **`.janus-library/`** is for **`bun run dev:desktop` only**, not for Release builds.
 
 Maintainers: run `/release verify` (or `bun run validate:desktop-release` after `bun run desktop:package`) before pushing a `v*` tag.

@@ -1,6 +1,7 @@
 # Janus
 
-**macOS toolchain:** [docs/install-macos.md](docs/install-macos.md) (clone → install → desktop → iOS Simulator).
+**macOS toolchain:** [docs/install-macos.md](docs/install-macos.md) (clone → install → desktop → iOS Simulator).  
+**Desktop download (GitHub Releases):** [docs/desktop-release-status.md](docs/desktop-release-status.md) — current tags, Gatekeeper limits, notarization gap.
 
 **Architecture:** [docs/architecture.md](docs/architecture.md) (services, bridge, shared UI, shells).
 
