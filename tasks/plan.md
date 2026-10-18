@@ -50,10 +50,10 @@ Full acceptance criteria: **`tasks/todo.md`** Tasks **1–8**.
 
 ### Phase 2: Shell I/O
 - [x] Task 3: Desktop library IPC and FS
-- [ ] Task 4: Mobile Capacitor FS adapter
+- [x] Task 4: Mobile Capacitor FS adapter
 
 ### Checkpoint: Adapters
-- [ ] Both shells expose `listBooks` / `createBook` / `deleteBook`
+- [x] Both shells expose `listBooks` / `createBook` / `deleteBook`
 
 ### Phase 3: Shelf
 - [ ] Task 5: Bookshelf UI and mount wiring

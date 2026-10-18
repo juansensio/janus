@@ -25,8 +25,10 @@
       "version": "0.0.0",
       "dependencies": {
         "@capacitor/core": "6.2.0",
+        "@capacitor/filesystem": "6.0.4",
         "@capacitor/ios": "6.2.0",
         "@janus/bridge": "workspace:*",
+        "@janus/library": "workspace:*",
         "@janus/ui": "workspace:*",
       },
       "devDependencies": {
@@ -56,6 +58,8 @@
     "@capacitor/cli": ["@capacitor/cli@6.2.0", "", { "dependencies": { "@ionic/cli-framework-output": "^2.2.5", "@ionic/utils-fs": "^3.1.6", "@ionic/utils-subprocess": "2.1.11", "@ionic/utils-terminal": "^2.3.3", "commander": "^9.3.0", "debug": "^4.3.4", "env-paths": "^2.2.0", "kleur": "^4.1.4", "native-run": "^2.0.0", "open": "^8.4.0", "plist": "^3.0.5", "prompts": "^2.4.2", "rimraf": "^4.4.1", "semver": "^7.3.7", "tar": "^6.1.11", "tslib": "^2.4.0", "xml2js": "^0.5.0" }, "bin": { "cap": "bin/capacitor", "capacitor": "bin/capacitor" } }, "sha512-EWcXG39mZh35zrHhOqzN1ILeSyMRyEqWVtQDXqMGjCXYRH6b6p5TvyvLDN8ZNy26tbhI3i79gfrgirt+mNwuuw=="],
 
     "@capacitor/core": ["@capacitor/core@6.2.0", "", { "dependencies": { "tslib": "^2.1.0" } }, "sha512-B9IlJtDpUqhhYb+T8+cp2Db/3RETX36STgjeU2kQZBs/SLAcFiMama227o+msRjLeo3DO+7HJjWVA1+XlyyPEg=="],
+
+    "@capacitor/filesystem": ["@capacitor/filesystem@6.0.4", "", { "peerDependencies": { "@capacitor/core": "^6.0.0" } }, "sha512-eFlg/ZrwYA4Y6ClLRRikudVu2XvuZxfX/XC0ky9MgfbC9dyqTnVkkEoWM6vr1xR89YNY4mB0EeVTet1m1Jcumw=="],
 
     "@capacitor/ios": ["@capacitor/ios@6.2.0", "", { "peerDependencies": { "@capacitor/core": "^6.2.0" } }, "sha512-gisvZBIrKT1siiumgpLPY63HmJe69Ed/dOmfQQ+U1MIJmOR5gWGWvfO7QSj/FMatVZS4Xt/8jCoUgzDD1U6kSw=="],
 

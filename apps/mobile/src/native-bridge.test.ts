@@ -1,5 +1,19 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import type { JanusBridge } from "@janus/bridge";
+
+vi.mock("@capacitor/filesystem", () => ({
+    Directory: { Data: "DATA" },
+    Encoding: { UTF8: "utf8" },
+    Filesystem: {
+        mkdir: vi.fn(async () => {}),
+        readdir: vi.fn(async () => ({ files: [] })),
+        readFile: vi.fn(async () => ({ data: "" })),
+        writeFile: vi.fn(async () => {}),
+        rmdir: vi.fn(async () => {}),
+        stat: vi.fn(async () => ({ type: "directory" })),
+    },
+}));
+
 import { installMobileBridge } from "./native-bridge";
 
 afterEach(() => {
@@ -17,5 +31,13 @@ describe("installMobileBridge", () => {
         const platform = window.janus?.platform();
         expect(platform).not.toBe("desktop");
         expect(platform).toBe("mobile");
+    });
+
+    it("exposes async library bridge methods", async () => {
+        installMobileBridge();
+        await expect(window.janus?.listBooks()).resolves.toEqual([]);
+        await expect(window.janus?.createBook()).resolves.toMatchObject({
+            title: "Untitled",
+        });
     });
 });

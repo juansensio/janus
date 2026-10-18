@@ -77,12 +77,12 @@ Sizing: **S** = 1–2 files, **M** = 3–5 files.
 **Description:** Add pinned `@capacitor/filesystem` to `apps/mobile`. Implement `listBooks`, `createBook`, `deleteBook` on mobile `JanusBridge` using app data directory and domain manifest helpers. Extend `native-bridge.test.ts`.
 
 **Acceptance criteria:**
-- [ ] Mobile bridge methods match desktop semantics
-- [ ] Default `capacitor.config.ts` has no permanent dev `server.url`
-- [ ] `bun run test` green
+- [x] Mobile bridge methods match desktop semantics
+- [x] Default `capacitor.config.ts` has no permanent dev `server.url`
+- [x] `bun run test` green
 
 **Verification:**
-- [ ] `bun run test`
+- [x] `bun run test`
 - [ ] Manual Simulator after Task 5
 
 **Dependencies:** Tasks 1, 2
@@ -178,7 +178,7 @@ Sizing: **S** = 1–2 files, **M** = 3–5 files.
 
 ## Checkpoint: Adapters (after Tasks 3–4)
 
-- [ ] Both shells expose working library bridge methods
+- [x] Both shells expose working library bridge methods
 
 ## Checkpoint: Complete (after Tasks 5–8)
 
