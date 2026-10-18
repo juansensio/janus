@@ -7,20 +7,13 @@ import {
     type LibraryIpcReject,
 } from "./library-ipc-error";
 import { createAiBridgeService } from "./ai-service";
+import {
+    AI_IPC_CHANNELS,
+    type AiWriteDraftDeltaPayload,
+} from "./ai-ipc-channels";
 import type { ManuscriptBridgeFs } from "./manuscript-service";
 
-export const AI_IPC_CHANNELS = {
-    getAiProviderStatus: "janus:ai:getAiProviderStatus",
-    connectOpenAiCodex: "janus:ai:connectOpenAiCodex",
-    disconnectOpenAiCodex: "janus:ai:disconnectOpenAiCodex",
-    writeForComment: "janus:ai:writeForComment",
-    writeDraftDelta: "janus:ai:writeDraftDelta",
-} as const;
-
-export type AiWriteDraftDeltaPayload = {
-    requestId: string;
-    draftHtml: string;
-};
+export { AI_IPC_CHANNELS, type AiWriteDraftDeltaPayload } from "./ai-ipc-channels";
 
 function rejectForBridge(error: unknown): LibraryIpcReject {
     if (isLibraryIpcReject(error)) {

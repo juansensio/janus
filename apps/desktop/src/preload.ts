@@ -1,6 +1,9 @@
 import type { JanusBridge } from "@janus/bridge";
 import { contextBridge, ipcRenderer } from "electron";
-import { AI_IPC_CHANNELS, type AiWriteDraftDeltaPayload } from "./ai-ipc";
+import {
+    AI_IPC_CHANNELS,
+    type AiWriteDraftDeltaPayload,
+} from "./ai-ipc-channels";
 import { invokeLibraryIpc } from "./library-ipc-error";
 
 const invoke = (channel: string, ...args: unknown[]) =>
