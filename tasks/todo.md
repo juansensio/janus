@@ -23,8 +23,8 @@
 
 ## Task 4: Mobile bridge persistence
 
-- [ ] `native-bridge.ts` get/set using `janus-settings`
-- [ ] Vitest merge behavior
+- [x] `native-bridge.ts` get/set using `janus-settings`
+- [x] Vitest merge behavior
 
 ## Task 5: Apply zoom in editor UI
 

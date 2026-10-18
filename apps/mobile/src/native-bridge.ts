@@ -1,5 +1,10 @@
 import type { JanusBridge } from "@janus/bridge";
-import { buildUiLanguage, buildUiLanguageForCode } from "@janus/bridge";
+import {
+    buildEditorZoomResult,
+    buildUiLanguage,
+    buildUiLanguageForCode,
+} from "@janus/bridge";
+import { assertEditorZoomPercent } from "@janus/zoom";
 import { assertSupported } from "@janus/languages";
 import { createShelfService } from "@janus/library";
 import { loadJanusSettings, saveJanusSettings } from "./janus-settings";
@@ -93,6 +98,19 @@ export function installMobileBridge(): void {
             const settings = await loadJanusSettings();
             await saveJanusSettings({ ...settings, uiLocale: code });
             return buildUiLanguageForCode(code);
+        },
+        getEditorZoom: async () => {
+            const settings = await loadJanusSettings();
+            return buildEditorZoomResult(settings.editorZoomPercent);
+        },
+        setEditorZoom: async (percent: number) => {
+            const valid = assertEditorZoomPercent(percent);
+            const settings = await loadJanusSettings();
+            await saveJanusSettings({
+                ...settings,
+                editorZoomPercent: valid,
+            });
+            return buildEditorZoomResult(valid);
         },
     };
     window.janus = bridge;

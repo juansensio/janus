@@ -39,6 +39,18 @@ describe("janus-settings", () => {
         await expect(loadJanusSettings()).resolves.toEqual({});
     });
 
+    it("merges editorZoomPercent on save without dropping uiLocale", async () => {
+        readFile.mockResolvedValue({
+            data: JSON.stringify({ uiLocale: "es" }),
+        });
+        await saveJanusSettings({ uiLocale: "es", editorZoomPercent: 125 });
+        const payload = JSON.parse(
+            String(writeFile.mock.calls[0]?.[0]?.data),
+        ) as { uiLocale?: string; editorZoomPercent?: number };
+        expect(payload.uiLocale).toBe("es");
+        expect(payload.editorZoomPercent).toBe(125);
+    });
+
     it("merges uiLocale on save without dropping libraryRoot", async () => {
         readFile.mockResolvedValue({
             data: JSON.stringify({ libraryRoot: "/custom" }),
