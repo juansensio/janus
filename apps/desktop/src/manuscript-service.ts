@@ -3,11 +3,7 @@ import {
     createManuscriptService,
     type ManuscriptFs,
 } from "@janus/manuscript";
-import {
-    isSkippableListError,
-    libraryBooksDir,
-    validateBookId,
-} from "@janus/library";
+import { libraryBooksDir, resolveBookDirById } from "@janus/library";
 import { LibraryBridgeError } from "./library-errors";
 
 export type ManuscriptBridgeFs = ManuscriptFs & {
@@ -26,23 +22,30 @@ export function createManuscriptBridgeService(
     const booksDir = libraryBooksDir(libraryRoot);
 
     async function resolveBookDir(id: string): Promise<string> {
-        if (!validateBookId(id)) {
-            throw new LibraryBridgeError("INVALID_BOOK_ID", "Invalid book id");
-        }
-        const dir = manuscriptFs.join(booksDir, id);
-        const manifestPath = manuscriptFs.join(dir, "book.json");
         try {
-            await fs.readFile(manifestPath, "utf8");
+            return await resolveBookDirById(booksDir, id, manuscriptFs);
         } catch (error) {
-            if (isSkippableListError(error)) {
-                throw new LibraryBridgeError(
-                    "BOOK_NOT_FOUND",
-                    "Book not found",
-                );
+            if (
+                error !== null &&
+                typeof error === "object" &&
+                "code" in error
+            ) {
+                const code = String((error as { code: unknown }).code);
+                if (code === "INVALID_BOOK_ID") {
+                    throw new LibraryBridgeError(
+                        "INVALID_BOOK_ID",
+                        "Invalid book id",
+                    );
+                }
+                if (code === "BOOK_NOT_FOUND") {
+                    throw new LibraryBridgeError(
+                        "BOOK_NOT_FOUND",
+                        "Book not found",
+                    );
+                }
             }
             throw error;
         }
-        return dir;
     }
 
     return {

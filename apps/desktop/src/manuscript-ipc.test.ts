@@ -46,7 +46,7 @@ describe("createManuscriptBridgeService", () => {
         const filePath = path.join(
             root,
             "books",
-            created.id,
+            "Draft",
             MANUSCRIPT_FILENAME,
         );
         await expect(fs.readFile(filePath, "utf8")).resolves.toBe(
