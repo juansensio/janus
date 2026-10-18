@@ -7,6 +7,7 @@ import {
     type DesktopLibraryContext,
 } from "./desktop-library-context";
 import { registerLanguageIpc } from "./language-ipc";
+import { registerZoomIpc } from "./zoom-ipc";
 import {
     createElectronDirectoryPicker,
     registerSettingsIpc,
@@ -168,6 +169,10 @@ app.whenReady().then(async () => {
         userDataPath,
         fs: rootFs,
         getSystemLocale: () => app.getLocale(),
+    });
+    registerZoomIpc(ipcMain, {
+        userDataPath,
+        fs: rootFs,
     });
 
     app.on("web-contents-created", (_event, contents) => {

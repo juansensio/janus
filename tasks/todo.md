@@ -17,9 +17,9 @@
 
 ## Task 3: Desktop zoom IPC
 
-- [ ] `zoom-ipc.ts` load/save `editorZoomPercent`
-- [ ] Register in `main.ts`, expose in `preload.ts`
-- [ ] Vitest with temp userData
+- [x] `zoom-ipc.ts` load/save `editorZoomPercent`
+- [x] Register in `main.ts`, expose in `preload.ts`
+- [x] Vitest with temp userData
 
 ## Task 4: Mobile bridge persistence
 
