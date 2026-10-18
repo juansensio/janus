@@ -80,6 +80,12 @@ After the shelf checks above:
 3. **Settings → Choose folder…** is available in dev. Janus **moves** your existing `books/` tree into the chosen folder, saves the path, and reloads. A saved path overrides `.janus-library` on later runs (still below `JANUS_LIBRARY_ROOT`).
 4. Optional override: `JANUS_LIBRARY_ROOT=/absolute/path bun run dev:desktop`.
 
+### Interface language (slice 1)
+
+1. Open **Settings** from the shelf (desktop or mobile).
+2. Under **Language**, choose **Español**. Shelf, editor, and Settings labels should switch to Spanish immediately (no restart).
+3. Quit and relaunch the app; the UI should still be Spanish.
+
 **Production desktop (`bun run desktop:prod`):**
 
 1. Open **Settings** from the shelf (desktop only).

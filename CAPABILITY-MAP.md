@@ -20,6 +20,8 @@ Build order (full Neo loop): shell → languages → manuscript → library, ai-
 
 **Library slice 1e** (`docs/specs/SPEC-library.md`): title-based `books/<Title>/` folders; uuid migration on list; rename moves folder; manuscript resolves by manifest id.
 
+**Languages slice 1** (`docs/specs/SPEC-languages.md`, approved 2026-10-18): interface locale (`en`/`es`), catalogs, Settings language picker (desktop + mobile); persists `uiLocale` in `janus-settings.json`. Does **not** wait on `ai-assist`. Per-book writing language is a later slice.
+
 `library` (full) and `ai-assist` can be specified in parallel after `manuscript` slice 1.
 
 **Module specs** live in `docs/specs/SPEC-<module-id>.md` (for example `docs/specs/SPEC-shell.md`). This map is the index; do not add module specs at the repo root.
