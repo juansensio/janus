@@ -30,6 +30,7 @@
         "@capacitor/ios": "6.2.0",
         "@janus/bridge": "workspace:*",
         "@janus/library": "workspace:*",
+        "@janus/manuscript": "workspace:*",
         "@janus/ui": "workspace:*",
       },
       "devDependencies": {

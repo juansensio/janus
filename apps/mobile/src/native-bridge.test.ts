@@ -9,6 +9,7 @@ vi.mock("@capacitor/filesystem", () => ({
         readdir: vi.fn(async () => ({ files: [] })),
         readFile: vi.fn(async () => ({ data: "" })),
         writeFile: vi.fn(async () => {}),
+        rename: vi.fn(async () => {}),
         rmdir: vi.fn(async () => {}),
         stat: vi.fn(async () => ({ type: "directory" })),
     },
@@ -41,5 +42,11 @@ describe("installMobileBridge", () => {
                 title: "Untitled",
             },
         );
+    });
+
+    it("exposes manuscript bridge methods", () => {
+        installMobileBridge();
+        expect(typeof window.janus?.readManuscript).toBe("function");
+        expect(typeof window.janus?.writeManuscript).toBe("function");
     });
 });
