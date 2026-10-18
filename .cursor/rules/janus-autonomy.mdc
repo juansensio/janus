@@ -1,0 +1,44 @@
+---
+description: Cloud agent autonomy — branch/PR only, queue-driven spec/plan/build, stop conditions
+alwaysApply: true
+---
+
+# Autonomous agent loop
+
+When running **unattended** (Cloud Agent or `/build auto` without a human in the loop), follow this workflow. Humans **approve specs and plans** and **merge PRs**; agents do the rest on a branch.
+
+## Git and PRs
+
+1. Work only on a feature branch (`cursor/<descriptive-name>-<suffix>` per cloud task instructions).
+2. **Never** push to `main`, **never** merge PRs, **never** tag releases unless a human explicitly requests it in the current message.
+3. Open **one PR per branch** when the slice is ready for human review.
+4. Before opening the PR, run **`/review`** (five-axis) and **`/ship`** (go/no-go with rollback plan). Fix **Critical** blockers; document accepted risks in the PR body.
+
+## Work selection
+
+1. Read `tasks/queue.md` for module status and spec paths.
+2. Pick the **first** row in build order with status **`spec-approved`** (see queue file for how humans set that).
+3. If nothing is `spec-approved`, stop and report — do not invent scope from `ROADMAP.md` alone.
+4. Run **`/plan`** for that spec → human approval of `tasks/plan.md` / `tasks/todo.md` when required by harness; in unattended mode, proceed only when the queue already marks the spec approved and the plan artifacts exist or `/plan` was run in the same session after approval.
+5. Run **`/build auto`** (or sequential `/build`) until `tasks/todo.md` is complete or a stop condition fires.
+
+## Stop conditions (report, do not spin)
+
+Stop and leave a clear report (branch state, failing command, open questions) when:
+
+- **Tests or build fail** without an obvious fix after at most **2 retries per failure** (same command, same root cause).
+- The **spec is ambiguous** or conflicts with code or `CAPABILITY-MAP.md` — name the conflict; do not guess.
+- A **product decision** is not covered by the approved spec or plan.
+- The change would **touch release automation**, **secrets/credentials**, **dependency major upgrades**, or **irreversible data migrations** without explicit human approval in the message.
+
+Do not disable CI checks, skip tests, or weaken lint rules to greenwash a run.
+
+## Verification before PR
+
+- `bun run test` and `bun run lint` (same as CI).
+- Commits: one per `/build` task when using autonomous build; messages state intent.
+- Update `tasks/queue.md` status (`in-progress` → `done`) only when the spec slice acceptance criteria are met and archived per `janus-planning.mdc`.
+
+## Constraints
+
+All work obeys `agents-constraints.mdc` / `AGENTS.md` and module specs under `docs/specs/`.
