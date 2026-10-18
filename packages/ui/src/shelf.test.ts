@@ -28,6 +28,18 @@ function clickDialogPrimary(): void {
     button.click();
 }
 
+function pressEnterInDialogInput(): void {
+    const input = getDialogInput();
+    input.dispatchEvent(
+        new KeyboardEvent("keydown", { key: "Enter", bubbles: true }),
+    );
+    const form = document.querySelector(".shelf-dialog-form") as HTMLFormElement;
+    if (!form) {
+        throw new Error("dialog form not found");
+    }
+    form.requestSubmit();
+}
+
 describe("renderShelf", () => {
     it("shows add tile and screen-reader empty state when there are no books", async () => {
         const host = document.createElement("div");
@@ -119,6 +131,67 @@ describe("renderShelf", () => {
         );
     });
 
+    it("submits create dialog on Enter in the title field", async () => {
+        const createBook = vi.fn(async () => ({
+            id: "550e8400-e29b-41d4-a716-446655440001",
+            title: "Untitled",
+            createdAt: "2026-01-02T00:00:00.000Z",
+        }));
+        const listBooks = vi
+            .fn()
+            .mockResolvedValueOnce([])
+            .mockResolvedValueOnce([
+                {
+                    id: "550e8400-e29b-41d4-a716-446655440001",
+                    title: "Untitled",
+                    createdAt: "2026-01-02T00:00:00.000Z",
+                },
+            ]);
+        const host = document.createElement("div");
+        document.body.append(host);
+        const bridge = createMockJanusBridge({
+            createBook,
+            suggestNewBookTitle: async () => "Untitled",
+            listBooks,
+        });
+
+        await renderShelf(host, bridge);
+        (host.querySelector(".shelf-add") as HTMLButtonElement).click();
+        await vi.waitFor(() =>
+            expect(document.querySelector(".shelf-dialog")).not.toBeNull(),
+        );
+
+        pressEnterInDialogInput();
+
+        await vi.waitFor(() =>
+            expect(createBook).toHaveBeenCalledWith("Untitled"),
+        );
+    });
+
+    it("does not submit create dialog on Enter when title is whitespace", async () => {
+        const createBook = vi.fn();
+        const host = document.createElement("div");
+        document.body.append(host);
+        const bridge = createMockJanusBridge({
+            listBooks: async () => [],
+            suggestNewBookTitle: async () => "Untitled",
+            createBook,
+        });
+
+        await renderShelf(host, bridge);
+        (host.querySelector(".shelf-add") as HTMLButtonElement).click();
+        await vi.waitFor(() =>
+            expect(document.querySelector(".shelf-dialog")).not.toBeNull(),
+        );
+
+        getDialogInput().value = "   ";
+        getDialogInput().dispatchEvent(new Event("input"));
+        pressEnterInDialogInput();
+
+        expect(createBook).not.toHaveBeenCalled();
+        expect(document.querySelector(".shelf-dialog")).not.toBeNull();
+    });
+
     it("does not call createBook when create dialog is cancelled", async () => {
         const createBook = vi.fn();
         const host = document.createElement("div");
@@ -182,6 +255,39 @@ describe("renderShelf", () => {
             expect(host.querySelector(".shelf-card-title")?.textContent).toBe(
                 "Renamed",
             ),
+        );
+    });
+
+    it("submits rename dialog on Enter in the title field", async () => {
+        const book: BookSummary = {
+            id: "550e8400-e29b-41d4-a716-446655440000",
+            title: "Draft",
+            createdAt: "2026-01-01T00:00:00.000Z",
+        };
+        const renameBook = vi.fn(async () => ({
+            ...book,
+            title: "Via Enter",
+        }));
+        const listBooks = vi
+            .fn()
+            .mockResolvedValueOnce([book])
+            .mockResolvedValueOnce([{ ...book, title: "Via Enter" }]);
+        const host = document.createElement("div");
+        document.body.append(host);
+        const bridge = createMockJanusBridge({ listBooks, renameBook });
+
+        await renderShelf(host, bridge);
+        (host.querySelector(".shelf-card-edit") as HTMLButtonElement).click();
+        await vi.waitFor(() =>
+            expect(document.querySelector(".shelf-dialog")).not.toBeNull(),
+        );
+
+        getDialogInput().value = "Via Enter";
+        getDialogInput().dispatchEvent(new Event("input"));
+        pressEnterInDialogInput();
+
+        await vi.waitFor(() =>
+            expect(renameBook).toHaveBeenCalledWith(book.id, "Via Enter"),
         );
     });
 

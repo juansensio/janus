@@ -464,6 +464,7 @@ Writers name books explicitly when adding them and can fix titles on the shelf w
 
 - Modal uses `role="dialog"`, `aria-modal="true"`, `aria-labelledby` pointing at the dialog title.
 - Focus moves into the field on open; Tab cycles within dialog; Escape closes (cancel).
+- **Enter** in the book name field submits (same as **Create** / **Save** when the title is valid).
 - On close, focus returns to the element that opened the dialog (+ tile or edit icon).
 
 **Non-regression**

@@ -50,6 +50,10 @@ export function openBookNameDialog(options: OpenBookNameDialogOptions): void {
     validation.hidden = true;
     validation.textContent = SHELF_STRINGS.dialogInvalidTitle;
 
+    const form = document.createElement("form");
+    form.className = "shelf-dialog-form";
+    form.noValidate = true;
+
     const actions = document.createElement("div");
     actions.className = "shelf-dialog-actions";
 
@@ -59,7 +63,7 @@ export function openBookNameDialog(options: OpenBookNameDialogOptions): void {
     cancelButton.textContent = SHELF_STRINGS.dialogCancel;
 
     const confirmButton = document.createElement("button");
-    confirmButton.type = "button";
+    confirmButton.type = "submit";
     confirmButton.className =
         "shelf-dialog-button shelf-dialog-button--primary";
     confirmButton.textContent =
@@ -68,7 +72,8 @@ export function openBookNameDialog(options: OpenBookNameDialogOptions): void {
             : SHELF_STRINGS.dialogSave;
 
     actions.append(cancelButton, confirmButton);
-    dialog.append(heading, label, input, validation, actions);
+    form.append(label, input, validation, actions);
+    dialog.append(heading, form);
     overlay.append(dialog);
     document.body.append(overlay);
 
@@ -116,7 +121,8 @@ export function openBookNameDialog(options: OpenBookNameDialogOptions): void {
 
     cancelButton.addEventListener("click", () => close());
 
-    confirmButton.addEventListener("click", () => {
+    form.addEventListener("submit", (event) => {
+        event.preventDefault();
         if (confirmButton.disabled) {
             return;
         }

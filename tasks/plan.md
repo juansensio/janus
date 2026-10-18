@@ -35,11 +35,13 @@ Task 2–4
 Checkpoint B (UI e2e in jsdom)
 Task 6
     → Task 7 install doc + human sign-off
+Task 8 (keyboard fix)
+    book-name-dialog.ts — Enter submits when title valid
 ```
 
 ## Task list
 
-Full acceptance criteria: **`tasks/todo.md`** Tasks **1–7**.
+Full acceptance criteria: **`tasks/todo.md`** Tasks **1–8**.
 
 ### Phase 1: Domain and contract
 - [x] Task 1: Library domain — title rules and shelf service API
@@ -65,9 +67,13 @@ Full acceptance criteria: **`tasks/todo.md`** Tasks **1–7**.
 ### Phase 4: Docs and sign-off
 - [x] Task 7: Install doc + human verification (automated gates done)
 
+### Phase 5: Dialog keyboard (manual QA follow-up)
+- [x] Task 8: Enter submits create/rename dialog
+
 ### Checkpoint: Complete
 - [x] `bun run test` && `bun run lint` && `bun run build:ui`
 - [ ] Manual create/rename/persistence on desktop (human)
+- [x] Enter in dialog submits create/rename (Task 8; manual spot-check optional)
 
 ## Risks and mitigations
 
@@ -87,6 +93,14 @@ Full acceptance criteria: **`tasks/todo.md`** Tasks **1–7**.
 | Rename affordance | Edit icon (per spec decisions) |
 | Create default | `suggestNewBookTitle()` prefill; Create without edit OK |
 
+## Slice 1c follow-up (Task 8)
+
+**Problem:** Escape closes the book-name modal; **Enter** in the title field does nothing — user must click **Create** / **Save**.
+
+**Cause:** Confirm uses `type="button"` click handlers only; no `form` submit or Enter handler on the input (`book-name-dialog.ts`).
+
+**Approach:** Wrap field + actions in a `<form>` and handle `submit` (or `keydown` Enter on input) by calling the same confirm path as the primary button; `preventDefault` on submit; no-op when title is whitespace-only (same as disabled primary). Escape behavior unchanged.
+
 ## Human approval
 
-Review this plan and `tasks/todo.md`; then **`/build`** starts at Task 1.
+**`/build`** for Task 8 only (Tasks 1–7 done). Approve or adjust, then implement.

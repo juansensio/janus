@@ -171,6 +171,31 @@ Sizing: **S** = 1–2 files, **M** = 3–5 files.
 
 ---
 
+## Task 8: Enter submits book-name dialog
+
+**Description:** In `book-name-dialog.ts`, pressing **Enter** while focus is in the book name field submits the dialog the same way as clicking **Create** / **Save** (calls `onConfirm` with trimmed logic unchanged, closes on success). Whitespace-only title still does not submit. **Escape** and backdrop cancel stay as today. Prefer a semantic `<form>` + `submit` handler over duplicating confirm logic in multiple places.
+
+**Acceptance criteria:**
+
+- [x] With a valid title in the field, **Enter** creates or renames (same bridge calls as primary button)
+- [x] **Enter** with whitespace-only title does not submit (inline validation unchanged)
+- [x] **Escape** still closes without submit
+- [x] Create and rename modes both behave the same for Enter
+
+**Verification:**
+
+- [x] `bun run test` — add or extend `shelf.test.ts` (or `book-name-dialog.test.ts`) simulating `keydown` Enter on `#shelf-book-name-input` and asserting `createBook` / `renameBook` called
+- [x] `bun run lint`
+- [ ] Manual: `bun run dev:desktop` — + tile → Enter with default Untitled; edit icon → change name → Enter
+
+**Dependencies:** Task 6
+
+**Files likely touched:** `packages/ui/src/shelf/book-name-dialog.ts`, `packages/ui/src/shelf.test.ts`
+
+**Estimated scope:** S
+
+---
+
 ## Checkpoint: Foundation (after Tasks 1–2)
 
 - [x] Domain and bridge tests green
@@ -187,3 +212,7 @@ Sizing: **S** = 1–2 files, **M** = 3–5 files.
 
 - [x] Install doc updated
 - [ ] Human sign-off on create/rename/persistence
+
+## Checkpoint: Dialog keyboard (after Task 8)
+
+- [x] Enter submits; Escape still cancels; tests green
