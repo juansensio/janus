@@ -19,7 +19,9 @@ export function installMobileBridge(): void {
     const bridge: JanusBridge = {
         platform: () => "mobile",
         listBooks: () => shelfService.listBooks(),
-        createBook: () => shelfService.createBook(),
+        suggestNewBookTitle: () => shelfService.suggestNewBookTitle(),
+        createBook: (title) => shelfService.createBook(title),
+        renameBook: (id, title) => shelfService.renameBook(id, title),
         deleteBook: (id) => shelfService.deleteBook(id),
     };
     window.janus = bridge;

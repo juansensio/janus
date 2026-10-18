@@ -153,10 +153,10 @@ body {
     background: linear-gradient(160deg, #4a4a4a 0%, #2a2a2a 100%);
 }
 
+.shelf-card-edit,
 .shelf-card-delete {
     position: absolute;
     top: 0.5rem;
-    left: 0.5rem;
     padding: 0.25rem;
     border: none;
     border-radius: 0.25rem;
@@ -166,15 +166,116 @@ body {
     opacity: 0;
 }
 
+.shelf-card-edit {
+    right: 0.5rem;
+    left: auto;
+}
+
+.shelf-card-delete {
+    left: 0.5rem;
+}
+
+.shelf-card:focus-within .shelf-card-edit,
 .shelf-card:focus-within .shelf-card-delete,
+.shelf-card:hover .shelf-card-edit,
 .shelf-card:hover .shelf-card-delete {
     opacity: 1;
 }
 
 @media (hover: none) {
+    .shelf-card-edit,
     .shelf-card-delete {
         opacity: 1;
     }
+}
+
+/* ——— Book name dialog ——— */
+
+.shelf-dialog-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    background: rgba(0, 0, 0, 0.65);
+}
+
+.shelf-dialog {
+    width: min(100%, 22rem);
+    padding: 1.25rem 1.5rem 1.5rem;
+    border-radius: 0.5rem;
+    border: 1px solid var(--shelf-border);
+    background: var(--shelf-bg-elevated);
+    box-shadow: var(--shelf-card-shadow);
+}
+
+.shelf-dialog-title {
+    margin: 0 0 1rem;
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--shelf-text);
+}
+
+.shelf-dialog-label {
+    display: block;
+    margin-bottom: 0.375rem;
+    font-size: 0.8125rem;
+    color: var(--shelf-text-muted);
+}
+
+.shelf-dialog-input {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 0.5rem 0.625rem;
+    border: 1px solid var(--shelf-ghost-border);
+    border-radius: 0.375rem;
+    background: var(--shelf-bg);
+    color: var(--shelf-text);
+    font: inherit;
+}
+
+.shelf-dialog-input:focus {
+    outline: 2px solid var(--shelf-wordmark);
+    outline-offset: 1px;
+}
+
+.shelf-dialog-validation {
+    margin: 0.375rem 0 0;
+    font-size: 0.8125rem;
+    color: #e88;
+}
+
+.shelf-dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    margin-top: 1.25rem;
+}
+
+.shelf-dialog-button {
+    padding: 0.4rem 0.85rem;
+    border-radius: 0.375rem;
+    font: inherit;
+    cursor: pointer;
+}
+
+.shelf-dialog-button--ghost {
+    border: 1px solid var(--shelf-ghost-border);
+    background: transparent;
+    color: var(--shelf-text);
+}
+
+.shelf-dialog-button--primary {
+    border: 1px solid var(--shelf-wordmark);
+    background: var(--shelf-wordmark);
+    color: #1a1a1a;
+}
+
+.shelf-dialog-button--primary:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
 }
 
 /* ——— Add tile ——— */

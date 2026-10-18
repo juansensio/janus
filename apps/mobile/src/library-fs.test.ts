@@ -88,7 +88,7 @@ describe("createCapacitorShelfFs", () => {
             () => "550e8400-e29b-41d4-a716-446655440000",
         );
 
-        const created = await service.createBook();
+        const created = await service.createBook("Untitled");
         expect(created.title).toBe("Untitled");
         await expect(service.listBooks()).resolves.toHaveLength(1);
         await service.deleteBook(created.id);

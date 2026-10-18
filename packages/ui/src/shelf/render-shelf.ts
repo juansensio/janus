@@ -1,4 +1,5 @@
 import { createShellLabel, type BookSummary, type JanusBridge } from "@janus/bridge";
+import { openBookNameDialog } from "./book-name-dialog";
 import { coverClassForBookId } from "./cover-palette";
 import { SHELF_STRINGS } from "./strings";
 
@@ -26,6 +27,22 @@ function createDeleteIcon(): SVGSVGElement {
     return svg;
 }
 
+function createEditIcon(): SVGSVGElement {
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("aria-hidden", "true");
+    svg.setAttribute("width", "16");
+    svg.setAttribute("height", "16");
+    svg.setAttribute("viewBox", "0 0 16 16");
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute(
+        "d",
+        "M11.5 2.5l2 2L5 13H3v-2L11.5 2.5zM10.5 3.5L4 10v1h1l6.5-6.5-1-1z",
+    );
+    path.setAttribute("fill", "currentColor");
+    svg.append(path);
+    return svg;
+}
+
 function appendShelfChrome(host: HTMLElement): void {
     const header = document.createElement("header");
     header.className = "shelf-header";
@@ -49,12 +66,21 @@ function appendAddTile(
     addButton.textContent = "+";
     addButton.setAttribute("aria-label", SHELF_STRINGS.addBook);
     addButton.addEventListener("click", () => {
-        void refreshAfterAction(
-            host,
-            bridge,
-            () => bridge.createBook(),
-            SHELF_STRINGS.createFailed,
-        );
+        void bridge.suggestNewBookTitle().then((initialValue) => {
+            openBookNameDialog({
+                mode: "create",
+                initialValue,
+                returnFocusTo: addButton,
+                onConfirm: async (title) => {
+                    await refreshAfterAction(
+                        host,
+                        bridge,
+                        () => bridge.createBook(title),
+                        SHELF_STRINGS.createFailed,
+                    );
+                },
+            });
+        });
     });
     addItem.append(addButton);
     track.append(addItem);
@@ -125,6 +151,31 @@ export async function renderShelf(
         title.className = "shelf-card-title";
         title.textContent = book.title;
         card.append(title);
+
+        const editButton = document.createElement("button");
+        editButton.type = "button";
+        editButton.className = "shelf-card-edit";
+        editButton.setAttribute(
+            "aria-label",
+            `${SHELF_STRINGS.rename} ${book.title}`,
+        );
+        editButton.append(createEditIcon());
+        editButton.addEventListener("click", () => {
+            openBookNameDialog({
+                mode: "rename",
+                initialValue: book.title,
+                returnFocusTo: editButton,
+                onConfirm: async (newTitle) => {
+                    await refreshAfterAction(
+                        host,
+                        bridge,
+                        () => bridge.renameBook(book.id, newTitle),
+                        SHELF_STRINGS.renameFailed,
+                    );
+                },
+            });
+        });
+        card.append(editButton);
 
         const deleteButton = document.createElement("button");
         deleteButton.type = "button";

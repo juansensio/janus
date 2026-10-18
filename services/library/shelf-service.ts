@@ -4,6 +4,7 @@ import {
     serializeManifest,
     type BookSummary,
 } from "./book-manifest";
+import { normalizeBookTitle, InvalidBookTitleError } from "./book-title";
 import { allocateUntitledTitle } from "./titles";
 import { validateBookId } from "./validate-book-id";
 import { isResolvedPathInsideRoot } from "./path-containment";
@@ -29,7 +30,10 @@ export type ShelfFs = {
     join(...parts: string[]): string;
 };
 
-export type ShelfServiceErrorCode = "BOOK_NOT_FOUND" | "INVALID_BOOK_ID";
+export type ShelfServiceErrorCode =
+    | "BOOK_NOT_FOUND"
+    | "INVALID_BOOK_ID"
+    | "INVALID_BOOK_TITLE";
 
 export class ShelfServiceError extends Error {
     readonly code: ShelfServiceErrorCode;
@@ -41,9 +45,21 @@ export class ShelfServiceError extends Error {
     }
 }
 
+function toShelfServiceError(error: unknown): ShelfServiceError {
+    if (error instanceof InvalidBookTitleError) {
+        return new ShelfServiceError("INVALID_BOOK_TITLE", error.message);
+    }
+    if (error instanceof ShelfServiceError) {
+        return error;
+    }
+    throw error;
+}
+
 export type ShelfService = {
     listBooks(): Promise<BookSummary[]>;
-    createBook(): Promise<BookSummary>;
+    suggestNewBookTitle(): Promise<string>;
+    createBook(title: string): Promise<BookSummary>;
+    renameBook(id: string, title: string): Promise<BookSummary>;
     deleteBook(id: string): Promise<void>;
 };
 
@@ -116,12 +132,19 @@ export function createShelfService(
             return sortBooksForShelf(summaries);
         },
 
-        async createBook(): Promise<BookSummary> {
-            await ensureBooksDir();
+        async suggestNewBookTitle(): Promise<string> {
             const existing = await this.listBooks();
-            const title = allocateUntitledTitle(
-                existing.map((book) => book.title),
-            );
+            return allocateUntitledTitle(existing.map((book) => book.title));
+        },
+
+        async createBook(titleRaw: string): Promise<BookSummary> {
+            await ensureBooksDir();
+            let title: string;
+            try {
+                title = normalizeBookTitle(titleRaw);
+            } catch (error) {
+                throw toShelfServiceError(error);
+            }
             const id = createId().toLowerCase();
             if (!validateBookId(id)) {
                 throw new Error("Generated book id is invalid");
@@ -141,6 +164,40 @@ export function createShelfService(
                 "utf8",
             );
             return manifestToSummary(manifest);
+        },
+
+        async renameBook(id: string, titleRaw: string): Promise<BookSummary> {
+            let title: string;
+            try {
+                title = normalizeBookTitle(titleRaw);
+            } catch (error) {
+                throw toShelfServiceError(error);
+            }
+            const dir = bookDir(id);
+            const manifestPath = fs.join(dir, "book.json");
+            let manifest;
+            try {
+                const raw = await fs.readFile(manifestPath, "utf8");
+                manifest = parseManifest(raw, id);
+            } catch (error) {
+                if (isSkippableListError(error)) {
+                    throw new ShelfServiceError(
+                        "BOOK_NOT_FOUND",
+                        "Book not found",
+                    );
+                }
+                throw error;
+            }
+            const updated = {
+                ...manifest,
+                title,
+            };
+            await fs.writeFile(
+                manifestPath,
+                serializeManifest(updated),
+                "utf8",
+            );
+            return manifestToSummary(updated);
         },
 
         async deleteBook(id: string): Promise<void> {

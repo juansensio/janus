@@ -16,7 +16,7 @@ describe("createMockJanusBridge", () => {
         const bridge = createMockJanusBridge({ platform: () => "mobile" });
         expect(bridge.platform()).toBe("mobile");
         await expect(bridge.listBooks()).resolves.toEqual([]);
-        const created = await bridge.createBook();
+        const created = await bridge.createBook("Untitled");
         expect(created.title).toBe("Untitled");
         await expect(bridge.deleteBook("x")).resolves.toBeUndefined();
     });

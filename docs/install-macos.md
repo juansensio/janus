@@ -48,15 +48,16 @@ bun run desktop:prod
 
 Close the Electron window when you have confirmed **Janus** inside `<main id="app">` with `data-platform="desktop"`.
 
-### Library (slice 1b — Neo-inspired shelf)
+### Library (slice 1b shelf + slice 1c naming)
 
 After `bun run dev:desktop` or `bun run desktop:prod`, verify the dark bookshelf (gold **Janus** wordmark, **BOOKS** row):
 
 1. **Empty shelf** — dashed **+** tile at the end of the row (screen readers hear **No books yet**).
-2. **New book** — click the **+** tile; a cover-style card appears titled **Untitled** (second book **Untitled 2**, and so on).
-3. **Delete** — hover or focus a card, click the minus icon; confirm with **Delete "{title}"? This cannot be undone.**; the card disappears.
-4. **Scroll** — with several books, the row scrolls horizontally.
-5. **Persistence** — quit the app completely and reopen (`dev:desktop` or `desktop:prod`); the same books remain in the same order.
+2. **New book** — click **+**; a **New book** dialog opens with **Untitled** (or **Untitled 2**, …) prefilled. Press **Create** to add the card, or **Cancel** to leave the shelf unchanged. Enter a custom name before **Create** to use that title.
+3. **Rename** — hover or focus a card, click the pencil (edit) icon; change the name in **Rename book** and press **Save**.
+4. **Delete** — hover or focus a card, click the minus icon; confirm with **Delete "{title}"? This cannot be undone.**; the card disappears.
+5. **Scroll** — with several books, the row scrolls horizontally.
+6. **Persistence** — quit the app completely and reopen (`dev:desktop` or `desktop:prod`); the same books and titles remain in the same order.
 
 On **iOS Simulator** (`bun run dev:ios` for live reload, or `cap:sync:ios` + Xcode Run for production-like), repeat steps 1–5 with `data-platform="mobile"`.
 

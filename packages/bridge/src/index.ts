@@ -14,12 +14,15 @@ export type BookSummary = {
  */
 export type JanusBridgeErrorCode =
     | "BOOK_NOT_FOUND"
-    | "INVALID_BOOK_ID";
+    | "INVALID_BOOK_ID"
+    | "INVALID_BOOK_TITLE";
 
 export interface JanusBridge {
     platform(): Platform;
     listBooks(): Promise<BookSummary[]>;
-    createBook(): Promise<BookSummary>;
+    suggestNewBookTitle(): Promise<string>;
+    createBook(title: string): Promise<BookSummary>;
+    renameBook(id: string, title: string): Promise<BookSummary>;
     deleteBook(id: string): Promise<void>;
 }
 
@@ -42,7 +45,12 @@ export function createMockJanusBridge(
     return {
         platform: () => "desktop",
         listBooks: async () => EMPTY_BOOKS,
+        suggestNewBookTitle: async () => "Untitled",
         createBook: async () => defaultBook,
+        renameBook: async (_id, title) => ({
+            ...defaultBook,
+            title,
+        }),
         deleteBook: async () => {},
         ...overrides,
     };

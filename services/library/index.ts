@@ -1,3 +1,8 @@
+export {
+    InvalidBookTitleError,
+    MAX_BOOK_TITLE_LENGTH,
+    normalizeBookTitle,
+} from "./book-title";
 export { allocateUntitledTitle } from "./titles";
 export {
     MANIFEST_VERSION,

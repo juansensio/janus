@@ -29,7 +29,7 @@ describe("createLibraryService", () => {
             () => "550e8400-e29b-41d4-a716-446655440000",
         );
 
-        const created = await service.createBook();
+        const created = await service.createBook("Untitled");
         expect(created).toEqual({
             id: "550e8400-e29b-41d4-a716-446655440000",
             title: "Untitled",
@@ -124,7 +124,7 @@ describe("createLibraryService", () => {
         await fs.rm(root, { recursive: true });
     });
 
-    it("allocates Untitled then Untitled 2 on second create", async () => {
+    it("creates books with explicit titles and suggestNewBookTitle", async () => {
         const root = await fs.mkdtemp(path.join(os.tmpdir(), "janus-lib-"));
         const service = createLibraryService(
             root,
@@ -138,10 +138,15 @@ describe("createLibraryService", () => {
             })(),
         );
 
-        const first = await service.createBook();
-        const second = await service.createBook();
+        await expect(service.suggestNewBookTitle()).resolves.toBe("Untitled");
+        const first = await service.createBook("Untitled");
+        await expect(service.suggestNewBookTitle()).resolves.toBe("Untitled 2");
+        const second = await service.createBook("Untitled 2");
         expect(first.title).toBe("Untitled");
         expect(second.title).toBe("Untitled 2");
+
+        const renamed = await service.renameBook(first.id, "Renamed");
+        expect(renamed.title).toBe("Renamed");
 
         await fs.rm(root, { recursive: true });
     });

@@ -5,7 +5,9 @@ import { toBridgeRejectValue } from "./library-errors";
 
 export const LIBRARY_IPC_CHANNELS = {
     listBooks: "janus:library:listBooks",
+    suggestNewBookTitle: "janus:library:suggestNewBookTitle",
     createBook: "janus:library:createBook",
+    renameBook: "janus:library:renameBook",
     deleteBook: "janus:library:deleteBook",
 } as const;
 
@@ -32,13 +34,53 @@ export function registerLibraryIpc(
         }
     });
 
-    ipcMain.handle(LIBRARY_IPC_CHANNELS.createBook, async () => {
+    ipcMain.handle(LIBRARY_IPC_CHANNELS.suggestNewBookTitle, async () => {
         try {
-            return await service.createBook();
+            return await service.suggestNewBookTitle();
         } catch (error) {
             throw rejectForBridge(error);
         }
     });
+
+    ipcMain.handle(LIBRARY_IPC_CHANNELS.createBook, async (_event, title: unknown) => {
+        if (typeof title !== "string") {
+            throw rejectForBridge(
+                new ShelfServiceError(
+                    "INVALID_BOOK_TITLE",
+                    "Book title is required",
+                ),
+            );
+        }
+        try {
+            return await service.createBook(title);
+        } catch (error) {
+            throw rejectForBridge(error);
+        }
+    });
+
+    ipcMain.handle(
+        LIBRARY_IPC_CHANNELS.renameBook,
+        async (_event, id: unknown, title: unknown) => {
+            if (typeof id !== "string") {
+                throw rejectForBridge(
+                    new ShelfServiceError("INVALID_BOOK_ID", "Invalid book id"),
+                );
+            }
+            if (typeof title !== "string") {
+                throw rejectForBridge(
+                    new ShelfServiceError(
+                        "INVALID_BOOK_TITLE",
+                        "Book title is required",
+                    ),
+                );
+            }
+            try {
+                return await service.renameBook(id, title);
+            } catch (error) {
+                throw rejectForBridge(error);
+            }
+        },
+    );
 
     ipcMain.handle(
         LIBRARY_IPC_CHANNELS.deleteBook,

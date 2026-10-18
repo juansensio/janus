@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
     allocateUntitledTitle,
+    InvalidBookTitleError,
     isSkippableListError,
     libraryBooksDir,
+    MAX_BOOK_TITLE_LENGTH,
     ManifestParseError,
+    normalizeBookTitle,
     parseManifest,
     serializeManifest,
     sortBooksForShelf,
@@ -11,6 +14,21 @@ import {
     type BookSummary,
 } from "./index";
 import { isResolvedPathInsideRoot } from "./path-containment";
+
+describe("normalizeBookTitle", () => {
+    it("trims whitespace", () => {
+        expect(normalizeBookTitle("  Hello  ")).toBe("Hello");
+    });
+
+    it("rejects empty titles", () => {
+        expect(() => normalizeBookTitle("   ")).toThrow(InvalidBookTitleError);
+    });
+
+    it("rejects titles over max length", () => {
+        const long = "a".repeat(MAX_BOOK_TITLE_LENGTH + 1);
+        expect(() => normalizeBookTitle(long)).toThrow(InvalidBookTitleError);
+    });
+});
 
 describe("allocateUntitledTitle", () => {
     it('returns "Untitled" when no titles exist', () => {

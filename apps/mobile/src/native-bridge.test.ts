@@ -36,8 +36,10 @@ describe("installMobileBridge", () => {
     it("exposes async library bridge methods", async () => {
         installMobileBridge();
         await expect(window.janus?.listBooks()).resolves.toEqual([]);
-        await expect(window.janus?.createBook()).resolves.toMatchObject({
-            title: "Untitled",
-        });
+        await expect(window.janus?.createBook("Untitled")).resolves.toMatchObject(
+            {
+                title: "Untitled",
+            },
+        );
     });
 });
