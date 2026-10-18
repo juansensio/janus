@@ -18,11 +18,35 @@ git clone <your-remote> janus
 cd janus
 bun install
 bun run test
-bun run build:ui
+```
+
+### Development (live reload)
+
+For day-to-day UI work, use the Vite dev server and Electron against `http://127.0.0.1:5173/` (no `build:ui` first):
+
+```bash
 bun run dev:desktop
 ```
 
-Close the Electron window when you have confirmed the window shows **Janus** inside `<main id="app">` with `data-platform="desktop"`.
+Edit `packages/bridge` or `packages/ui` and the Electron window should refresh within a few seconds. Only the shared UI hot-reloads; changing Electron `main`/`preload` still needs a restart (re-run `dev:desktop`).
+
+Optional: run the UI dev server alone (`bun run dev:ui`) and open `http://127.0.0.1:5173/` in a browser (desktop entry needs `window.janus` from Electron preload; use Electron for the real desktop shell).
+
+iOS Simulator live reload (Mac + Xcode):
+
+```bash
+bun run dev:ios
+```
+
+This starts Vite and runs Capacitor with `CAPACITOR_SERVER_URL` pointing at `/mobile.html` on the dev server. Production-like mobile still uses `bun run cap:sync:ios` after `build:ui`.
+
+### Production-like desktop check
+
+```bash
+bun run desktop:prod
+```
+
+Close the Electron window when you have confirmed **Janus** inside `<main id="app">` with `data-platform="desktop"`.
 
 If Electron fails to start (missing `path.txt`, *“failed to install correctly”*, or `Electron Framework.framework` not loaded), the `node_modules/electron/dist` bundle is probably incomplete. Fix it with:
 
@@ -51,7 +75,7 @@ In Xcode, select an iPhone or iPad simulator and click **Run**. Confirm **Janus*
 bun run validate:install
 ```
 
-This runs unit tests, builds the UI, and asserts `dist/ui` contains the expected artifacts. It does **not** launch the Simulator; keep the manual Simulator step above for mobile sign-off.
+This runs unit tests, builds the UI, and asserts `dist/ui` contains the expected artifacts. It exercises the **production** UI build (`build:ui`), not the Vite dev server. It does **not** launch the Simulator; keep the manual Simulator step above for mobile sign-off.
 
 ## UI build output
 
