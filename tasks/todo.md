@@ -30,8 +30,8 @@ Sizing: **S** = 1–2 files, **M** = 3–5 files. No task should exceed ~5 files
 **Description:** Wire `bun run test` (Vitest workspace or root config) and `bun run lint` (pick **one** of oxlint or eslint, pinned). Empty workspace may pass with zero tests until Task 3.
 
 **Acceptance criteria:**
-- [ ] `bun run test` exits 0
-- [ ] `bun run lint` exits 0 on shell files added so far
+- [x] `bun run test` exits 0
+- [x] `bun run lint` exits 0 on shell files added so far
 
 **Verification:**
 - [ ] `bun run test`
