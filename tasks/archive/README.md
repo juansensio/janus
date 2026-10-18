@@ -11,3 +11,4 @@ When `/plan` starts a new `docs/specs/SPEC-<module-id>.md`, move the previous pa
 |----------------|------|--------|
 | `shell/` | `docs/specs/SPEC-shell.md` | Shell, ship-fixes, live reload (2026-10-18) |
 | `library/` | `docs/specs/SPEC-library.md` | Slice 1 — shelf CRUD (2026-10-18) |
+| `library-slice-1b/` | `docs/specs/SPEC-library.md` | Slice 1b — Neo shelf visual (2026-10-18; Task 7 manual optional) |

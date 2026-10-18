@@ -1,6 +1,6 @@
 # Spec: library
 
-> Status: **Slice 1 approved** (2026-10-18). **Slice 1b (Neo-inspired shelf visual)** — *approved for implementation* (plan: `tasks/plan.md`, 2026-10-18). Depends on signed-off **shell** (`docs/specs/SPEC-shell.md`). **Slice 1** ships **before** `languages` and `manuscript` per product direction; full “open and write” waits on `manuscript`.
+> Status: **Slice 1 approved** (2026-10-18). **Slice 1b (Neo-inspired shelf visual)** — *approved for implementation* (plan: `tasks/plan.md`, 2026-10-18). **Slice 1c (book naming: create + rename)** — *approved for implementation* (plan: `tasks/plan.md`, 2026-10-18). Depends on signed-off **shell** (`docs/specs/SPEC-shell.md`). **Slice 1** ships **before** `languages` and `manuscript` per product direction; full “open and write” waits on `manuscript`.
 
 ## Assumptions
 
@@ -401,3 +401,211 @@ No visual snapshot framework in slice 1b unless the human requests it (ask first
 ---
 
 **Slice 1b next step:** **`/build`** from `tasks/todo.md` (plan in `tasks/plan.md`). Archive slice 1b pair to `tasks/archive/library-slice-1b/` when complete (or extend archive naming in `tasks/archive/README.md`).
+
+---
+
+# Slice 1c — Book naming (create dialog + rename)
+
+> **Scope:** Writers choose and change book **titles** on the shelf. **Create** opens a modal to enter the name before the book is written to disk. **Rename** updates `book.json` for an existing book. Depends on slice 1 (CRUD + persistence) and slice 1b (dark shelf + add tile); does not enable open-book / manuscript.
+
+## Assumptions (slice 1c)
+
+```
+ASSUMPTIONS I'M MAKING:
+1. **Create:** Tapping the **+** add tile (and any header “New book” control, if present) opens a **modal dialog** first; the book is created only after the writer confirms with a non-empty title (see validation).
+2. **Default title in the create dialog** is the next auto name from domain (`Untitled`, then `Untitled 2`, …) via `suggestNewBookTitle()` — the UI does not run `allocateUntitledTitle` locally. Pressing **Create** without editing the field uses that default (same outcome as slice 1 auto-create when the library is empty or only lower `Untitled N` slots are free).
+3. **Rename:** A small **edit icon** on each card (same visibility pattern as delete: focus + hover-capable pointers) opens the rename dialog pre-filled with the current title; the cover **title stays plain text** (not a separate rename button).
+4. **Duplicate titles** among books are **allowed** (writers may reuse names); only the create-dialog default avoids colliding with `Untitled` / `Untitled N` when the writer accepts the default without editing.
+5. **Title rules** (trim, length, empty) live in `services/library/`; shells persist the validated title in `book.json` only.
+6. **Cancel** on the dialog (Escape, Cancel button, backdrop click) does not create or rename; create leaves the shelf unchanged.
+7. Dialog is a **custom accessible modal** in `packages/ui` (not `window.prompt`); styling matches slice 1b dark shelf (tokens in `shelf.css`).
+8. English literals for dialog copy until `languages`; catalog keys listed below.
+→ Correct me now or approve slice 1c and we proceed to `/plan`.
+```
+
+## Objective (slice 1c)
+
+Writers name books explicitly when adding them and can fix titles on the shelf without re-creating a book. One-click create with silent `Untitled` allocation (slice 1 assumption 4) is **replaced** by this slice for the shelf UI; domain keeps `allocateUntitledTitle` for the create-dialog default only.
+
+### User stories
+
+- As a writer, when I add a book, I enter its name in a dialog before it appears on the shelf.
+- As a writer, I can change a book’s name from the shelf and see the new title on the card after I save.
+- As a writer, if I cancel naming, nothing new is created and existing titles stay unchanged.
+
+### Acceptance criteria (slice 1c)
+
+**Create flow**
+
+- **+** add tile opens a modal with a single-line **Book name** field, **Create** (primary) and **Cancel**.
+- Field is focused on open; default value is `suggestNewBookTitle()` from the bridge (`Untitled` / `Untitled 2`, …).
+- **Create** calls `createBook(title)` with the field value after domain normalization; confirming with the **unchanged default** creates a book with that `Untitled` name (intended).
+- On success the modal closes and the shelf re-renders with the new card.
+- **Cancel** / Escape / backdrop closes without calling `createBook`.
+- Empty or whitespace-only title: **Create** stays disabled or shows inline validation; no disk write.
+
+**Rename flow**
+
+- Each card has an **icon-only edit** control (inline SVG, no icon font) with an accessible name such as “Rename {title}”.
+- Edit opens the same modal with heading **Rename book**, field pre-filled with current title, **Save** and **Cancel**.
+- Title on the cover remains a non-interactive heading (`<h2>`); rename is only via the edit icon.
+- **Save** calls `renameBook(id, title)`; on success modal closes and card title updates after re-render.
+- **Cancel** leaves `book.json` unchanged.
+
+**Domain and bridge**
+
+- `normalizeBookTitle(raw: string): string` trims leading/trailing whitespace; throws `INVALID_BOOK_TITLE` if result is empty or exceeds max length (default **200** characters).
+- `createBook(title: string)` validates title, writes manifest, returns `BookSummary` (replaces zero-arg `createBook()` on the bridge).
+- `renameBook(id: string, title: string)` validates id and title, rewrites `book.json` with same `id`, `createdAt`, `version`; returns updated `BookSummary`.
+- `suggestNewBookTitle(): Promise<string>` lists books (or reads titles only) and returns `allocateUntitledTitle(existingTitles)` — implemented in shell via domain, not in UI.
+- Stable error codes: `INVALID_BOOK_TITLE`, `BOOK_NOT_FOUND`, `INVALID_BOOK_ID` (existing).
+
+**Accessibility**
+
+- Modal uses `role="dialog"`, `aria-modal="true"`, `aria-labelledby` pointing at the dialog title.
+- Focus moves into the field on open; Tab cycles within dialog; Escape closes (cancel).
+- On close, focus returns to the element that opened the dialog (+ tile or edit icon).
+
+**Non-regression**
+
+- Delete flow unchanged (`window.confirm` until a later slice).
+- Sort order unchanged (`createdAt`, then `id`).
+- Open book still disabled.
+- Slice 1b visual layout (horizontal row, cover cards, add tile) unchanged except an edit icon on each card and modal overlay on the shelf.
+
+### UI strings (English until `languages`)
+
+| Key (future catalog) | Slice 1c English |
+|----------------------|------------------|
+| `library.dialog.createTitle` | New book |
+| `library.dialog.renameTitle` | Rename book |
+| `library.dialog.nameLabel` | Book name |
+| `library.dialog.create` | Create |
+| `library.dialog.save` | Save |
+| `library.dialog.cancel` | Cancel |
+| `library.dialog.invalidTitle` | Enter a book name. |
+| `library.rename` | Rename |
+| `library.renameFailed` | Could not rename the book. |
+
+## Tech Stack (slice 1c)
+
+Unchanged from slice 1. No new npm dependencies.
+
+## Commands
+
+Same as slice 1:
+
+```
+Install:     bun install
+Build UI:    bun run build:ui
+Dev desktop: bun run dev:desktop
+Test:        bun run test
+Lint:        bun run lint
+```
+
+## Project Structure (slice 1c additions)
+
+```
+services/library/
+  book-title.ts           → normalizeBookTitle, MAX_BOOK_TITLE_LENGTH
+  index.ts                → export title helpers; create/rename service API
+  shelf-service.ts        → createBook(title), renameBook(id, title)
+  library.test.ts         → title validation, rename updates manifest
+
+packages/bridge/
+  src/index.ts            → JanusBridge: suggestNewBookTitle, createBook(title), renameBook
+
+packages/ui/
+  src/shelf/
+    book-name-dialog.ts   → open/close modal, return confirmed title or null
+    render-shelf.ts       → wire + tile and card edit icon to dialog
+  src/styles/shelf.css    → modal overlay + form (dark theme)
+  src/shelf.test.ts       → dialog create/rename flows with mocked bridge
+
+apps/desktop/ + apps/mobile/
+  IPC / native bridge     → new methods delegate to ShelfService
+```
+
+## Code Style (slice 1c)
+
+Domain owns normalization and errors; UI only displays messages and passes strings to the bridge.
+
+```ts
+// services/library/book-title.ts
+export const MAX_BOOK_TITLE_LENGTH = 200;
+
+export class InvalidBookTitleError extends Error {
+    readonly code = "INVALID_BOOK_TITLE";
+}
+
+export function normalizeBookTitle(raw: string): string {
+    const title = raw.trim();
+    if (title.length === 0) {
+        throw new InvalidBookTitleError("Book title is required");
+    }
+    if (title.length > MAX_BOOK_TITLE_LENGTH) {
+        throw new InvalidBookTitleError("Book title is too long");
+    }
+    return title;
+}
+```
+
+Dialog API (presentation):
+
+```ts
+// packages/ui/src/shelf/book-name-dialog.ts
+export type BookNameDialogMode = "create" | "rename";
+
+export function openBookNameDialog(options: {
+    mode: BookNameDialogMode;
+    initialValue: string;
+    onConfirm: (title: string) => void | Promise<void>;
+}): void;
+```
+
+## Contract changes (slice 1c)
+
+| Method | Behavior |
+|--------|----------|
+| `suggestNewBookTitle()` | `Promise<string>` — next default `Untitled` / `Untitled N` from current library titles. |
+| `createBook(title: string)` | Validates title, creates book dir + `book.json`, returns `BookSummary`. Replaces `createBook()` with no args. |
+| `renameBook(id: string, title: string)` | Validates id and title, updates `book.json` title field, returns `BookSummary`. |
+
+## Testing Strategy (slice 1c)
+
+| Level | What | Tool |
+|--------|------|------|
+| Unit | `normalizeBookTitle` (trim, empty, max length) | Vitest in `services/library/` |
+| Unit | `renameBook` writes manifest; `BOOK_NOT_FOUND` | Vitest with mock `ShelfFs` |
+| Unit | Create dialog: confirm calls `createBook` with entered title; cancel does not | Vitest + jsdom |
+| Unit | Rename: edit icon opens dialog; save calls `renameBook` | Vitest + jsdom |
+| Integration | Desktop IPC: create with custom title; rename round-trip | Existing library IPC tests |
+
+## Boundaries (slice 1c)
+
+- **Always:** Title validation and manifest updates only in `services/library/`. Run `bun run test` and `bun run lint` before sign-off.
+- **Ask first:** Unique-title enforcement across the library, subtitle/author fields, inline edit without modal, schema version bump, new UI framework.
+- **Never:** `window.prompt` for naming; compute `Untitled N` in `packages/ui`; allow rename without updating `book.json` on disk.
+
+## Success Criteria (slice 1c)
+
+- Create and rename flows work on desktop and mobile shell with the slice 1b shelf visible.
+- Titles persist across app restart.
+- Bridge and domain tests green; shelf UI tests cover dialog confirm/cancel.
+- Slice 1 assumption 4 and decision 2 (one-click silent create) are superseded for product behavior; `allocateUntitledTitle` remains for dialog defaults only.
+
+## Decisions (slice 1c)
+
+1. **Rename affordance:** **Edit icon** on each card (not a clickable title).
+2. **Create default:** Dialog opens with **`Untitled` / `Untitled N`** from `suggestNewBookTitle()`; **Create** without edits uses that name.
+
+## Open Questions (resolved for build)
+
+| Question | Decision (see `tasks/plan.md`) |
+|----------|----------------------------------|
+| Backdrop click | Cancel — no create/rename |
+| API errors | Inline validation in dialog; bridge failures → `.shelf-error` on shelf |
+
+---
+
+**Slice 1c next step:** **`/build`** from `tasks/todo.md` (plan in `tasks/plan.md`). Archive pair to `tasks/archive/library-slice-1c/` when complete.

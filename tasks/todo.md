@@ -1,143 +1,169 @@
-# Library module — slice 1b (Neo-inspired shelf visual)
+# Library module — slice 1c (book naming)
 
-**Source spec:** `docs/specs/SPEC-library.md` — Slice 1b  
+**Source spec:** `docs/specs/SPEC-library.md` — Slice 1c  
 **Plan:** `tasks/plan.md`  
-**Archived:** `tasks/archive/library/` (slice 1 CRUD)
+**Archived:** `tasks/archive/library-slice-1b/` (slice 1b visual)
 
 Sizing: **S** = 1–2 files, **M** = 3–5 files.
 
-**Out of scope:** bridge/domain changes, multi-shelf, Import, cover images, open book, custom delete modal, new CSS frameworks.
+**Out of scope:** open book, unique titles, cover images, multi-shelf, `window.prompt`.
 
 ---
 
-## Task 1: Shelf CSS tokens and global dark shell
+## Task 1: Library domain — title rules and shelf service API
 
-**Description:** Add `packages/ui/src/styles/shelf.css` with design tokens (near-black background, gold wordmark, shelf rule, card 2:3, track flex + horizontal overflow, dashed add tile, cover modifier classes, error/empty/sr-only utilities). Import the stylesheet from `packages/ui/src/shell-entry.ts`. Apply dark background to `body` / `#app` via classes set in `mount.ts` or shelf root (e.g. `janus-shelf-shell` on `#app`).
+**Description:** Add `services/library/book-title.ts` (`normalizeBookTitle`, `MAX_BOOK_TITLE_LENGTH`, `InvalidBookTitleError` / `INVALID_BOOK_TITLE`). Extend `ShelfServiceErrorCode` and mapping. Change `createBook(title: string)` to normalize the given title (no silent `allocateUntitledTitle` inside create — caller supplies title). Add `renameBook(id, title)` (read manifest, update title, write `book.json`). Add `suggestNewBookTitle()` on the service using `listBooks` + `allocateUntitledTitle`. Export helpers from `index.ts`. Update `library.test.ts` and shelf-service tests (including service-level tests if present).
 
 **Acceptance criteria:**
 
-- [x] CSS file exists and is imported from UI entry so `bun run build:ui` includes styles in built artifacts
-- [x] No new npm dependencies for styling
-- [x] Card width uses `rem`; palette defines at least 8 `.shelf-cover--*` modifier classes
+- [x] `normalizeBookTitle` trims; rejects empty and >200 chars with `INVALID_BOOK_TITLE`
+- [x] `createBook("Custom")` writes that title; `createBook` with default-style title from tests works
+- [x] `renameBook` updates manifest; `BOOK_NOT_FOUND` / `INVALID_BOOK_ID` unchanged behavior
+- [x] `suggestNewBookTitle` returns `Untitled` then `Untitled 2` when those titles exist
 
 **Verification:**
 
-- [x] `bun run build:ui`
 - [x] `bun run test`
 - [x] `bun run lint`
 
 **Dependencies:** None
 
-**Files likely touched:** `packages/ui/src/styles/shelf.css`, `packages/ui/src/shell-entry.ts`, `packages/ui/src/mount.ts` (optional shell class)
+**Files likely touched:** `services/library/book-title.ts`, `services/library/shelf-service.ts`, `services/library/index.ts`, `services/library/library.test.ts`
 
-**Estimated scope:** S
+**Estimated scope:** M
 
 ---
 
-## Task 2: Cover palette helper
+## Task 2: Bridge types and mock
 
-**Description:** Add `packages/ui/src/shelf/cover-palette.ts` with `coverClassForBookId(id: string)` per spec (stable hash into fixed class list). Colocated `cover-palette.test.ts` asserts same id → same class, different ids can differ.
+**Description:** Update `JanusBridge`: `suggestNewBookTitle()`, `createBook(title: string)`, `renameBook(id, title)`. Add `INVALID_BOOK_TITLE` to `JanusBridgeErrorCode`. Update `createMockJanusBridge` defaults and any package tests that call `createBook()` with no args.
 
 **Acceptance criteria:**
 
-- [x] Pure function; no DOM or bridge imports
-- [x] Unit tests cover stability and bounds
+- [x] Types compile across workspace
+- [x] Mock implements all three new/changed methods
 
 **Verification:**
 
 - [x] `bun run test`
 - [x] `bun run lint`
 
-**Dependencies:** Task 1 (CSS modifier class names must match palette output)
+**Dependencies:** Task 1
 
-**Files likely touched:** `packages/ui/src/shelf/cover-palette.ts`, `packages/ui/src/shelf/cover-palette.test.ts`
+**Files likely touched:** `packages/bridge/src/index.ts`
 
 **Estimated scope:** S
 
 ---
 
-## Task 3: Neo-style shelf markup and behavior
+## Task 3: Desktop library IPC
 
-**Description:** Refactor `render-shelf.ts`: shelf header with spaced gold wordmark (`createShellLabel()`), **BOOKS** label, horizontal `<ul class="shelf-track">` of cover cards (uppercase title, `title` attr, cover class from palette), icon delete with existing confirm flow, dashed add tile calling `createBook()`. Remove top toolbar **New book** button. Load errors unchanged; empty list shows add tile + visually hidden empty message. No `<a>` on cards; default cursor.
+**Description:** Register IPC for `suggestNewBookTitle`, `renameBook`; change `createBook` handler to accept `title` string. Wire `preload.ts`. Map `INVALID_BOOK_TITLE` through `library-errors` / `ShelfServiceError`. Update `library-ipc.test.ts` for custom create title, rename round-trip, and suggest default.
 
 **Acceptance criteria:**
 
-- [x] Matches slice 1b acceptance criteria in spec (chrome, row, cards, add tile, delete icon)
-- [x] Still no title allocation or sorting in UI
-- [x] `SHELF_STRINGS` updated (`shelfLabel`, `addBook` aria label, etc.)
+- [x] Preload exposes full `JanusBridge` library surface
+- [x] Invalid title rejects with `INVALID_BOOK_TITLE`
+- [x] Integration tests green
 
 **Verification:**
 
 - [x] `bun run test`
-- [x] Manual: `bun run dev:desktop` — visual spot-check against reference
+- [x] `bun run lint`
 
 **Dependencies:** Tasks 1, 2
 
-**Files likely touched:** `packages/ui/src/shelf/render-shelf.ts`, `packages/ui/src/shelf/strings.ts`, `packages/ui/src/shelf/index.ts` (if re-exports)
+**Files likely touched:** `apps/desktop/src/library-ipc.ts`, `apps/desktop/src/preload.ts`, `apps/desktop/src/library-ipc.test.ts`
 
 **Estimated scope:** M
 
 ---
 
-## Task 4: Mount wiring (wordmark in shelf only)
+## Task 4: Mobile native bridge
 
-**Description:** `mountJanusShell` removes standalone `<h1>Janus</h1>`; only `section.janus-shelf` hosts `renderShelf` (header inside shelf). Keep `root.dataset.platform`. Update `mount.test.ts` to assert wordmark inside shelf chrome (e.g. `.shelf-wordmark`) and single heading.
+**Description:** Implement `suggestNewBookTitle`, `createBook(title)`, `renameBook` on `apps/mobile/src/native-bridge.ts`. Update `native-bridge.test.ts` and `library-fs.test.ts` for titled create and rename.
 
 **Acceptance criteria:**
 
-- [x] No duplicate headings outside shelf
-- [x] `data-platform` still on `#app` root
-- [x] `mount.test.ts` updated and passing
+- [x] Mobile bridge matches desktop contract
+- [x] Tests pass without Electron
 
 **Verification:**
 
 - [x] `bun run test`
 - [x] `bun run lint`
 
-**Dependencies:** Task 3
+**Dependencies:** Tasks 1, 2
 
-**Files likely touched:** `packages/ui/src/mount.ts`, `packages/ui/src/mount.test.ts`
-
-**Estimated scope:** S
-
----
-
-## Task 5: Shelf unit tests
-
-**Description:** Update `packages/ui/src/shelf.test.ts` for new DOM: add tile triggers `createBook` (query `.shelf-add` or agreed class), N cards + 1 add tile, delete via card icon button, empty state uses sr-only empty text, no reliance on toolbar **New book** button.
-
-**Acceptance criteria:**
-
-- [x] All prior behaviors covered (create, delete confirm/cancel, load/create errors)
-- [x] `bun run test` and `bun run lint` pass
-
-**Verification:**
-
-- [x] `bun run test`
-- [x] `bun run lint`
-
-**Dependencies:** Tasks 3, 4
-
-**Files likely touched:** `packages/ui/src/shelf.test.ts`
+**Files likely touched:** `apps/mobile/src/native-bridge.ts`, `apps/mobile/src/native-bridge.test.ts`, `apps/mobile/src/library-fs.test.ts`
 
 **Estimated scope:** M
 
 ---
 
-## Task 6: Install doc — shelf visual checks
+## Task 5: Book name dialog + styles
 
-**Description:** Update `docs/install-macos.md` library section: dark shelf, **BOOKS** row, + tile, cover cards, icon delete; remove references to plain **New book** toolbar and visible-only empty copy.
+**Description:** Add `packages/ui/src/shelf/book-name-dialog.ts` (create vs rename headings, **Book name** field, Create/Save + Cancel, Escape + backdrop cancel, inline empty validation, focus field on open, return focus on close). Extend `shelf.css` for overlay/panel (dark theme). Add dialog strings to `strings.ts` per spec.
 
 **Acceptance criteria:**
 
-- [x] Manual steps match slice 1b UI
-- [x] Still notes that `validate:install` is shell/toolchain only
+- [x] Dialog meets spec a11y attributes (`role="dialog"`, `aria-modal`, labelled heading)
+- [x] Whitespace-only blocks confirm (disabled or inline message)
+- [x] No `window.prompt`
 
 **Verification:**
 
-- [x] Read-through against running app
+- [x] `bun run test` (add focused tests if colocated `book-name-dialog.test.ts`)
+- [x] `bun run lint`
 
-**Dependencies:** Task 5
+**Dependencies:** Task 2
+
+**Files likely touched:** `packages/ui/src/shelf/book-name-dialog.ts`, `packages/ui/src/styles/shelf.css`, `packages/ui/src/shelf/strings.ts`
+
+**Estimated scope:** M
+
+---
+
+## Task 6: Shelf integration and unit tests
+
+**Description:** `render-shelf.ts`: + tile opens create dialog (`suggestNewBookTitle` → prefill → `createBook(title)`); add edit icon per card → rename dialog → `renameBook`. Style edit icon like delete (hover/focus). Update `shelf.test.ts`: add tile does **not** call `createBook` until dialog confirm; cancel leaves shelf unchanged; rename via `.shelf-card-edit` (or agreed class); errors show `.shelf-error`.
+
+**Acceptance criteria:**
+
+- [x] Matches slice 1c acceptance criteria in spec
+- [x] Delete flow unchanged
+- [x] UI still does not allocate or sort titles locally
+
+**Verification:**
+
+- [x] `bun run test`
+- [x] `bun run lint`
+- [x] Manual: `bun run dev:desktop` — create with default Untitled, rename, cancel create
+
+**Dependencies:** Tasks 3, 4, 5
+
+**Files likely touched:** `packages/ui/src/shelf/render-shelf.ts`, `packages/ui/src/shelf.test.ts`, `packages/ui/src/styles/shelf.css`
+
+**Estimated scope:** M
+
+---
+
+## Task 7: Install doc + slice 1c sign-off (human)
+
+**Description:** Update `docs/install-macos.md` library steps: create dialog, edit icon rename, persistence. Manual desktop (+ Simulator if available): create with custom name, rename, restart app, confirm titles on disk.
+
+**Acceptance criteria:**
+
+- [x] Doc steps match UI
+- [x] `bun run test`, `bun run lint`, `bun run validate:install` green
+- [ ] Manual create/rename/persistence verified
+
+**Verification:**
+
+- [x] `bun run validate:install`
+- [ ] Manual desktop (+ Simulator optional)
+
+**Dependencies:** Task 6
 
 **Files likely touched:** `docs/install-macos.md`
 
@@ -145,38 +171,19 @@ Sizing: **S** = 1–2 files, **M** = 3–5 files.
 
 ---
 
-## Task 7: Library slice 1b sign-off (human)
-
-**Description:** Desktop + iOS Simulator visual pass (reference screenshot parity for layout/mood, not Neo branding). Confirm create/delete/persistence still work. Run `bun run validate:install`.
-
-**Acceptance criteria:**
-
-- [x] `bun run test`, `bun run lint`, `bun run validate:install` green
-- [ ] Horizontal scroll with many books (optional: create 5+ books) — manual desktop/Simulator
-- [ ] Persistence across restart — manual desktop/Simulator
-
-**Verification:**
-
-- [x] `bun run validate:install`
-- [ ] Manual desktop + Simulator (writer)
-
-**Dependencies:** Task 6
-
-**Files likely touched:** `tasks/plan.md`, `tasks/todo.md` (checkpoint checkboxes)
-
-**Estimated scope:** S (human)
-
----
-
 ## Checkpoint: Foundation (after Tasks 1–2)
 
-- [x] CSS bundled (Task 1); cover palette tested (Task 2)
+- [x] Domain and bridge tests green
 
-## Checkpoint: Shelf visual (after Tasks 3–5)
+## Checkpoint: Adapters (after Tasks 3–4)
 
-- [x] Unit tests green; dev desktop shows Neo-like shelf
+- [x] Shell tests green; IPC/mobile call titled create and rename
 
-## Checkpoint: Complete (after Tasks 6–7)
+## Checkpoint: UI (after Tasks 5–6)
+
+- [x] Shelf unit tests green; dev desktop smoke for dialog flows
+
+## Checkpoint: Complete (after Task 7)
 
 - [x] Install doc updated
-- [ ] Human sign-off done (desktop + Simulator manual)
+- [ ] Human sign-off on create/rename/persistence

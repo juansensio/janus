@@ -1,87 +1,92 @@
-# Implementation Plan: library (slice 1b — Neo-inspired shelf visual)
+# Implementation Plan: library (slice 1c — book naming)
 
-**Source spec:** `docs/specs/SPEC-library.md` — **Slice 1b** (Neo-inspired shelf visual)  
-**Archived:** `tasks/archive/library/` (slice 1 CRUD complete)
+**Source spec:** `docs/specs/SPEC-library.md` — **Slice 1c** (create dialog + rename)  
+**Archived:** `tasks/archive/library-slice-1b/` (slice 1b visual; Task 7 manual sign-off optional)
 
 ## Overview
 
-Reskin the existing bookshelf **without** changing bridge, domain, or on-disk format. `packages/ui` gains dark Neo-like chrome (gold spaced **Janus** wordmark), one horizontal **BOOKS** row with cover-style cards (2:3, palette from `book.id`), a dashed **+** add tile for `createBook()`, and icon delete with `window.confirm`. Slice 1 CRUD behavior and sort order stay the same.
+Add **named create** and **rename** on the dark shelf: **+** opens a modal (default `Untitled` / `Untitled N` from the bridge), **edit icon** on each card opens rename. Domain owns `normalizeBookTitle`, `createBook(title)`, `renameBook`, and `suggestNewBookTitle`; bridge and both shells expose new methods; UI owns an accessible dialog and card edit control. Delete, sort, and layout stay as slice 1b.
 
-**Prerequisite:** Slice 1 signed off (`tasks/archive/library/`).
+**Prerequisites:** Slice 1 CRUD (`tasks/archive/library/`), slice 1b shelf UI (code complete).
 
-**Not in slice 1b:** Multi-shelf UI, Import, author line, cover images, open-book navigation, custom delete modal, new npm UI/CSS frameworks.
+**Not in slice 1c:** Open book, unique-title enforcement, inline edit without modal, `window.prompt`.
 
 ## Architecture decisions
 
-- **Presentation only:** `coverClassForBookId` and all layout live in `packages/ui`; no `services/library` changes.
-- **Stylesheet:** `packages/ui/src/styles/shelf.css` imported once from `shell-entry.ts` (Vite bundles CSS into desktop/mobile artifacts).
-- **Wordmark:** `createShellLabel()` from `@janus/bridge` inside shelf header (`<h1 class="shelf-wordmark">`); remove duplicate heading from `mount.ts`. System **serif** stack for wordmark; sans for shelf UI (no bundled font).
-- **Empty shelf:** Always show add tile; **No books yet** as visually hidden text (`shelf-empty` + screen-reader-only utility) for a11y — no visible empty paragraph.
-- **Create:** Add tile only (no header **New book** button); `aria-label` on add tile uses `SHELF_STRINGS.addBook` (rename from `newBook` or alias in strings).
-- **Delete:** Icon button (inline SVG minus/bar); visible on **focus** and on **`@media (hover: hover)`** hover; unchanged confirm copy.
-- **DOM:** `<header class="shelf-header">`, `<section class="shelf-row">`, `<ul class="shelf-track" role="list">` with `<li role="listitem">` for cards + add tile.
-- **Validate guard:** Built JS must still include `Janus` and `data-platform` markers (`scripts/validate-built-ui.ts`); wordmark text satisfies label check.
+- **Breaking bridge change:** `createBook()` → `createBook(title: string)`; add `suggestNewBookTitle()` and `renameBook(id, title)`. Update mock bridge and all call sites in one vertical pass per shell.
+- **Title validation:** `services/library/book-title.ts` with `INVALID_BOOK_TITLE` on `ShelfServiceError` (extend error code union in domain + `@janus/bridge`).
+- **Create default:** UI calls `suggestNewBookTitle()` when opening create dialog; unchanged field + **Create** persists that `Untitled` name.
+- **Rename affordance:** Icon-only edit on card (inline SVG); title stays `<h2>` text.
+- **Dialog UX:** Custom modal in `book-name-dialog.ts`; backdrop click **cancels**; empty/whitespace shows **inline** validation; failed `createBook` / `renameBook` after confirm closes dialog and shows **`.shelf-error`** (same pattern as today).
+- **Focus:** Return focus to + tile or edit button on close; `role="dialog"`, `aria-modal`, trap focus within dialog (minimal: focus field on open, Escape cancels).
 
 ## Dependency graph
 
 ```
-Task 1 shelf.css + shell-entry import + base #app dark shell
-    → Task 2 cover-palette.ts + unit tests
-Task 1 + 2
-    → Task 3 render-shelf DOM/chrome/row/cards/add/delete icons
-        → Task 4 mount.ts (shelf-only root) + mount.test.ts
-Task 3 + 4
-    → Task 5 shelf.test.ts alignment + strings
-        → Task 6 docs/install-macos.md visual checklist
+Task 1 Domain: normalizeBookTitle + createBook(title) + renameBook + suggestNewBookTitle + tests
+    → Task 2 Bridge contract + mock + INVALID_BOOK_TITLE
+Task 1–2
+    → Task 3 Desktop IPC/preload + library-ipc.test.ts
+    → Task 4 Mobile native-bridge + tests
+Checkpoint A (bridge callable from shells)
+Task 2–4
+    → Task 5 book-name-dialog.ts + shelf.css modal + dialog strings
+    → Task 6 render-shelf wire create/rename + edit icon + shelf.test.ts
+Checkpoint B (UI e2e in jsdom)
 Task 6
-    → Task 7 Human sign-off
+    → Task 7 install doc + human sign-off
 ```
 
 ## Task list
 
 Full acceptance criteria: **`tasks/todo.md`** Tasks **1–7**.
 
-### Phase 1: Foundation
-- [x] Task 1: Shelf CSS tokens and global dark shell
-- [x] Task 2: Cover palette helper
+### Phase 1: Domain and contract
+- [x] Task 1: Library domain — title rules and shelf service API
+- [x] Task 2: Bridge types and mock
 
 ### Checkpoint: Foundation
-- [x] `bun run test` green; CSS loads in dev desktop
+- [x] `bun run test` green for `@janus/library` and `@janus/bridge`
 
-### Phase 2: Shelf UI
-- [x] Task 3: Neo-style shelf markup and behavior
-- [x] Task 4: Mount wiring (wordmark in shelf only)
+### Phase 2: Shell adapters
+- [x] Task 3: Desktop library IPC
+- [x] Task 4: Mobile native bridge
 
-### Checkpoint: Shelf visual
-- [x] Create/delete/list unchanged; horizontal row + add tile work in jsdom tests
+### Checkpoint: Adapters
+- [x] Desktop + mobile tests pass; `createBook("My Book")` and `renameBook` work via service layer
 
-### Phase 3: Docs and sign-off
-- [x] Task 5: Shelf unit tests
-- [x] Task 6: Install doc — shelf visual checks
-- [ ] Task 7: Human sign-off (automated gates done; manual desktop/Simulator pending)
+### Phase 3: Shelf UI
+- [x] Task 5: Book name dialog + styles
+- [x] Task 6: Shelf integration and unit tests
+
+### Checkpoint: UI
+- [x] jsdom tests cover create (dialog + title arg), rename (edit icon), cancel paths
+
+### Phase 4: Docs and sign-off
+- [x] Task 7: Install doc + human verification (automated gates done)
 
 ### Checkpoint: Complete
-- [x] `bun run test` && `bun run lint` && `bun run validate:install`
-- [ ] Desktop + Simulator visual pass (human)
+- [x] `bun run test` && `bun run lint` && `bun run build:ui`
+- [ ] Manual create/rename/persistence on desktop (human)
 
 ## Risks and mitigations
 
 | Risk | Impact | Mitigation |
 |------|--------|------------|
-| Mount test expected `h1` at root | Low | Task 4 updates `mount.test.ts` to assert shelf wordmark |
-| Built UI guard breaks on DOM change | Low | Keep `Janus` string and `data-platform` on `#app` |
-| jsdom lacks layout | Low | Test behavior/selectors, not scroll metrics; manual check for overflow |
-| Delete icon hard to discover | Med | Focus-visible styles; sr-only labels; manual a11y spot-check |
+| Breaking `createBook()` signature | Med | Task 2 updates mock + grep all call sites in same PR slice |
+| Modal a11y incomplete in jsdom | Low | Test behavior (open, confirm, cancel); manual keyboard pass in Task 7 |
+| Edit + delete icons crowd card | Low | Mirror delete positioning; CSS in shelf.css |
+| IPC channel arity for createBook | Low | Pass `title` as first invoke argument; validate string in main |
 
 ## Open questions (resolved for build)
 
 | Spec open question | Plan decision |
 |--------------------|---------------|
-| Empty copy | Visually hidden `shelf-empty`; add tile always visible |
-| Header New book | Add tile only |
-| Typography | System serif wordmark |
-| Delete on hover | Hover + focus-within |
+| Backdrop click | Cancels (no create/rename) |
+| API errors | Close dialog; `.shelf-error` banner on shelf |
+| Rename affordance | Edit icon (per spec decisions) |
+| Create default | `suggestNewBookTitle()` prefill; Create without edit OK |
 
 ## Human approval
 
-Slice 1b implementation complete pending manual Simulator/desktop visual sign-off (Task 7).
+Review this plan and `tasks/todo.md`; then **`/build`** starts at Task 1.
