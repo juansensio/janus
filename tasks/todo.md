@@ -68,8 +68,8 @@
 
 ## Checkpoint: After Tasks 1–2
 
-- [ ] Context and parser tests pass without a live provider
-- [ ] Spec and intent match `tasks/plan.md`
+- [x] Context and parser tests pass without a live provider
+- [x] Spec and intent match `tasks/plan.md`
 - [ ] Review with human before wiring the provider
 
 ---
@@ -107,15 +107,15 @@
 
 **Acceptance criteria:**
 
-- [ ] IPC test: refusal body → reject `code` is `AI_COMMENT_NOT_INSTRUCTION` and `message` is the model sentence
-- [ ] That path does not call manuscript write
-- [ ] A draft result still returns updated HTML containing `janus-ai-draft`
+- [x] IPC test: refusal body → reject `code` is `AI_COMMENT_NOT_INSTRUCTION` and `message` is the model sentence
+- [x] That path does not call manuscript write
+- [x] A draft result still returns updated HTML containing `janus-ai-draft`
 
 **Verification:**
 
-- [ ] `bun run test apps/desktop/src/ai-ipc.test.ts`
-- [ ] `bun run test services/ai-assist`
-- [ ] `bun run lint`
+- [x] `bun run test apps/desktop/src/ai-ipc.test.ts`
+- [x] `bun run test services/ai-assist`
+- [x] `bun run lint`
 
 **Dependencies:** Task 3
 
@@ -132,9 +132,9 @@
 
 ## Checkpoint: After Tasks 3–4
 
-- [ ] Refusal does not write the manuscript file
-- [ ] A draft still inserts `janus-ai-draft`
-- [ ] `bun run test services/ai-assist apps/desktop/src/ai-ipc.test.ts` passes
+- [x] Refusal does not write the manuscript file
+- [x] A draft still inserts `janus-ai-draft`
+- [x] `bun run test services/ai-assist apps/desktop/src/ai-ipc.test.ts` passes
 
 ---
 
@@ -144,14 +144,14 @@
 
 **Acceptance criteria:**
 
-- [ ] Keys exist in `en` and `es`
-- [ ] Mapper returns the model message when the code is `AI_COMMENT_NOT_INSTRUCTION` and `message` is non-empty
-- [ ] Empty message maps to `ai.commentNotInstruction`
+- [x] Keys exist in `en` and `es`
+- [x] Mapper returns the model message when the code is `AI_COMMENT_NOT_INSTRUCTION` and `message` is non-empty
+- [x] Empty message maps to `ai.commentNotInstruction`
 
 **Verification:**
 
-- [ ] `bun run test packages/ui/src/editor/ai-write-error.test.ts`
-- [ ] `bun run lint`
+- [x] `bun run test packages/ui/src/editor/ai-write-error.test.ts`
+- [x] `bun run lint`
 
 **Dependencies:** Task 4
 
@@ -172,14 +172,14 @@
 
 **Acceptance criteria:**
 
-- [ ] Editor flow: bridge rejects with `AI_COMMENT_NOT_INSTRUCTION` and a message → that message is on the comment, manuscript HTML unchanged, buttons enabled again
-- [ ] Empty message shows the locale string
-- [ ] A successful Write still ends in a draft and re-enables the buttons
+- [x] Editor flow: bridge rejects with `AI_COMMENT_NOT_INSTRUCTION` and a message → that message is on the comment, manuscript HTML unchanged, buttons enabled again
+- [x] Empty message shows the locale string
+- [x] A successful Write still ends in a draft and re-enables the buttons
 
 **Verification:**
 
-- [ ] `bun run test packages/ui/src/editor`
-- [ ] `bun run lint`
+- [x] `bun run test packages/ui/src/editor`
+- [x] `bun run lint`
 - [ ] Manual: comment `hola` → refusal on the comment, book unchanged; comment `continue` → draft in the book’s language
 
 **Dependencies:** Task 5
@@ -198,5 +198,5 @@
 
 - [ ] `hola` shows the refusal on the comment and the book is unchanged
 - [ ] “Continue”, “make this colder”, and “rewrite the jam-jar sentence” produce a draft
-- [ ] Write and Delete stay disabled until the response, with “Writing…” on the active comment
-- [ ] `bun run test` and `bun run lint` pass
+- [x] Write and Delete stay disabled until the response, with “Writing…” on the active comment
+- [x] `bun run test` and `bun run lint` pass

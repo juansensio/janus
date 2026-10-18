@@ -34,7 +34,10 @@ describe("writeForComment manuscript integration", () => {
                 text: async () =>
                     `data: ${JSON.stringify({
                         type: "response.output_text.delta",
-                        delta: "<janus-p>Generated prose</janus-p>",
+                        delta: JSON.stringify({
+                            kind: "draft",
+                            paragraphs: ["Generated prose"],
+                        }),
                     })}\n\ndata: ${JSON.stringify({
                         type: "response.completed",
                     })}\n\n`,

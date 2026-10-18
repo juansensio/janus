@@ -64,6 +64,7 @@ export type JanusBridgeErrorCode =
     | "AI_NOT_SUPPORTED"
     | "AI_NOT_CONNECTED"
     | "AI_COMMENT_NOT_FOUND"
+    | "AI_COMMENT_NOT_INSTRUCTION"
     | "AI_CONTEXT_TOO_LARGE"
     | "AI_PROVIDER_ERROR"
     | "AI_AUTH_FAILED"
