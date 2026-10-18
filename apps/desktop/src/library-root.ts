@@ -53,12 +53,6 @@ export function resolveLibraryRoot(options: {
         }
         return { path: path.resolve(envRoot), source: "env" };
     }
-    if (options.isDev) {
-        return {
-            path: devLibraryPath(options.repoRoot),
-            source: "dev-default",
-        };
-    }
     const settingsRoot = options.settings.libraryRoot?.trim();
     if (settingsRoot) {
         if (!path.isAbsolute(settingsRoot)) {
@@ -68,6 +62,12 @@ export function resolveLibraryRoot(options: {
             );
         }
         return { path: path.resolve(settingsRoot), source: "settings" };
+    }
+    if (options.isDev) {
+        return {
+            path: devLibraryPath(options.repoRoot),
+            source: "dev-default",
+        };
     }
     return {
         path: defaultUserDataLibraryPath(options.userDataPath),

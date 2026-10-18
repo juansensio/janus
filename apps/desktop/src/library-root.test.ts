@@ -108,12 +108,26 @@ describe("resolveLibraryRoot", () => {
         expect(resolved).toEqual({ path: "/tmp/custom-lib", source: "env" });
     });
 
-    it("uses dev default when JANUS_DEV and no env override", () => {
+    it("uses saved settings before dev default when env override unset", () => {
         const resolved = resolveLibraryRoot({
             env: {},
             repoRoot: "repo",
             userDataPath: "user",
             settings: { libraryRoot: "/saved" },
+            isDev: true,
+        });
+        expect(resolved).toEqual({
+            path: "/saved",
+            source: "settings",
+        });
+    });
+
+    it("uses dev default in dev when no saved library root", () => {
+        const resolved = resolveLibraryRoot({
+            env: {},
+            repoRoot: "repo",
+            userDataPath: "user",
+            settings: {},
             isDev: true,
         });
         expect(resolved).toEqual({
