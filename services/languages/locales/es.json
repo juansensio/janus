@@ -32,6 +32,8 @@
     "manuscript.rejectDraft": "Rechazar",
     "manuscript.transformFailed": "No se pudo actualizar el borrador.",
     "manuscript.writeAi": "Escribir",
+    "manuscript.deleteAiComment": "Eliminar",
+    "manuscript.deleteCommentFailed": "No se pudo eliminar el comentario de IA.",
     "ai.settingsTitle": "OpenAI (Codex)",
     "ai.connected": "Conectado",
     "ai.notConnected": "Sin conexión",

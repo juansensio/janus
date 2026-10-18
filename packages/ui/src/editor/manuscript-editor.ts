@@ -1,3 +1,4 @@
+import { deleteAiComment } from "@janus/manuscript";
 import { baseKeymap } from "prosemirror-commands";
 import { history, redo, undo } from "prosemirror-history";
 import { keymap } from "prosemirror-keymap";
@@ -43,6 +44,25 @@ export function createManuscriptEditor(
         },
     });
 
+    function removeAiComment(commentId: string): void {
+        try {
+            const html = deleteAiComment(
+                serializeManuscriptHtml(view.state.doc),
+                commentId,
+            );
+            const nextDoc = parseManuscriptHtml(html);
+            view.updateState(
+                EditorState.create({
+                    doc: nextDoc,
+                    plugins: view.state.plugins,
+                }),
+            );
+            options.onDocChange();
+        } catch {
+            options.onTransformError(t("manuscript.deleteCommentFailed"));
+        }
+    }
+
     const view = new EditorView(mount, {
         state: EditorState.create({
             doc,
@@ -77,7 +97,14 @@ export function createManuscriptEditor(
                             options.onTransformError(t("ai.writeFailed"));
                         });
                     });
-                    actions.append(write);
+                    const del = document.createElement("button");
+                    del.type = "button";
+                    del.className = "editor-ai-comment-delete";
+                    del.textContent = t("manuscript.deleteAiComment");
+                    del.addEventListener("click", () => {
+                        removeAiComment(commentId);
+                    });
+                    actions.append(write, del);
                     dom.append(actions, contentDOM);
                 } else {
                     dom.append(contentDOM);
@@ -149,11 +176,7 @@ export function createManuscriptEditor(
         },
         insertAiComment() {
             const id = crypto.randomUUID();
-            const comment = manuscriptSchema.node(
-                "janus_ai_comment",
-                { id },
-                [manuscriptSchema.text("AI instruction…")],
-            );
+            const comment = manuscriptSchema.node("janus_ai_comment", { id });
             const { state } = view;
             const tr = state.tr.insert(state.doc.content.size, comment);
             view.dispatch(tr);

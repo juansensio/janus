@@ -62,6 +62,22 @@ export function acceptAiDraft(html: string, draftId: string): string {
     return serializeManuscriptBlocks(next);
 }
 
+export function deleteAiComment(html: string, commentId: string): string {
+    const blocks = parseManuscriptBlocks(html);
+    const hasComment = blocks.some(
+        (block) => block.kind === "comment" && block.id === commentId,
+    );
+    if (!hasComment) {
+        commentNotFound();
+    }
+    const next = blocks.filter(
+        (block) =>
+            !(block.kind === "comment" && block.id === commentId) &&
+            !(block.kind === "draft" && block.commentId === commentId),
+    );
+    return serializeManuscriptBlocks(next);
+}
+
 export function rejectAiDraft(html: string, draftId: string): string {
     const blocks = parseManuscriptBlocks(html);
     const draftIndex = blocks.findIndex(

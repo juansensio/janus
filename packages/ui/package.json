@@ -14,6 +14,7 @@
     },
     "dependencies": {
         "@janus/bridge": "workspace:*",
+        "@janus/manuscript": "workspace:*",
         "prosemirror-commands": "^1.7.2",
         "prosemirror-history": "^1.5.1",
         "prosemirror-keymap": "^1.2.3",

@@ -32,6 +32,8 @@
     "manuscript.rejectDraft": "Reject",
     "manuscript.transformFailed": "Could not update the draft.",
     "manuscript.writeAi": "Write",
+    "manuscript.deleteAiComment": "Delete",
+    "manuscript.deleteCommentFailed": "Could not remove the AI comment.",
     "ai.settingsTitle": "OpenAI (Codex)",
     "ai.connected": "Connected",
     "ai.notConnected": "Not connected",

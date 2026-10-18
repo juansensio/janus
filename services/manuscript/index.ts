@@ -18,6 +18,7 @@ export {
 } from "./manuscript-html";
 export {
     acceptAiDraft,
+    deleteAiComment,
     insertOrReplaceDraft,
     rejectAiDraft,
 } from "./manuscript-transforms";

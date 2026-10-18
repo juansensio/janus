@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { ManuscriptServiceError } from "./manuscript-service";
 import {
     acceptAiDraft,
+    deleteAiComment,
     insertOrReplaceDraft,
     rejectAiDraft,
 } from "./manuscript-transforms";
@@ -36,6 +37,34 @@ describe("rejectAiDraft", () => {
 
     it("is a no-op when draft is missing", () => {
         expect(rejectAiDraft(base, "missing")).toBe(base);
+    });
+});
+
+describe("deleteAiComment", () => {
+    it("removes comment and linked draft", () => {
+        expect(deleteAiComment(base, "comment-1")).toBe(
+            '<janus-manuscript version="1"><janus-p>Before</janus-p><janus-p>After</janus-p></janus-manuscript>',
+        );
+    });
+
+    it("removes comment when there is no draft", () => {
+        const html =
+            '<janus-manuscript version="1"><janus-ai-comment id="comment-1">Go</janus-ai-comment></janus-manuscript>';
+        expect(deleteAiComment(html, "comment-1")).toBe(
+            '<janus-manuscript version="1"></janus-manuscript>',
+        );
+    });
+
+    it("throws when comment is missing", () => {
+        try {
+            deleteAiComment(base, "missing");
+        } catch (error) {
+            expect(error).toMatchObject({
+                code: "MANUSCRIPT_COMMENT_NOT_FOUND",
+            });
+            return;
+        }
+        throw new Error("expected throw");
     });
 });
 

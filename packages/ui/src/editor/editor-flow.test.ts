@@ -39,7 +39,7 @@ describe("editor autosave flow", () => {
         expect(write).toHaveBeenCalled();
         const saved = write.mock.calls.at(-1)?.[1] as string;
         expect(saved).toContain("janus-ai-comment");
-        expect(saved).toContain("AI instruction");
+        expect(saved).not.toContain("AI instruction");
     });
 
     it("flushes on Shelf before returning to the shelf", async () => {
