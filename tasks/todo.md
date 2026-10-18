@@ -40,13 +40,13 @@ Sizing: **S** = 1–2 files, **M** = 3–5 files.
 
 **Acceptance criteria:**
 
-- [ ] Pure function; no DOM or bridge imports
-- [ ] Unit tests cover stability and bounds
+- [x] Pure function; no DOM or bridge imports
+- [x] Unit tests cover stability and bounds
 
 **Verification:**
 
-- [ ] `bun run test`
-- [ ] `bun run lint`
+- [x] `bun run test`
+- [x] `bun run lint`
 
 **Dependencies:** Task 1 (CSS modifier class names must match palette output)
 
@@ -62,14 +62,14 @@ Sizing: **S** = 1–2 files, **M** = 3–5 files.
 
 **Acceptance criteria:**
 
-- [ ] Matches slice 1b acceptance criteria in spec (chrome, row, cards, add tile, delete icon)
-- [ ] Still no title allocation or sorting in UI
-- [ ] `SHELF_STRINGS` updated (`shelfLabel`, `addBook` aria label, etc.)
+- [x] Matches slice 1b acceptance criteria in spec (chrome, row, cards, add tile, delete icon)
+- [x] Still no title allocation or sorting in UI
+- [x] `SHELF_STRINGS` updated (`shelfLabel`, `addBook` aria label, etc.)
 
 **Verification:**
 
-- [ ] `bun run test` (may fail until Task 5 — complete Task 5 before treating shelf green)
-- [ ] Manual: `bun run dev:desktop` — visual spot-check against reference
+- [x] `bun run test`
+- [x] Manual: `bun run dev:desktop` — visual spot-check against reference
 
 **Dependencies:** Tasks 1, 2
 
@@ -85,14 +85,14 @@ Sizing: **S** = 1–2 files, **M** = 3–5 files.
 
 **Acceptance criteria:**
 
-- [ ] No duplicate headings outside shelf
-- [ ] `data-platform` still on `#app` root
-- [ ] `mount.test.ts` updated and passing
+- [x] No duplicate headings outside shelf
+- [x] `data-platform` still on `#app` root
+- [x] `mount.test.ts` updated and passing
 
 **Verification:**
 
-- [ ] `bun run test`
-- [ ] `bun run lint`
+- [x] `bun run test`
+- [x] `bun run lint`
 
 **Dependencies:** Task 3
 
@@ -108,13 +108,13 @@ Sizing: **S** = 1–2 files, **M** = 3–5 files.
 
 **Acceptance criteria:**
 
-- [ ] All prior behaviors covered (create, delete confirm/cancel, load/create errors)
-- [ ] `bun run test` and `bun run lint` pass
+- [x] All prior behaviors covered (create, delete confirm/cancel, load/create errors)
+- [x] `bun run test` and `bun run lint` pass
 
 **Verification:**
 
-- [ ] `bun run test`
-- [ ] `bun run lint`
+- [x] `bun run test`
+- [x] `bun run lint`
 
 **Dependencies:** Tasks 3, 4
 
@@ -130,12 +130,12 @@ Sizing: **S** = 1–2 files, **M** = 3–5 files.
 
 **Acceptance criteria:**
 
-- [ ] Manual steps match slice 1b UI
-- [ ] Still notes that `validate:install` is shell/toolchain only
+- [x] Manual steps match slice 1b UI
+- [x] Still notes that `validate:install` is shell/toolchain only
 
 **Verification:**
 
-- [ ] Read-through against running app
+- [x] Read-through against running app
 
 **Dependencies:** Task 5
 
@@ -151,13 +151,14 @@ Sizing: **S** = 1–2 files, **M** = 3–5 files.
 
 **Acceptance criteria:**
 
-- [ ] Horizontal scroll with many books (optional: create 5+ books)
-- [ ] `bun run test`, `bun run lint`, `bun run validate:install` green
+- [x] `bun run test`, `bun run lint`, `bun run validate:install` green
+- [ ] Horizontal scroll with many books (optional: create 5+ books) — manual desktop/Simulator
+- [ ] Persistence across restart — manual desktop/Simulator
 
 **Verification:**
 
-- [ ] Manual desktop + Simulator
-- [ ] `bun run validate:install`
+- [x] `bun run validate:install`
+- [ ] Manual desktop + Simulator (writer)
 
 **Dependencies:** Task 6
 
@@ -173,8 +174,9 @@ Sizing: **S** = 1–2 files, **M** = 3–5 files.
 
 ## Checkpoint: Shelf visual (after Tasks 3–5)
 
-- [ ] Unit tests green; dev desktop shows Neo-like shelf
+- [x] Unit tests green; dev desktop shows Neo-like shelf
 
 ## Checkpoint: Complete (after Tasks 6–7)
 
-- [ ] Install doc updated; human sign-off done
+- [x] Install doc updated
+- [ ] Human sign-off done (desktop + Simulator manual)

@@ -10,3 +10,4 @@ When `/plan` starts a new `docs/specs/SPEC-<module-id>.md`, move the previous pa
 | Archive folder | Spec | Notes |
 |----------------|------|--------|
 | `shell/` | `docs/specs/SPEC-shell.md` | Shell, ship-fixes, live reload (2026-10-18) |
+| `library/` | `docs/specs/SPEC-library.md` | Slice 1 — shelf CRUD (2026-10-18) |

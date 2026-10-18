@@ -43,25 +43,26 @@ Full acceptance criteria: **`tasks/todo.md`** Tasks **1–7**.
 
 ### Phase 1: Foundation
 - [x] Task 1: Shelf CSS tokens and global dark shell
-- [ ] Task 2: Cover palette helper
+- [x] Task 2: Cover palette helper
 
 ### Checkpoint: Foundation
-- [ ] `bun run test` green; CSS loads in dev desktop
+- [x] `bun run test` green; CSS loads in dev desktop
 
 ### Phase 2: Shelf UI
-- [ ] Task 3: Neo-style shelf markup and behavior
-- [ ] Task 4: Mount wiring (wordmark in shelf only)
+- [x] Task 3: Neo-style shelf markup and behavior
+- [x] Task 4: Mount wiring (wordmark in shelf only)
 
 ### Checkpoint: Shelf visual
-- [ ] Create/delete/list unchanged; horizontal row + add tile work in jsdom tests
+- [x] Create/delete/list unchanged; horizontal row + add tile work in jsdom tests
 
 ### Phase 3: Docs and sign-off
-- [ ] Task 5: Shelf unit tests
-- [ ] Task 6: Install doc — shelf visual checks
-- [ ] Task 7: Human sign-off
+- [x] Task 5: Shelf unit tests
+- [x] Task 6: Install doc — shelf visual checks
+- [ ] Task 7: Human sign-off (automated gates done; manual desktop/Simulator pending)
 
 ### Checkpoint: Complete
-- [ ] Desktop + Simulator visual pass; `bun run test` && `bun run lint` && `bun run validate:install`
+- [x] `bun run test` && `bun run lint` && `bun run validate:install`
+- [ ] Desktop + Simulator visual pass (human)
 
 ## Risks and mitigations
 
@@ -83,4 +84,4 @@ Full acceptance criteria: **`tasks/todo.md`** Tasks **1–7**.
 
 ## Human approval
 
-Review **Tasks 1–7** in `tasks/todo.md`, then **`/build`** Task 1.
+Slice 1b implementation complete pending manual Simulator/desktop visual sign-off (Task 7).

@@ -1,6 +1,6 @@
 # Spec: library
 
-> Status: **approved** (2026-10-18). Depends on signed-off **shell** (`docs/specs/SPEC-shell.md`). **Slice 1** (this spec) ships **before** `languages` and `manuscript` per product direction; full “open and write” waits on `manuscript`.
+> Status: **Slice 1 approved** (2026-10-18). **Slice 1b (Neo-inspired shelf visual)** — *approved for implementation* (plan: `tasks/plan.md`, 2026-10-18). Depends on signed-off **shell** (`docs/specs/SPEC-shell.md`). **Slice 1** ships **before** `languages` and `manuscript` per product direction; full “open and write” waits on `manuscript`.
 
 ## Assumptions
 
@@ -27,9 +27,10 @@ This module owns **which books exist**, **how they are named for the shelf**, an
 
 | Phase | Outcome | Depends on |
 |--------|---------|------------|
-| **Slice 1 — Shelf CRUD** (this spec) | List, create, delete books; minimal `book.json`; simple card UI | `shell` |
+| **Slice 1 — Shelf CRUD** (approved) | List, create, delete books; minimal `book.json`; simple card UI | `shell` |
+| **Slice 1b — Shelf visual (Neo-inspired)** | Dark chrome, horizontal shelf row, cover-style cards, dashed “add” tile; same CRUD as slice 1 | Slice 1 |
 | **Slice 2 — Open book** | Selecting a card opens the manuscript for that book | `manuscript` |
-| **Slice 3 — Arrange** | Reorder or group books on the shelf | Slice 2 + product rules |
+| **Slice 3 — Arrange** | Multiple named shelves, reorder, `+ Shelf`, drag handles | Slice 2 + product rules |
 
 `CAPABILITY-MAP.md` lists `library` after `manuscript` for the **full** Neo-style loop. Slice 1 is a deliberate vertical cut so the shelf exists early; update the map footnote when this spec is approved.
 
@@ -236,3 +237,167 @@ Coverage gate: none until project sets one. Slice 1 is done when unit tests pass
 ---
 
 **Next step:** **`/build`** from `tasks/todo.md` (active plan in `tasks/plan.md`). When this module ships, archive that pair to `tasks/archive/library/` before planning the next spec.
+
+---
+
+# Slice 1b — Neo-inspired shelf visual design
+
+> **Reference:** Product screenshot (dark bookshelf UI with spaced gold wordmark, horizontal shelf rows, cover-style cards, dashed add tiles). Janus implements the **visual language**, not Neo feature parity.  
+> **Scope:** Presentation in `packages/ui` only. No bridge, domain, or on-disk changes.
+
+## Assumptions (slice 1b)
+
+```
+ASSUMPTIONS I'M MAKING:
+1. **Brand** is **Janus** (from `createShellLabel()`), styled like the reference wordmark (wide letter-spacing, muted gold on dark), not the literal “NEO” string.
+2. **One shelf row** labeled **BOOKS** (English literal until `languages`). Multi-shelf labels, `+ Shelf`, drag handles, and Import stay in slice 3 / later map items.
+3. **No author line** on cards until manuscript adds author metadata; optional muted footer band may be omitted or left empty—no fake “Hugh Howey” placeholder.
+4. **No cover images** in slice 1b. Cards use **presentation-only** cover colors derived from `book.id` (stable per book) in `packages/ui`—not in `services/library`.
+5. **Create** is triggered by the **dashed “+” tile** at the end of the row (primary). A secondary text control in the header is optional for keyboard discoverability only.
+6. **Delete** remains confirm-then-delete (`window.confirm`); control moves to an **icon** on the card (reference: small bar/minus), visible on focus and on hover-capable pointers.
+7. **Open book** stays disabled (no navigation, no pointer “open” affordance beyond hover styling).
+8. **CSS** ships as a dedicated stylesheet imported by the UI entry (`shell-entry.ts`); no new UI framework or CSS-in-JS dependency.
+9. Desktop and mobile share the same markup and styles; narrow viewports use **horizontal scroll** on the card row (no reflow to a vertical grid).
+→ Correct me now or approve slice 1b and we proceed to `/plan`.
+```
+
+## Objective (slice 1b)
+
+Writers opening Janus see a **dark, Neo-like bookshelf**: app chrome with a gold **Janus** wordmark, a single horizontal **shelf** of **cover-shaped cards**, and a **dashed add tile**. Slice 1 behaviors (list, create, delete, persistence, sort order) are unchanged; only layout, typography, color, and control placement change.
+
+### User stories
+
+- As a writer, the shelf feels like a real bookshelf (vertical covers in a row), not a plain list with text buttons.
+- As a writer, I add a book by clicking the **+** tile at the end of the row, consistent with the reference UI.
+- As a writer, I can still delete a book with confirmation; the delete control does not dominate the cover art.
+
+### Acceptance criteria (slice 1b)
+
+**Chrome**
+
+- Page background is near-black (`#0f0f0f`–`#141414` range); shelf separators use a subtle 1px horizontal rule.
+- Top bar: **Janus** wordmark (serif or system serif stack), letter-spaced, gold/brass accent; no duplicate `<h1>` outside the shelf chrome (mount delegates header to shelf layout).
+- Top bar does **not** show Import, user name, or `+ Shelf` (out of scope).
+
+**Shelf row**
+
+- One section with uppercase muted label **BOOKS** (future catalog key `library.shelf.default`).
+- Books render in a single **horizontal row** with consistent gap; row scrolls horizontally when overflow (scrollbar styled subtly or native).
+- Sort order unchanged: `createdAt` ascending, then `id` (domain list order as today).
+
+**Book cards**
+
+- Aspect ratio **2:3**, rounded corners (~6–8px), light drop shadow on dark background.
+- Title shown in **uppercase** on the “cover” (truncate with ellipsis if needed; full title in `title` attribute / accessible name).
+- Background color is **deterministic from `book.id`** via a pure function in `packages/ui` (fixed palette of ~8–12 hues matching reference saturation, not random per session).
+- Cards are **not** links; `cursor` default except optional subtle hover lift/shadow (no “hand” open cursor).
+
+**Add tile**
+
+- Last item in the row: dashed border, centered **+**, same dimensions as a book card.
+- Activating it calls `bridge.createBook()` (same as slice 1 **New book**).
+- Empty library: row shows **only** the add tile (no separate “No books yet” paragraph, or that copy moves inside the shelf as visually hidden text for screen readers—pick one in implementation; see Open Questions).
+
+**Delete**
+
+- Icon-only delete on each card (ARIA label unchanged semantics); `window.confirm` before `deleteBook`.
+- Failed create/delete/list still surfaces `.shelf-error` below chrome or shelf.
+
+**Non-regression**
+
+- All slice 1 domain and bridge tests remain green without changes unless selectors in UI tests must track renamed structure.
+- `packages/ui` still does not allocate titles, sort, or parse manifests.
+
+### Visual reference (implementation targets)
+
+| Element | Target |
+|--------|--------|
+| Wordmark | Spaced caps, gold `#b8a066` ± tweak for contrast on dark bg |
+| Shelf label | 11–12px, uppercase, `#6b6b6b`, generous top/bottom margin |
+| Card width | ~140–160px at default desktop scale (scale with `rem`) |
+| Ghost buttons (if any in header) | 1px `#444` border, rounded, transparent fill |
+| Add tile | 1px dashed `#555`, `+` at ~24px, muted |
+
+## Tech Stack (slice 1b)
+
+Unchanged from slice 1. Add **CSS** only (no new runtime dependencies).
+
+## Commands
+
+Same as slice 1:
+
+```
+Install:     bun install
+Build UI:    bun run build:ui
+Dev desktop: bun run dev:desktop
+Test:        bun run test
+Lint:        bun run lint
+```
+
+Manual check: run desktop and Simulator; confirm dark shelf matches acceptance criteria.
+
+## Project Structure (slice 1b additions)
+
+```
+packages/ui/
+  src/styles/shelf.css          → tokens + layout (imported once from shell-entry)
+  src/shelf/
+    render-shelf.ts             → shelf chrome, row, cards, add tile, delete icon
+    cover-palette.ts            → id → cover class or CSS variable (presentation only)
+    strings.ts                  → optional new keys (shelf label, add tile label)
+  src/mount.ts                  → mount shelf only; remove standalone h1
+  src/shelf.test.ts             → update queries/roles for new DOM
+```
+
+## Code Style (slice 1b)
+
+- **BEM-like** class prefix `shelf-` (keep existing error/empty class names or migrate in one commit).
+- **Cover color:** pure function, no I/O:
+
+```ts
+// packages/ui/src/shelf/cover-palette.ts
+const COVER_CLASSES = ["shelf-cover--a", "shelf-cover--b", /* … */] as const;
+
+export function coverClassForBookId(id: string): (typeof COVER_CLASSES)[number] {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h + id.charCodeAt(i)) % COVER_CLASSES.length;
+  return COVER_CLASSES[h];
+}
+```
+
+- **Icons:** inline SVG in TS or small static SVG strings—no icon font package.
+- **Semantic structure:** `<header class="shelf-header">`, `<section class="shelf-row">`, `<ul role="list">` / `<li role="listitem">` for cards.
+
+## Testing Strategy (slice 1b)
+
+| Level | What | Tool |
+|--------|------|------|
+| Unit | `coverClassForBookId` stable for same id | Vitest in `packages/ui` |
+| Unit | Shelf mount: add tile calls `createBook`; N cards + 1 add tile; delete still confirms | Vitest + jsdom, mocked bridge |
+| Manual | Visual parity pass against reference screenshot on desktop; smoke on iOS Simulator | Install doc checklist (append short “Shelf visual” bullets) |
+
+No visual snapshot framework in slice 1b unless the human requests it (ask first).
+
+## Boundaries (slice 1b)
+
+- **Always:** Keep business rules in `services/library/`; cover colors and layout only in `packages/ui`. Run `bun run test` and `bun run lint` before sign-off.
+- **Ask first:** New npm dependencies (fonts, icon packs, Tailwind), custom delete modal, author/cover fields on `book.json`, multi-shelf data model, Import button, user display name.
+- **Never:** Copy proprietary Neo assets (logos, cover art, fonts) from the reference app; compute titles or sort keys in UI; make cards navigate without slice 2 spec.
+
+## Success Criteria (slice 1b)
+
+- Desktop and Simulator show the dark shelf UI; create/delete/persistence behave as slice 1.
+- Horizontal row + add tile + cover-style cards meet acceptance criteria above.
+- UI unit tests updated and green; install doc mentions a quick visual check.
+- `tasks/plan.md` / `tasks/todo.md` replaced or extended via `/plan` after this slice is **approved** (archive slice 1 pair to `tasks/archive/library/` first per `janus-planning.mdc` if starting a new plan).
+
+## Open Questions
+
+1. **Empty shelf copy:** Hide “No books yet” visually and rely on the add tile only, or show muted helper text under **BOOKS**?
+2. **Header actions:** Add-tile only, or also keep a small **New book** ghost button in the header for accessibility?
+3. **Typography:** System serif for wordmark only, or add one licensed/open font file to `packages/ui` (would be “ask first”)?
+4. **Card hover:** Subtle lift only, or also show delete icon only on hover (reference shows icons on hover)?
+
+---
+
+**Slice 1b next step:** **`/build`** from `tasks/todo.md` (plan in `tasks/plan.md`). Archive slice 1b pair to `tasks/archive/library-slice-1b/` when complete (or extend archive naming in `tasks/archive/README.md`).
