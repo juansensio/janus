@@ -43,6 +43,6 @@ describe("createAiBridgeService", () => {
         });
         await expect(
             ai.writeForComment("550e8400-e29b-41d4-a716-446655440000", "c1", "en"),
-        ).rejects.toBeInstanceOf(AiAssistError);
+        ).rejects.toMatchObject({ code: "AI_NOT_CONNECTED" });
     });
 });

@@ -1,15 +1,16 @@
-import { buildUiLanguageForCode } from "@janus/bridge";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { initI18n } from "../i18n";
+import { initTestI18n } from "../test-i18n";
 import { createManuscriptEditor } from "./manuscript-editor";
 
 beforeEach(() => {
-    initI18n(buildUiLanguageForCode("en"));
+    initTestI18n("en");
 });
 
 afterEach(() => {
     document.body.innerHTML = "";
 });
+
+const idleFlight = () => ({ inFlight: false, commentId: null as string | null });
 
 describe("manuscript editor AI comments", () => {
     it("removes an existing comment and its draft when Delete is clicked", () => {
@@ -21,6 +22,7 @@ describe("manuscript editor AI comments", () => {
         const editor = createManuscriptEditor(mount, html, {
             lang: "en",
             showAiChrome: true,
+            getWriteFlight: idleFlight,
             onDocChange,
             onWriteComment: async () => {},
             onAcceptDraft: async () => {},
@@ -30,10 +32,34 @@ describe("manuscript editor AI comments", () => {
         mount
             .querySelector<HTMLButtonElement>(".editor-ai-comment-delete")
             ?.click();
-        const saved = editor.getHtml();
-        expect(saved).not.toContain("janus-ai-comment");
-        expect(saved).not.toContain("janus-ai-draft");
+        expect(editor.getHtml()).toBe(
+            '<janus-manuscript version="1"><janus-p></janus-p></janus-manuscript>',
+        );
         expect(onDocChange).toHaveBeenCalled();
+        editor.destroy();
+    });
+
+    it("shows Write and Delete on a loaded AI comment", () => {
+        const mount = document.createElement("div");
+        document.body.append(mount);
+        const html =
+            '<janus-manuscript version="1"><janus-ai-comment id="c1">Prompt text</janus-ai-comment></janus-manuscript>';
+        const editor = createManuscriptEditor(mount, html, {
+            lang: "en",
+            showAiChrome: true,
+            getWriteFlight: idleFlight,
+            onDocChange: () => {},
+            onWriteComment: async () => {},
+            onAcceptDraft: async () => {},
+            onRejectDraft: async () => {},
+            onTransformError: () => {},
+        });
+        expect(
+            mount.querySelector(".editor-ai-comment-write"),
+        ).not.toBeNull();
+        expect(
+            mount.querySelector(".editor-ai-comment-delete"),
+        ).not.toBeNull();
         editor.destroy();
     });
 
@@ -43,6 +69,7 @@ describe("manuscript editor AI comments", () => {
         const editor = createManuscriptEditor(mount, '<janus-manuscript version="1"></janus-manuscript>', {
             lang: "en",
             showAiChrome: true,
+            getWriteFlight: idleFlight,
             onDocChange: () => {},
             onWriteComment: async () => {},
             onAcceptDraft: async () => {},
@@ -53,6 +80,80 @@ describe("manuscript editor AI comments", () => {
         const saved = editor.getHtml();
         expect(saved).toContain("janus-ai-comment");
         expect(saved).not.toContain("AI instruction");
+        editor.destroy();
+    });
+
+    it("disables Write and Delete while onWriteComment is pending", async () => {
+        const mount = document.createElement("div");
+        document.body.append(mount);
+        const html =
+            '<janus-manuscript version="1"><janus-ai-comment id="c1">Go</janus-ai-comment></janus-manuscript>';
+        const writeFlight = { inFlight: false, commentId: null as string | null };
+        let finishWrite!: () => void;
+        const editor = createManuscriptEditor(mount, html, {
+            lang: "en",
+            showAiChrome: true,
+            getWriteFlight: () => writeFlight,
+            onDocChange: () => {},
+            onWriteComment: () =>
+                new Promise<void>((resolve) => {
+                    writeFlight.inFlight = true;
+                    writeFlight.commentId = "c1";
+                    editor.refreshAiCommentChrome();
+                    finishWrite = () => {
+                        writeFlight.inFlight = false;
+                        writeFlight.commentId = null;
+                        editor.refreshAiCommentChrome();
+                        resolve();
+                    };
+                }),
+            onAcceptDraft: async () => {},
+            onRejectDraft: async () => {},
+            onTransformError: () => {},
+        });
+        const writeBtn = mount.querySelector<HTMLButtonElement>(
+            ".editor-ai-comment-write",
+        );
+        const deleteBtn = mount.querySelector<HTMLButtonElement>(
+            ".editor-ai-comment-delete",
+        );
+        writeBtn?.click();
+        await vi.waitFor(() => expect(writeBtn?.disabled).toBe(true));
+        expect(deleteBtn?.disabled).toBe(true);
+        expect(mount.querySelector(".editor-ai-comment-status")?.textContent).toContain(
+            "Writing",
+        );
+        finishWrite();
+        await vi.waitFor(() => expect(writeBtn?.disabled).toBe(false));
+        editor.destroy();
+    });
+
+    it("shows inline error when Write fails", async () => {
+        const mount = document.createElement("div");
+        document.body.append(mount);
+        const html =
+            '<janus-manuscript version="1"><janus-ai-comment id="c1">Go</janus-ai-comment></janus-manuscript>';
+        const onWriteComment = vi.fn(async () => {
+            throw Object.assign(new Error("no session"), {
+                code: "AI_NOT_CONNECTED",
+            });
+        });
+        const editor = createManuscriptEditor(mount, html, {
+            lang: "en",
+            showAiChrome: true,
+            getWriteFlight: idleFlight,
+            onDocChange: () => {},
+            onWriteComment,
+            onAcceptDraft: async () => {},
+            onRejectDraft: async () => {},
+            onTransformError: () => {},
+        });
+        mount.querySelector<HTMLButtonElement>(".editor-ai-comment-write")?.click();
+        await vi.waitFor(() => expect(onWriteComment).toHaveBeenCalled());
+        await vi.waitFor(() => {
+            const status = mount.querySelector(".editor-ai-comment-status");
+            expect(status?.textContent ?? "").toContain("Connect OpenAI");
+        });
         editor.destroy();
     });
 });

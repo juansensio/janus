@@ -59,6 +59,30 @@ describe("renderEditor", () => {
         );
         expect(host.querySelector(".editor-title")?.textContent).toBe("Draft");
     });
+
+    it("shows inline error when Write fails", async () => {
+        const host = document.createElement("div");
+        document.body.append(host);
+        const commentHtml =
+            '<janus-manuscript version="1"><janus-ai-comment id="c1">Prompt</janus-ai-comment></janus-manuscript>';
+        const writeForComment = vi.fn(async () => {
+            throw Object.assign(new Error("Connect first"), {
+                code: "AI_NOT_CONNECTED",
+            });
+        });
+        const bridge = createMockJanusBridge({
+            readManuscript: async () => commentHtml,
+            writeForComment,
+        });
+        await renderEditor(host, bridge, sampleBook, { onBack: () => {} });
+        host.querySelector<HTMLButtonElement>(".editor-ai-comment-write")?.click();
+        await vi.waitFor(() => expect(writeForComment).toHaveBeenCalled());
+        await vi.waitFor(() => {
+            expect(
+                host.querySelector(".editor-ai-comment-status")?.textContent ?? "",
+            ).toContain("Connect OpenAI");
+        });
+    });
 });
 
 describe("mountJanusShell editor flow", () => {

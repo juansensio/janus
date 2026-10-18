@@ -4,13 +4,20 @@ import { history, redo, undo } from "prosemirror-history";
 import { keymap } from "prosemirror-keymap";
 import { EditorState, Plugin } from "prosemirror-state";
 import { EditorView } from "prosemirror-view";
+import { aiWriteErrorKey } from "./ai-write-error";
 import { t } from "../i18n";
 import { manuscriptSchema } from "./manuscript-schema";
 import { parseManuscriptHtml, serializeManuscriptHtml } from "./manuscript-html";
 
+export type AiWriteFlight = {
+    inFlight: boolean;
+    commentId: string | null;
+};
+
 export type ManuscriptEditorOptions = {
     lang: string;
     showAiChrome: boolean;
+    getWriteFlight: () => AiWriteFlight;
     onDocChange: () => void;
     onWriteComment: (commentId: string) => Promise<void>;
     onAcceptDraft: (draftId: string) => Promise<void>;
@@ -24,6 +31,8 @@ export type ManuscriptEditor = {
     focus(): void;
     destroy(): void;
     insertAiComment(): string;
+    refreshAiCommentChrome(): void;
+    showWriteErrorForComment(commentId: string, error: unknown): void;
 };
 
 export function createManuscriptEditor(
@@ -32,6 +41,8 @@ export function createManuscriptEditor(
     options: ManuscriptEditorOptions,
 ): ManuscriptEditor {
     const doc = parseManuscriptHtml(initialHtml);
+    const chromeRefreshers = new Set<() => void>();
+
     const changePlugin = new Plugin({
         view() {
             return {
@@ -43,6 +54,12 @@ export function createManuscriptEditor(
             };
         },
     });
+
+    function refreshAiCommentChrome(): void {
+        for (const apply of chromeRefreshers) {
+            apply();
+        }
+    }
 
     function removeAiComment(commentId: string): void {
         try {
@@ -85,31 +102,89 @@ export function createManuscriptEditor(
                 dom.setAttribute("data-comment-id", commentId);
                 const contentDOM = document.createElement("div");
                 contentDOM.className = "editor-ai-comment-body";
+                let write: HTMLButtonElement | null = null;
+                let del: HTMLButtonElement | null = null;
+                let status: HTMLParagraphElement | null = null;
+
+                function applyChromeState(): void {
+                    if (!write || !del || !status) {
+                        return;
+                    }
+                    const flight = options.getWriteFlight();
+                    const locked = flight.inFlight;
+                    const isActive =
+                        locked && flight.commentId === commentId;
+                    write.disabled = locked;
+                    del.disabled = locked;
+                    if (isActive) {
+                        write.textContent = t("ai.writing");
+                        status.textContent = t("ai.writing");
+                        status.classList.remove("editor-ai-comment-status-error");
+                        dom.setAttribute("aria-busy", "true");
+                    } else {
+                        write.textContent = t("manuscript.writeAi");
+                        dom.removeAttribute("aria-busy");
+                    }
+                }
+
                 if (options.showAiChrome) {
                     const actions = document.createElement("div");
                     actions.className = "editor-ai-comment-actions";
-                    const write = document.createElement("button");
+                    write = document.createElement("button");
                     write.type = "button";
                     write.className = "editor-ai-comment-write";
                     write.textContent = t("manuscript.writeAi");
-                    write.addEventListener("click", () => {
-                        void options.onWriteComment(commentId).catch(() => {
-                            options.onTransformError(t("ai.writeFailed"));
-                        });
-                    });
-                    const del = document.createElement("button");
+                    del = document.createElement("button");
                     del.type = "button";
                     del.className = "editor-ai-comment-delete";
                     del.textContent = t("manuscript.deleteAiComment");
+                    status = document.createElement("p");
+                    status.className = "editor-ai-comment-status";
+                    status.setAttribute("role", "status");
+                    status.setAttribute("aria-live", "polite");
+                    write.addEventListener("click", () => {
+                        void (async () => {
+                            status.textContent = "";
+                            status.classList.remove(
+                                "editor-ai-comment-status-error",
+                            );
+                            try {
+                                await options.onWriteComment(commentId);
+                                if (
+                                    !status.classList.contains(
+                                        "editor-ai-comment-status-error",
+                                    )
+                                ) {
+                                    status.textContent = "";
+                                }
+                            } catch (error) {
+                                status.textContent = t(aiWriteErrorKey(error));
+                                status.classList.add(
+                                    "editor-ai-comment-status-error",
+                                );
+                            }
+                        })();
+                    });
                     del.addEventListener("click", () => {
+                        if (options.getWriteFlight().inFlight) {
+                            return;
+                        }
                         removeAiComment(commentId);
                     });
                     actions.append(write, del);
-                    dom.append(actions, contentDOM);
+                    dom.append(actions, status, contentDOM);
+                    chromeRefreshers.add(applyChromeState);
+                    applyChromeState();
                 } else {
                     dom.append(contentDOM);
                 }
-                return { dom, contentDOM };
+                return {
+                    dom,
+                    contentDOM,
+                    destroy() {
+                        chromeRefreshers.delete(applyChromeState);
+                    },
+                };
             },
             janus_ai_draft(node) {
                 const dom = document.createElement("div");
@@ -181,6 +256,20 @@ export function createManuscriptEditor(
             const tr = state.tr.insert(state.doc.content.size, comment);
             view.dispatch(tr);
             return id;
+        },
+        refreshAiCommentChrome,
+        showWriteErrorForComment(commentId: string, error: unknown): void {
+            const comment = mount.querySelector(
+                `[data-comment-id="${commentId}"]`,
+            );
+            const statusEl = comment?.querySelector(
+                ".editor-ai-comment-status",
+            );
+            if (!statusEl) {
+                return;
+            }
+            statusEl.textContent = t(aiWriteErrorKey(error));
+            statusEl.classList.add("editor-ai-comment-status-error");
         },
     };
 }

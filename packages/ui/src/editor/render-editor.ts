@@ -1,6 +1,7 @@
 import type { BookSummary, JanusBridge } from "@janus/bridge";
 import { getUiLocale, t } from "../i18n";
 import { createAutosaveController, type EditorSaveStatus } from "./autosave";
+import type { AiWriteFlight } from "./manuscript-editor";
 import { createManuscriptEditor } from "./manuscript-editor";
 
 const AUTOSAVE_INTERVAL_MS = 1000;
@@ -105,20 +106,25 @@ export async function renderEditor(
     const autosaveRef: {
         current: ReturnType<typeof createAutosaveController> | null;
     } = { current: null };
-    let writeInFlight = false;
+
+    const writeFlight: AiWriteFlight = {
+        inFlight: false,
+        commentId: null,
+    };
 
     const editor = createManuscriptEditor(field, loadedHtml, {
         lang: locale,
         showAiChrome,
+        getWriteFlight: () => writeFlight,
         onDocChange: () => {
             autosaveRef.current?.onInput(editor.getHtml());
         },
         onWriteComment: async (commentId) => {
-            if (writeInFlight) {
-                return;
-            }
-            writeInFlight = true;
-            transformError.textContent = "";
+            writeFlight.inFlight = true;
+            writeFlight.commentId = commentId;
+            addCommentButton.disabled = true;
+            editor.refreshAiCommentChrome();
+            let writeError: unknown;
             try {
                 const html = await bridge.writeForComment(
                     book.id,
@@ -127,10 +133,16 @@ export async function renderEditor(
                 );
                 editor.setHtml(html);
                 autosaveRef.current?.markLoaded(html);
-            } catch {
-                transformError.textContent = t("ai.writeFailed");
+            } catch (error) {
+                writeError = error;
             } finally {
-                writeInFlight = false;
+                writeFlight.inFlight = false;
+                writeFlight.commentId = null;
+                addCommentButton.disabled = false;
+                editor.refreshAiCommentChrome();
+            }
+            if (writeError) {
+                editor.showWriteErrorForComment(commentId, writeError);
             }
         },
         onAcceptDraft: async (draftId) => {
@@ -170,6 +182,9 @@ export async function renderEditor(
     autosave.markLoaded(loadedHtml);
 
     addCommentButton.addEventListener("click", () => {
+        if (writeFlight.inFlight) {
+            return;
+        }
         editor.insertAiComment();
         autosave.onInput(editor.getHtml());
     });

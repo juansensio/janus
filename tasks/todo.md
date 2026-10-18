@@ -1,229 +1,141 @@
-# Tasks: AI assist — SIWC Connect completion
+# Tasks: AI Write — editor feedback
 
-**Plan:** `tasks/plan.md`  
-**Specs:** `docs/specs/SPEC-ai-assist.md`, `docs/adrs/ADR-ai-openai-auth.md`  
-**Archived build phase:** `tasks/archive/html-manuscript-ai-assist/`
+**Spec:** `docs/specs/SPEC-ai-assist.md` (UI acceptance: loading + inline errors)  
+**Plan:** `tasks/plan.md`
 
 ---
 
-## Task 1: SIWC credential model + host ID
+## Task 1: Write in-flight — disable buttons + busy feedback
 
-**Description:** Replace the minimal `StoredAiSession` (`accessToken` only) with an ADR-aligned credential record and persist `ext_agent_host_id` before first sign-in. Migrate or clear legacy session files on upgrade.
+**Description:** When Write is clicked, the UI must stay in a locked, informative state until `writeForComment` resolves (success or error). On the **active** comment: disable **Write and Delete**, change Write label to localized “Writing…”, set `aria-busy="true"` on the comment, and show inline status text (e.g. same `ai.writing` string in a `role="status"` region). While **any** write is in flight (`writeInFlight` in `render-editor`): disable Write and Delete on **all** AI comments and disable the header **Add AI comment** button; re-enable everything in `finally` after the bridge returns.
 
 **Acceptance criteria:**
 
-- [x] `ext_agent_host_id` generated once (`urn:uuid:…`) and stored encrypted in main
-- [x] Session stores at minimum: `clientId` (`oaiapp_…` after first login), `refreshToken`, `accessToken`, `accessTokenExpiresAt`, optional `idToken` for re-auth hint
-- [x] Renderer/bridge types unchanged (connected boolean only)
-- [x] Unit tests for load/save/migration (mock `safeStorage`)
+- [x] New locale key `ai.writing` in `en` and `es`
+- [x] Active comment: Write + Delete `disabled` for the full pending duration; Write shows busy label; inline status visible
+- [x] Other comments: Write + Delete disabled while a write is in flight elsewhere (via shared `isWriteInFlight` hook from shell)
+- [x] Header `Add AI comment` disabled for the same period
+- [x] All controls restore on both success and failure (failure details come in Task 2)
+- [x] Tests assert `disabled` on buttons during a pending `onWriteComment` promise
 
 **Verification:**
 
-- [x] `bun run test apps/desktop` (session store tests)
+- [x] `bun run test packages/ui/src/editor/manuscript-editor.test.ts`
 - [x] `bun run lint`
+- [x] Manual: delayed `writeForComment` — cannot click Delete or second Write until response; Add comment stays disabled
 
 **Dependencies:** None
 
-**Files likely touched:** `apps/desktop/src/ai-session-store.ts`, `apps/desktop/src/ai-session-store.test.ts` (new)
+**Files likely touched:**
 
-**Estimated scope:** Medium
+- `packages/ui/src/editor/manuscript-editor.ts`
+- `packages/ui/src/editor/render-editor.ts`
+- `packages/ui/src/styles/editor.css`
+- `services/languages/locales/en.json`
+- `services/languages/locales/es.json`
+- `packages/ui/src/editor/manuscript-editor.test.ts`
+
+**Estimated scope:** Medium (4–6 files)
 
 ---
 
-## Task 2: PKCE + loopback callback server
+## Task 2: Inline Write errors + code mapping
 
-**Description:** Implement PKCE (S256), authorize URL construction per ADR (scopes, `resource`, `agent_name_hint=Janus`, first-time `client_id=dynamic_agent_client`), and a local HTTP listener on `127.0.0.1` that captures `code`, `state`, and issued `client_id` from the callback query.
+**Description:** Add an inline status element under each comment’s actions (`aria-live="polite"`, `role="status"`). On Write failure, show mapped copy from `ai-write-error.ts` (pattern from `ai-connect-error.ts`). Add locale keys for `AI_NOT_CONNECTED`, `AI_CONTEXT_TOO_LARGE`, `AI_PROVIDER_ERROR`, `AI_COMMENT_NOT_FOUND`, `AI_AUTH_FAILED`, and keep generic `ai.writeFailed` as fallback.
 
 **Acceptance criteria:**
 
-- [x] Authorize URL includes required scopes (`openid profile email offline_access resource.invoke chatgpt.tokens.use.direct`)
-- [x] Callback validates `state`; rejects mismatch
-- [x] Server binds `127.0.0.1` only; path `/auth/callback` (port ephemeral)
-- [x] Tests use injected HTTP handler / mock socket (no real browser in CI)
+- [x] `packages/ui/src/editor/ai-write-error.ts` maps known `AI_*` codes to `ai.*` keys
+- [x] Inline error appears on the comment that triggered Write; cleared on new Write attempt
+- [x] Write click handler no longer calls `onTransformError` with a duplicate generic message
+- [x] Unit tests for mapper + comment inline error display (jsdom)
 
 **Verification:**
 
-- [x] `bun run test apps/desktop`
+- [x] `bun run test packages/ui/src/editor/ai-write-error.test.ts` (new) and manuscript editor tests
 - [x] `bun run lint`
 
 **Dependencies:** Task 1
 
-**Files likely touched:** `apps/desktop/src/ai-oauth.ts` (new), `apps/desktop/src/ai-oauth.test.ts` (new)
+**Files likely touched:**
 
-**Estimated scope:** Medium
+- `packages/ui/src/editor/ai-write-error.ts`
+- `packages/ui/src/editor/ai-write-error.test.ts`
+- `packages/ui/src/editor/manuscript-editor.ts`
+- `packages/ui/src/styles/editor.css`
+- `services/languages/locales/en.json`
+- `services/languages/locales/es.json`
+
+**Estimated scope:** Medium (3–5 files)
 
 ---
 
-## Task 3: Connect flow (browser → token exchange)
+## Checkpoint: After Tasks 1–2
 
-**Description:** Vertical slice: `connectOpenAiCodex` starts loopback server, opens **system browser** to authorize URL, exchanges code at `https://auth.openai.com/api/accounts/oauth/token`, persists credentials, sets connected status.
+- [x] UI tests pass without desktop
+- [x] Mock bridge write flow shows busy + inline error paths
+- [x] Review with human before IPC work
+
+---
+
+## Task 3: Editor shell wiring + integration test
+
+**Description:** Update `render-editor.ts` so `onWriteComment` rejects with `Error` carrying `code` from the bridge (use `bridgeErrorCode`). Remove setting header `transformError` for Write failures. Add an editor flow test: open book with AI comment HTML, click Write, assert busy then result (success or inline error).
 
 **Acceptance criteria:**
 
-- [x] First sign-in uses `dynamic_agent_client`; persisted issued `client_id` used on subsequent Connect
-- [x] Token exchange uses PKCE `code_verifier`; no client secret
-- [x] On success, `getAiProviderStatus()` → connected; survives app restart
-- [x] User cancel / timeout / exchange failure → `AI_AUTH_FAILED` without partial credentials
-- [x] IPC tests mock OAuth module (no network in CI)
-
-**Verification:**
-
-- [x] `bun run test apps/desktop`
-- [ ] Manual: Connect with ChatGPT Plus/Pro account — Settings **Connected**, no env var
-
-**Dependencies:** Task 2
-
-**Files likely touched:** `apps/desktop/src/ai-service.ts`, `apps/desktop/src/ai-oauth.ts`, `apps/desktop/src/ai-ipc.test.ts`
-
-**Estimated scope:** Medium
-
----
-
-## Checkpoint: Connect works (after Task 3)
-
-- [ ] Manual Connect + restart on maintainer Mac
-- [x] `bun run test` && `bun run lint`
-
----
-
-## Task 4: Access token refresh before Write
-
-**Description:** Before `generateDraft`, ensure a valid access token: refresh when near expiry or on provider 401 once.
-
-**Acceptance criteria:**
-
-- [x] Refresh uses `grant_type=refresh_token` with saved `client_id` and `resource=https://api.openai.com/v1`
-- [x] New refresh token replaces old atomically on success
-- [x] Refresh failure clears session or marks disconnected with `AI_AUTH_FAILED`
-- [x] Unit tests mock token endpoint
-
-**Verification:**
-
-- [x] `bun run test apps/desktop` && `bun run test services/ai-assist`
-- [ ] Manual: Connect, Write successfully (draft on disk)
-
-**Dependencies:** Task 3
-
-**Files likely touched:** `apps/desktop/src/ai-service.ts`, `apps/desktop/src/ai-oauth.ts`
-
-**Estimated scope:** Medium
-
----
-
-## Task 5: Disconnect + OIDC revoke
-
-**Description:** `disconnectOpenAiCodex` revokes refresh token via OIDC `revocation_endpoint` (from OpenID discovery), then clears local credentials.
-
-**Acceptance criteria:**
-
-- [x] Revoke called with refresh token when present; local file removed even if revoke fails (log only)
-- [x] Status disconnected immediately; Write returns `AI_NOT_CONNECTED`
-- [x] Tests mock revocation HTTP
-
-**Verification:**
-
-- [x] `bun run test apps/desktop`
-- [ ] Manual: Disconnect → Connect again works
-
-**Dependencies:** Task 4
-
-**Files likely touched:** `apps/desktop/src/ai-service.ts`, `apps/desktop/src/ai-oauth.ts`
-
-**Estimated scope:** Small
-
----
-
-## Task 6: Remove default env-var Connect path
-
-**Description:** `connectOpenAiCodex` invokes SIWC by default. Optional `JANUS_OPENAI_ACCESS_TOKEN` remains for maintainer override only (documented, not required for normal users).
-
-**Acceptance criteria:**
-
-- [x] Connect without env var uses Task 3 flow
-- [x] `SPEC-ai-assist.md` dev-connect note updated to “override only” or removed after SIWC ships
-- [x] No regression in mocked IPC tests
-
-**Verification:**
-
-- [x] `bun run test`
-- [ ] Manual: fresh user path needs no token in shell env
-
-**Dependencies:** Task 5
-
-**Files likely touched:** `apps/desktop/src/ai-service.ts`, `docs/specs/SPEC-ai-assist.md`
-
-**Estimated scope:** Small
-
----
-
-## Task 7: Settings auth error copy
-
-**Description:** Map `AiAssistError` codes (and known OpenAI usage errors) to `ai.*` strings instead of generic `ai.connectFailed` for all failures.
-
-**Acceptance criteria:**
-
-- [x] Connect failures show distinct copy for auth failed vs user cancelled vs network
-- [x] Keys in `services/languages/locales/en.json` and `es.json`
-- [x] UI test or unit test for error mapping helper
+- [x] Write failures do not populate header `transformError`
+- [x] Accept/Reject still use header `transformError` (unchanged)
+- [x] `editor-flow.test.ts` (or colocated test) covers Write success and `AI_NOT_CONNECTED` inline message
 
 **Verification:**
 
 - [x] `bun run test packages/ui`
 - [x] `bun run lint`
+- [x] Manual desktop: visible inline error when not connected
 
-**Dependencies:** Task 6 (error codes stable)
+**Dependencies:** Task 2
 
-**Files likely touched:** `packages/ui/src/settings/render-settings.ts`, `services/languages/locales/*.json`
+**Files likely touched:**
 
-**Estimated scope:** Small
+- `packages/ui/src/editor/render-editor.ts`
+- `packages/ui/src/editor/editor-flow.test.ts`
+- `packages/bridge/src/mock-janus-bridge.ts` (if mock needs write hook)
+
+**Estimated scope:** Medium (3–4 files)
 
 ---
 
-## Task 8: Manual MVP smoke + install doc
+## Task 4: Desktop write IPC — stable error codes
 
-**Description:** Run full desktop checklist from archived Task 13; document AI Connect for developers in `docs/install-macos.md` (SIWC, no secrets in repo).
+**Description:** Investigate `janus:ai:writeForComment` logging `code: 'UNKNOWN'`. Ensure `rejectForBridge` returns specific codes for expected failures (`AiAssistError`, manuscript read/write, provider errors). Wrap unexpected errors as `AI_PROVIDER_ERROR` with a safe message in main where appropriate. Add/extend `apps/desktop/src/ai-ipc.test.ts` asserting reject shape for `AI_NOT_CONNECTED` and one provider failure path (mocked).
 
 **Acceptance criteria:**
 
-- [ ] Manual smoke: legacy `.md` migration (if applicable), comment, **Connect (SIWC)**, Write, draft highlight, Accept, Shelf, reopen
-- [x] `docs/install-macos.md` mentions desktop AI Connect (subscription, main-process auth)
-- [x] `CAPABILITY-MAP.md` ai-assist bullet reflects OAuth Connect (not env stub)
-- [x] `bun run test` && `bun run lint` && `bun run validate:install`
+- [x] IPC test: write without session → renderer-receivable `AI_NOT_CONNECTED`
+- [x] No regression: existing `ai-assist` and `ai-ipc` tests pass
+- [x] Real failure from dev desktop surfaces non-`UNKNOWN` code when root cause is a known `AiAssistError`
 
 **Verification:**
 
-- [ ] Human sign-off on smoke notes (PR comment or archive readme)
+- [x] `bun run test apps/desktop/src/ai-ipc.test.ts`
+- [x] `bun run test services/ai-assist`
+- [x] Manual: reproduce terminal case — UI inline message matches code (not only generic library message)
 
-**Dependencies:** Task 7
+**Dependencies:** Task 3 (UI ready to display codes)
 
-**Files likely touched:** `docs/install-macos.md`, `CAPABILITY-MAP.md`
+**Files likely touched:**
 
-**Estimated scope:** Small
+- `apps/desktop/src/ai-ipc.ts`
+- `apps/desktop/src/ai-service.ts`
+- `apps/desktop/src/ai-ipc.test.ts`
 
----
-
-## Task 9: Archive completion plan
-
-**Description:** When Task 8 is signed off, archive this pair to `tasks/archive/ai-assist-siwc/` and leave root `tasks/` ready for the next capability.
-
-**Acceptance criteria:**
-
-- [ ] `tasks/archive/ai-assist-siwc/plan.md` + `todo.md` copied from root
-- [ ] `tasks/archive/README.md` row added
-- [ ] Root `tasks/plan.md` / `tasks/todo.md` replaced or cleared per next `/plan`
-
-**Verification:**
-
-- [ ] Human confirms milestone complete
-
-**Dependencies:** Task 8
-
-**Estimated scope:** XS
+**Estimated scope:** Medium (2–4 files)
 
 ---
 
-## Checkpoint: MVP spec complete (after Task 8)
+## Checkpoint: Complete
 
-- [ ] Desktop AI loop works on maintainer Mac **without** `JANUS_OPENAI_ACCESS_TOKEN`
-- [x] Spec acceptance criterion “Connect opens OAuth” satisfied (code)
-- [ ] Ready for Task 9 archive
+- [x] Spec UI bullets satisfied: loading on Write, buttons disabled until response, errors inline on comment
+- [x] `bun run test` and `bun run lint` pass
+- [ ] Maintainer manual: Connect → Write → draft; disconnect → Write → clear inline guidance

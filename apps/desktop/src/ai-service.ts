@@ -109,73 +109,46 @@ export function createAiBridgeService(
             commentId: string,
             locale: string,
         ): Promise<string> {
-            let session = await loadAiSession();
-            if (!session) {
-                throw new AiAssistError(
-                    "AI_NOT_CONNECTED",
-                    "Connect OpenAI before writing",
-                );
-            }
-            if (!isDevOverrideSession(session)) {
-                if (!sessionHasChatGptDirectScope(session)) {
-                    throw new AiAssistError(
-                        "AI_AUTH_FAILED",
-                        "ChatGPT plan usage is not enabled",
-                    );
-                }
-                try {
-                    session = await ensureFreshAccessToken(fetchImpl, session);
-                } catch (error) {
-                    await clearAiSession();
-                    throw error;
-                }
-            }
-            const html = await manuscript.readManuscript(bookId);
-            const commentText = findCommentText(html, commentId);
-            if (commentText === null) {
-                throw new AiAssistError(
-                    "AI_COMMENT_NOT_FOUND",
-                    "AI comment not found",
-                );
-            }
-            assertManuscriptContextSize(html);
-            let accessToken = accessTokenForSession(session);
             try {
-                const { draftHtml } = await provider.generateDraft(
-                    {
-                        provider: "openai-codex",
-                        accessToken,
-                    },
-                    {
-                        manuscriptHtml: html,
-                        commentId,
-                        commentText,
-                        locale,
-                    },
-                );
-                const next = insertOrReplaceDraft(
-                    html,
-                    commentId,
-                    draftHtml,
-                    randomUUID(),
-                );
-                await manuscript.writeManuscript(bookId, next);
-                return next;
-            } catch (error) {
-                if (
-                    error instanceof AiAssistError &&
-                    error.code === "AI_AUTH_FAILED" &&
-                    !isDevOverrideSession(session)
-                ) {
-                    const refreshed = await refreshAccessToken(
-                        fetchImpl,
-                        session as StoredAiSession,
+                let session = await loadAiSession();
+                if (!session) {
+                    throw new AiAssistError(
+                        "AI_NOT_CONNECTED",
+                        "Connect OpenAI before writing",
                     );
-                    await saveAiSession(refreshed);
+                }
+                if (!isDevOverrideSession(session)) {
+                    if (!sessionHasChatGptDirectScope(session)) {
+                        throw new AiAssistError(
+                            "AI_AUTH_FAILED",
+                            "ChatGPT plan usage is not enabled",
+                        );
+                    }
+                    try {
+                        session = await ensureFreshAccessToken(
+                            fetchImpl,
+                            session,
+                        );
+                    } catch (error) {
+                        await clearAiSession();
+                        throw error;
+                    }
+                }
+                const html = await manuscript.readManuscript(bookId);
+                const commentText = findCommentText(html, commentId);
+                if (commentText === null) {
+                    throw new AiAssistError(
+                        "AI_COMMENT_NOT_FOUND",
+                        "AI comment not found",
+                    );
+                }
+                assertManuscriptContextSize(html);
+                const accessToken = accessTokenForSession(session);
+                try {
                     const { draftHtml } = await provider.generateDraft(
                         {
                             provider: "openai-codex",
-                            accessToken: refreshed.accessToken,
+                            accessToken,
                         },
                         {
                             manuscriptHtml: html,
@@ -192,8 +165,48 @@ export function createAiBridgeService(
                     );
                     await manuscript.writeManuscript(bookId, next);
                     return next;
+                } catch (error) {
+                    if (
+                        error instanceof AiAssistError &&
+                        error.code === "AI_AUTH_FAILED" &&
+                        !isDevOverrideSession(session)
+                    ) {
+                        const refreshed = await refreshAccessToken(
+                            fetchImpl,
+                            session as StoredAiSession,
+                        );
+                        await saveAiSession(refreshed);
+                        const { draftHtml } = await provider.generateDraft(
+                            {
+                                provider: "openai-codex",
+                                accessToken: refreshed.accessToken,
+                            },
+                            {
+                                manuscriptHtml: html,
+                                commentId,
+                                commentText,
+                                locale,
+                            },
+                        );
+                        const next = insertOrReplaceDraft(
+                            html,
+                            commentId,
+                            draftHtml,
+                            randomUUID(),
+                        );
+                        await manuscript.writeManuscript(bookId, next);
+                        return next;
+                    }
+                    throw error;
                 }
-                throw error;
+            } catch (error) {
+                if (error instanceof AiAssistError) {
+                    throw error;
+                }
+                throw new AiAssistError(
+                    "AI_PROVIDER_ERROR",
+                    error instanceof Error ? error.message : "Write failed",
+                );
             }
         },
     };
