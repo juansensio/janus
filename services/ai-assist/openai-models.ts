@@ -5,10 +5,10 @@ type ModelsListResponse = {
     models?: Array<{ slug?: string; visibility?: string }>;
 };
 
-export async function fetchListedInferenceModelSlug(
+export async function fetchListedModelSlugs(
     accessToken: string,
     fetchImpl: FetchFn,
-): Promise<string> {
+): Promise<string[]> {
     const response = await fetchImpl("https://api.openai.com/v1/models", {
         headers: { Authorization: `Bearer ${accessToken}` },
     });
@@ -25,7 +25,19 @@ export async function fetchListedInferenceModelSlug(
         );
     }
     const data = (await response.json()) as ModelsListResponse;
-    const slug = data.models?.find((m) => m.visibility === "list")?.slug;
+    return (
+        data.models
+            ?.filter((m) => m.visibility === "list" && typeof m.slug === "string")
+            .map((m) => m.slug as string) ?? []
+    );
+}
+
+export async function fetchListedInferenceModelSlug(
+    accessToken: string,
+    fetchImpl: FetchFn,
+): Promise<string> {
+    const slugs = await fetchListedModelSlugs(accessToken, fetchImpl);
+    const slug = slugs[0];
     if (!slug) {
         throw new AiAssistError(
             "AI_PROVIDER_ERROR",

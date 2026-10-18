@@ -13,20 +13,29 @@ export const manuscriptSchema = new Schema({
         },
         janus_ai_comment: {
             group: "block",
-            attrs: { id: {} },
+            attrs: { id: {}, model: { default: "" } },
             content: "text*",
             parseDOM: [
                 {
                     tag: "janus-ai-comment",
                     getAttrs(dom) {
+                        const el = dom as HTMLElement;
                         return {
-                            id: (dom as HTMLElement).getAttribute("id"),
+                            id: el.getAttribute("id"),
+                            model: el.getAttribute("model") ?? "",
                         };
                     },
                 },
             ],
             toDOM(node) {
-                return ["janus-ai-comment", { id: node.attrs.id }, 0];
+                const attrs: Record<string, string> = {
+                    id: String(node.attrs.id),
+                };
+                const model = String(node.attrs.model ?? "").trim();
+                if (model) {
+                    attrs.model = model;
+                }
+                return ["janus-ai-comment", attrs, 0];
             },
         },
         janus_ai_draft: {

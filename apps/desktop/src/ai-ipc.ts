@@ -30,8 +30,19 @@ export function registerAiIpc(
     ipcMain: IpcMain,
     getLibraryRoot: () => string,
     fs: ManuscriptBridgeFs,
+    options: {
+        userDataPath: string;
+        settingsFs: Pick<
+            import("./library-root").LibraryRootFs,
+            "readFile" | "writeFile" | "mkdir"
+        >;
+    },
 ): void {
-    const service = () => createAiBridgeService(getLibraryRoot(), fs);
+    const service = () =>
+        createAiBridgeService(getLibraryRoot(), fs, {
+            userDataPath: options.userDataPath,
+            settingsFs: options.settingsFs,
+        });
 
     ipcMain.handle(AI_IPC_CHANNELS.getAiProviderStatus, async () => {
         try {
@@ -56,6 +67,33 @@ export function registerAiIpc(
             throw rejectForBridge(error);
         }
     });
+
+    ipcMain.handle(AI_IPC_CHANNELS.getOpenAiModelSettings, async () => {
+        try {
+            return await service().getOpenAiModelSettings();
+        } catch (error) {
+            throw rejectForBridge(error);
+        }
+    });
+
+    ipcMain.handle(
+        AI_IPC_CHANNELS.setOpenAiModelPreference,
+        async (_event, preference: unknown) => {
+            if (typeof preference !== "string") {
+                throw rejectForBridge(
+                    new LibraryBridgeError(
+                        "AI_PROVIDER_ERROR",
+                        "Model preference is required",
+                    ),
+                );
+            }
+            try {
+                return await service().setOpenAiModelPreference(preference);
+            } catch (error) {
+                throw rejectForBridge(error);
+            }
+        },
+    );
 
     ipcMain.handle(
         AI_IPC_CHANNELS.writeForComment,

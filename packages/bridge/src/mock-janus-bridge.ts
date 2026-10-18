@@ -29,6 +29,8 @@ export function createMockJanusBridge(
 ): JanusBridge {
     const manuscripts = createMockManuscriptStore();
     let mockSavedLocale: string | null = null;
+    let mockOpenAiModel = "auto";
+    const mockOpenAiModelOptions = ["auto", "gpt-4o", "gpt-4.1", "o4-mini"];
     const emptyHtml = createEmptyManuscriptHtml();
 
     return {
@@ -92,6 +94,17 @@ export function createMockJanusBridge(
             });
         },
         disconnectOpenAiCodex: async () => {},
+        getOpenAiModelSettings: async () => ({
+            preference: mockOpenAiModel,
+            options: mockOpenAiModelOptions,
+        }),
+        setOpenAiModelPreference: async (preference) => {
+            mockOpenAiModel = preference;
+            return {
+                preference: mockOpenAiModel,
+                options: mockOpenAiModelOptions,
+            };
+        },
         writeForComment: async () => {
             throw Object.assign(new Error("Not supported in mock"), {
                 code: "AI_NOT_SUPPORTED",

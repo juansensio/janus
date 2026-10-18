@@ -23,6 +23,7 @@ describe("manuscript editor AI comments", () => {
             lang: "en",
             showAiChrome: true,
             getWriteFlight: idleFlight,
+            openAiModelOptions: ["auto", "gpt-4o"],
             onDocChange,
             onWriteComment: async () => {},
             onAcceptDraft: async () => {},
@@ -48,6 +49,7 @@ describe("manuscript editor AI comments", () => {
             lang: "en",
             showAiChrome: true,
             getWriteFlight: idleFlight,
+            openAiModelOptions: ["auto", "gpt-4o"],
             onDocChange: () => {},
             onWriteComment: async () => {},
             onAcceptDraft: async () => {},
@@ -70,6 +72,7 @@ describe("manuscript editor AI comments", () => {
             lang: "en",
             showAiChrome: true,
             getWriteFlight: idleFlight,
+            openAiModelOptions: ["auto", "gpt-4o"],
             onDocChange: () => {},
             onWriteComment: async () => {},
             onAcceptDraft: async () => {},
@@ -94,6 +97,7 @@ describe("manuscript editor AI comments", () => {
             lang: "en",
             showAiChrome: true,
             getWriteFlight: () => writeFlight,
+            openAiModelOptions: ["auto", "gpt-4o"],
             onDocChange: () => {},
             onWriteComment: () =>
                 new Promise<void>((resolve) => {
@@ -128,6 +132,31 @@ describe("manuscript editor AI comments", () => {
         editor.destroy();
     });
 
+    it("persists per-comment model on the comment element", () => {
+        const mount = document.createElement("div");
+        document.body.append(mount);
+        const html =
+            '<janus-manuscript version="1"><janus-ai-comment id="c1">Go</janus-ai-comment></janus-manuscript>';
+        const editor = createManuscriptEditor(mount, html, {
+            lang: "en",
+            showAiChrome: true,
+            getWriteFlight: idleFlight,
+            openAiModelOptions: ["auto", "gpt-4o"],
+            onDocChange: () => {},
+            onWriteComment: async () => {},
+            onAcceptDraft: async () => {},
+            onRejectDraft: async () => {},
+            onTransformError: () => {},
+        });
+        const select = mount.querySelector(
+            ".editor-ai-comment-model",
+        ) as HTMLSelectElement;
+        select.value = "gpt-4o";
+        select.dispatchEvent(new Event("change", { bubbles: true }));
+        expect(editor.getHtml()).toContain('model="gpt-4o"');
+        editor.destroy();
+    });
+
     it("applyStreamingDraft inserts draft content for the comment", () => {
         const mount = document.createElement("div");
         document.body.append(mount);
@@ -137,6 +166,7 @@ describe("manuscript editor AI comments", () => {
             lang: "en",
             showAiChrome: true,
             getWriteFlight: idleFlight,
+            openAiModelOptions: ["auto", "gpt-4o"],
             onDocChange: () => {},
             onWriteComment: async () => {},
             onAcceptDraft: async () => {},
@@ -167,6 +197,7 @@ describe("manuscript editor AI comments", () => {
             lang: "en",
             showAiChrome: true,
             getWriteFlight: idleFlight,
+            openAiModelOptions: ["auto", "gpt-4o"],
             onDocChange: () => {},
             onWriteComment,
             onAcceptDraft: async () => {},

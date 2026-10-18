@@ -40,6 +40,10 @@ const bridge: JanusBridge = {
     getAiProviderStatus: () => invoke("janus:ai:getAiProviderStatus"),
     connectOpenAiCodex: () => invoke("janus:ai:connectOpenAiCodex"),
     disconnectOpenAiCodex: () => invoke("janus:ai:disconnectOpenAiCodex"),
+    getOpenAiModelSettings: () =>
+        invoke(AI_IPC_CHANNELS.getOpenAiModelSettings),
+    setOpenAiModelPreference: (preference: string) =>
+        invoke(AI_IPC_CHANNELS.setOpenAiModelPreference, preference),
     writeForComment: async (
         id: string,
         commentId: string,

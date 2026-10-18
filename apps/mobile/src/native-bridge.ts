@@ -56,6 +56,16 @@ export function installMobileBridge(): void {
                 code: "AI_NOT_SUPPORTED",
             });
         },
+        getOpenAiModelSettings: async () => {
+            throw Object.assign(new Error("AI is not supported on mobile"), {
+                code: "AI_NOT_SUPPORTED",
+            });
+        },
+        setOpenAiModelPreference: async () => {
+            throw Object.assign(new Error("AI is not supported on mobile"), {
+                code: "AI_NOT_SUPPORTED",
+            });
+        },
         writeForComment: async () => {
             throw Object.assign(new Error("AI is not supported on mobile"), {
                 code: "AI_NOT_SUPPORTED",
