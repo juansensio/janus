@@ -19,13 +19,22 @@ import {
     type NavigationPolicyOptions,
 } from "./navigation-policy";
 import { resolveDesktopUiLoadTarget } from "./ui-load-url";
+import { resolveUiBundleDir } from "./ui-bundle-dir";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const uiBundleDir = path.resolve(__dirname, "../../../dist/ui");
+const devUiBundleDir = path.resolve(__dirname, "../../../dist/ui");
+
+function uiBundleDir(): string {
+    return resolveUiBundleDir({
+        isPackaged: app.isPackaged,
+        resourcesPath: process.resourcesPath,
+        devDistDir: devUiBundleDir,
+    });
+}
 
 function uiIndexPath(): string {
-    return path.join(uiBundleDir, "index.html");
+    return path.join(uiBundleDir(), "index.html");
 }
 
 function isJanusDevMode(): boolean {
@@ -34,7 +43,7 @@ function isJanusDevMode(): boolean {
 
 function navigationOptions(): NavigationPolicyOptions {
     return {
-        uiBundleDir,
+        uiBundleDir: uiBundleDir(),
         devMode: isJanusDevMode(),
     };
 }

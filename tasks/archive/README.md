@@ -20,3 +20,4 @@ When `/plan` starts a new `docs/specs/SPEC-<module-id>.md`, move the previous pa
 | `languages-slice-1/` | `docs/specs/SPEC-languages.md` | Interface locale `en`/`es`, catalogs, Settings picker (2026-10-18) |
 | `perf-command-phase-1/` | `docs/specs/SPEC-perf-command.md` | Janus `/perf` agent workflow (2026-10-18) |
 | `idle-post-perf/` | — | Idle root plan before ship-gate fixes (2026-10-18) |
+| `ship-gate-fixes/` | library / languages / library-root specs | `/ship` NO-GO fixes — unique dirs, settings, DRY i18n (2026-10-18) |

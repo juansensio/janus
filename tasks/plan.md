@@ -1,96 +1,112 @@
-# Implementation Plan: Ship-gate fixes (2026-10-18)
+# Implementation Plan: desktop-release (macOS GitHub CI)
 
-**Status:** Implemented 2026-10-18. See `tasks/todo.md`. Re-run `/ship` for GO.
+**Status:** Active (2026-10-18). Tasks: `tasks/todo.md`.
 
-**Source:** `/ship` NO-GO on `main` (`564f837`) — blockers and recommended hardening from parallel code / security / test review.
+**Source specs:**
 
-**Specs touched (no new module spec):**
+- `docs/specs/SPEC-desktop-release.md` (module — CI, packaging, Release assets)
+- `docs/specs/SPEC-desktop-release-command.md` (`/release` verify workflow)
 
-- `docs/specs/SPEC-library.md` — slice 1e (title folders; collision gap)
-- `docs/specs/SPEC-languages.md` — slice 1 (persistence + DRY interpolation)
-- `docs/specs/SPEC-library-root.md` — `janus-settings.json` shape
-
-**Archived:** `tasks/archive/idle-post-perf/` (previous idle root plan).
+**Archived:** `tasks/archive/ship-gate-fixes/` (previous root plan).
 
 ## Overview
 
-Close the **data-integrity blocker** where distinct shelf titles map to the same sanitized folder name (`createBook` / `renameBook`), add **targeted tests** called out by the test gate, **harden settings load** against corrupt JSON, and **deduplicate** placeholder interpolation per Invariant 11. Optional follow-up: manuscript path containment (symlinks) aligned with `deleteBook`.
+Ship **tag-triggered macOS Electron builds** on GitHub: maintainer pushes `v*`, Actions runs tests + UI/desktop build, **electron-builder** produces installable artifacts, **GitHub Release** hosts the download. Local **`bun run desktop:package`** mirrors CI. **`/release`** command + skill run the same verification gates before tagging.
+
+No Windows, iOS, signing/notarization, or auto-update in this initiative.
+
+## Plan decisions (open spec questions resolved for build)
+
+| Topic | Decision |
+|--------|----------|
+| Artifacts | **`.zip`** required (drag `Janus.app`); **`.dmg`** if electron-builder produces it with no extra cost — not a blocker |
+| Architecture | **arm64** only (`macos-latest`); document “Apple Silicon Mac” in install docs |
+| Version | **Tag is source of truth** (`v0.1.0` → `0.1.0`); CI **fails** if `apps/desktop/package.json` `version` does not match |
+| Release notes | **Auto-generated** body via `softprops/action-gh-release` (or `gh release create --generate-notes`) |
+| Signing | **Out of scope** — unsigned + Gatekeeper copy in docs; phase 2 = spec amendment |
+
+Bump `apps/desktop` `version` from `0.0.0` to first real tag (e.g. `0.1.0`) in Task 2.
+
+## Current baseline
+
+- No `.github/workflows/` yet.
+- Desktop: `bun build` main/preload with `electron` external; workspace deps `@janus/*` resolve to **`.ts` exports** — packaged app must **bundle** main (or ship compiled workspace output); plan assumes **bun build inlines workspace imports** into `apps/desktop/dist/main.js` and builder packs `dist/` + `extraResources` for `dist/ui`.
+- UI path today: `main.ts` → `../../../dist/ui` (monorepo dev/prod-from-source only).
 
 ## Architecture decisions
 
-1. **One home for directory disambiguation** — Extract `uniqueDirectoryName` from `migrate-legacy-uuid-dirs.ts` into `services/library/` (e.g. `book-directory-name.ts` or `allocate-book-directory.ts`) and use it in **migrate**, **createBook**, and **renameBook**. Same suffix rule as migration (`"Title 2"`, `"Title 3"`, …).
-2. **Title uniqueness stays canonical** — Shelf still dedupes by **exact title** (`assertTitleNotDuplicate`). Folder allocation only prevents **filesystem** clashes when sanitized names collide.
-3. **Settings normalization at load** — Shared `normalizeJanusSettings(parsed): JanusSettings` in one place shells call after `JSON.parse` (desktop `library-root.ts`, mobile `janus-settings.ts`): string-only `libraryRoot` / `uiLocale`, drop invalid types (treat as absent).
-4. **Interpolation DRY** — Re-export `formatMessage` from `@janus/bridge` (already depends on `@janus/languages`); `packages/ui/src/i18n.ts` calls bridge helper so UI does not import `services/*`.
-5. **Manuscript containment (Phase 4)** — Reuse `realpath` + `isResolvedPathInsideRoot` pattern from `deleteBook` before read/write; defer if time-boxed (document risk in SPEC-library or ADR note).
+1. **Packaged UI path** — Extract pure `resolveUiBundleDir({ isPackaged, resourcesPath, devDistDir })` (testable without launching Electron); packaged → `path.join(resourcesPath, "ui")`; dev → existing repo `dist/ui` relative to built main.
+2. **electron-builder** — Pinned devDependency on `@janus/desktop` (or root); `productName` **Janus**; `appId` e.g. `com.janus.writer` (stable); `mac.target`: `zip` (+ `dmg` default if enabled); `extraResources`: copy repo `dist/ui` → `resources/ui`.
+3. **Production entry** — Packaged app must not set `JANUS_DEV`; `electron-builder` `files` include `dist/main.js`, `dist/preload.js`, `package.json`, and runtime deps as needed (avoid shipping whole monorepo).
+4. **CI workflow** — Single job `release-macos` on `push.tags: v*`; permissions `contents: write`; steps: checkout → setup Bun → frozen install → test → build:ui → desktop build → package → upload to Release (no partial upload on failure).
+5. **Verify script** — `scripts/validate-desktop-release.ts` asserts `Janus.app/Contents/Resources/ui/index.html` after local package; optional arg: path to `.app`.
+6. **Agent workflow** — Mirror `perf` split: `.cursor/commands/release.md` + `.cursor/skills/janus-desktop-release/` per command spec (report shape already in spec).
 
 ## Dependency graph
 
 ```
-uniqueDirectoryName (shared)
-    ├── createBook collision-safe dirs
-    ├── renameBook collision-safe moves
-    └── migrate (refactor import only)
-
-resolveBookDirById tests ── depends on stable dir rules (after Task 1–2)
-
-normalizeJanusSettings ── independent (desktop + mobile)
-
-chooseLibraryRoot + uiLocale test ── independent
-
-formatMessage via bridge ── independent
-
-manuscript realpath ── depends on path-containment helpers (after library tasks)
+resolveUiBundleDir + tests
+    └── main.ts wired
+            └── electron-builder config + extraResources(ui)
+                    ├── bun run desktop:package (local vertical slice)
+                    │       └── validate-desktop-release.ts
+                    └── .github/workflows/desktop-release.yml
+                            └── docs/install-macos.md (Release section)
+                                    └── /release command + skill
 ```
 
 ## Task list (summary)
 
-| # | Title | Phase |
-|---|--------|-------|
-| 1 | Shared unique directory names + safe `createBook` | 1 — Blockers |
-| 2 | Safe `renameBook` folder moves | 1 — Blockers |
-| 3 | `resolveBookDirById` unit tests | 1 — Blockers |
-| 4 | Normalize `janus-settings.json` on load | 2 — Hardening |
-| 5 | Test `chooseLibraryRoot` preserves `uiLocale` | 2 — Hardening |
-| 6 | Deduplicate `formatMessage` through bridge | 3 — DRY |
-| 7 | Manuscript read/write path containment | 4 — Security (optional) |
-| 8 | Spec note + re-ship checklist | 5 — Sign-off |
+| # | Title | Delivers |
+|---|--------|----------|
+| 1 | Packaged UI path | Testable resolver + `main.ts`; dev/prod unchanged |
+| 2 | Local macOS package | electron-builder, version bump, `desktop:package`, openable `.app` |
+| 3 | Validate packaged bundle | `validate-desktop-release.ts` + root script hook |
+| 4 | GitHub Actions release | `desktop-release.yml` on `v*` only |
+| 5 | Install documentation | Release download + unsigned macOS steps |
+| 6 | `/release` command + skill | Verify/setup/cut/remote modes |
+| 7 | Spec approval + first tag checklist | Mark specs approved; manual CI sign-off task |
 
-Details and checkboxes: `tasks/todo.md`.
+Details: `tasks/todo.md`.
 
 ## Checkpoints
 
-### After Tasks 1–3 (blockers)
+### After Task 1
 
-- [ ] Collision regression tests pass (`foo/bar` vs `foobar`, etc.)
-- [ ] `bun run test` && `bun run lint`
-- [ ] Re-run `/ship` — expect NO-GO cleared on Critical/Required library items
+- [ ] `bun run test` && `bun run desktop:prod` still works from repo root
+- [ ] New unit tests for packaged vs dev UI paths
 
-### After Tasks 4–6
+### After Tasks 2–3 (local release path)
 
-- [ ] Settings corrupt-json manual: invalid `libraryRoot` type does not crash app
-- [ ] `bun run test` && `bun run build:ui`
+- [ ] `bun run desktop:package` produces `Janus.app`
+- [ ] `bun run validate:desktop-release` (or documented name) passes
+- [ ] Manual: open packaged app — shelf visible, `data-platform="desktop"`
 
-### After Tasks 7–8 (if done)
+### After Task 4
 
-- [ ] Manuscript tests cover symlink escape (desktop fs mock)
-- [ ] SPEC-library slice 1e acceptance bullet for unique folders (if behavior documented)
-- [ ] `/ship` → GO or explicit accepted risks
+- [ ] Workflow YAML reviewed: tags `v*` only, `macos-latest`, no secrets
+- [ ] Optional dry-run: `act` not required; first real tag is acceptance
+
+### After Tasks 5–7 (module done)
+
+- [ ] Install doc complete
+- [ ] `/release verify` documented path matches CI
+- [ ] First `v0.1.0` push: Release asset downloadable (manual maintainer)
 
 ## Risks and mitigations
 
 | Risk | Impact | Mitigation |
 |------|--------|------------|
-| Disambiguated folder names differ from visible title | Low — id in manifest | Document; shelf UI shows `title` from manifest, not dirname |
-| Rename allocates `"Title 2"` while user expected exact folder name | Low | Same as migration behavior today |
-| `formatMessage` export from bridge blurs “UI must not import services” | Low | Bridge is the shell contract layer; README already points shells at languages |
-| Symlink fix changes mobile behavior | Med | Desktop-first test; mobile parity note in task 7 |
-
-## Open questions
-
-- **Task 7 scope:** Include in this fix batch or file as follow-up issue? Plan defaults to **optional Task 7**; Tasks 1–6 sufficient for library ship blocker + test gate.
-- **New error code for impossible rename target?** Prefer reuse `DUPLICATE_BOOK_TITLE` only for title clashes; folder-only clashes use disambiguation (no user error) unless product wants explicit messaging.
+| Bun build does not bundle `@janus/*` `.ts` for runtime in asar | High — app crashes on launch | Task 2: verify packaged main has no bare `workspace:` imports; add bundle step or compile services if needed |
+| `dist/ui` path wrong inside `.app` | High — blank window | Task 1 + validate script; CI bundle assert step |
+| electron-builder + Bun lockfile friction | Med | Pin builder version; CI uses same commands as local package |
+| Unsigned Gatekeeper blocks users | Med | Document right-click Open / `xattr` in Task 5 |
+| Tag/version drift | Low | CI version check in Task 4 |
 
 ## Parallelization
 
-- Tasks 4, 5, 6 can run in parallel **after** Task 1 lands (shared `uniqueDirectoryName` export), if multiple agents — otherwise sequential 1 → 2 → 3 → 4 → 5 → 6.
+Sequential **1 → 2 → 3 → 4** (CI depends on local package). **Tasks 5 and 6** can parallelize after Task 3. **Task 7** last.
+
+## Out of scope (explicit)
+
+- Windows/Linux CI, Capacitor, `electron-updater`, notarization, `workflow_dispatch`, PR builds.
