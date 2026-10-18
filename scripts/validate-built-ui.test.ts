@@ -46,15 +46,25 @@ describe("assertBuiltIndexHtml", () => {
 });
 
 describe("assertBuiltJsContainsShellLabel", () => {
-    it("passes when bundle text includes Janus shell label", () => {
+    it("passes when bundle includes label and mount markers", () => {
         expect(() =>
-            assertBuiltJsContainsShellLabel('const label = "Janus";'),
+            assertBuiltJsContainsShellLabel(
+                'r.dataset.platform=n.platform(); const label = "Janus";',
+            ),
         ).not.toThrow();
     });
 
+    it("fails when bundle has only console.error Janus shell text", () => {
+        expect(() =>
+            assertBuiltJsContainsShellLabel(
+                'console.error("[Janus shell]", err);',
+            ),
+        ).toThrow(/mount path/i);
+    });
+
     it("fails when bundle does not include Janus", () => {
-        expect(() => assertBuiltJsContainsShellLabel("export {}")).toThrow(
-            /shell label/i,
-        );
+        expect(() =>
+            assertBuiltJsContainsShellLabel("r.dataset.platform=n.platform();"),
+        ).toThrow(/mount path/i);
     });
 });

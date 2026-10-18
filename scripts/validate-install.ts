@@ -42,20 +42,28 @@ async function main(): Promise<void> {
     if (jsFiles.length === 0) {
         fail("validate:install: no .js files under dist/ui/assets");
     }
+    const bootstrapChunks = jsFiles.filter((name) =>
+        name.startsWith("bootstrap-"),
+    );
+    const labelCandidates =
+        bootstrapChunks.length > 0 ? bootstrapChunks : jsFiles;
     let labelFound = false;
-    for (const name of jsFiles) {
+    let lastLabelError = "";
+    for (const name of labelCandidates) {
         const js = await Bun.file(path.join(assetsDir, name)).text();
         try {
             assertBuiltJsContainsShellLabel(js);
             labelFound = true;
             break;
-        } catch {
-            // try next chunk (e.g. vendor split)
+        } catch (err) {
+            lastLabelError =
+                err instanceof Error ? err.message : String(err);
         }
     }
     if (!labelFound) {
         fail(
-            "validate:install: built JS bundle missing shell label text Janus",
+            lastLabelError ||
+                "validate:install: built JS bundle missing shell mount path",
         );
     }
 

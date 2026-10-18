@@ -472,8 +472,8 @@ Plan: `tasks/plan.md` § Ship NO-GO follow-ups. Complete **before** calling shel
 **Description:** Tighten `assertBuiltJsContainsShellLabel` (or split desktop/mobile checks) so passing does not rely on `"[Janus shell]"` in `console.error` alone. Prefer asserting on the **bootstrap** chunk and/or mount markers (`createShellLabel`, `data-platform`).
 
 **Acceptance criteria:**
-- [ ] Unit test: JS containing only `"[Janus shell]"` without mount path **fails**
-- [ ] `validate:install` still passes on a clean tree after `build:ui`
+- [x] Unit test: JS containing only `"[Janus shell]"` without mount path **fails**
+- [x] `validate:install` still passes on a clean tree after `build:ui`
 
 **Verification:**
 - [ ] `bun run test`

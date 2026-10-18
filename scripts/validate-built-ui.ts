@@ -20,10 +20,17 @@ export function assertBuiltIndexHtml(html: string): void {
     assertBuiltShellHtml(html, "built index.html");
 }
 
+/** Mount path markers from createShellLabel + mountJanusShell (survives minification). */
+const SHELL_MOUNT_MARKERS = ["dataset.platform", "data-platform"] as const;
+
 export function assertBuiltJsContainsShellLabel(js: string): void {
-    if (!js.includes("Janus")) {
+    const hasMountMarker = SHELL_MOUNT_MARKERS.some((marker) =>
+        js.includes(marker),
+    );
+    const hasLabel = js.includes("Janus");
+    if (!hasMountMarker || !hasLabel) {
         throw new Error(
-            "validate:install: built JS bundle missing shell label text Janus",
+            "validate:install: built JS missing shell mount path (expected Janus label and data-platform mount markers)",
         );
     }
 }
