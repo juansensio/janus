@@ -102,6 +102,7 @@ Codex **app-server** subprocess is optional; spec prefers pure TS `fetch` in `se
 
 ## References
 
+- **Janus implementation guide:** [`docs/ai-auth-desktop.md`](../ai-auth-desktop.md) (flow, on-disk storage, token lifetimes)
 - [Sign in with ChatGPT — quickstart](https://developers.openai.com/siwc/quickstart.md)
 - [OSS ChatGPT plan usage](https://developers.openai.com/siwc/token-sharing-open-source.md)
 - [Registration and sign-in](https://developers.openai.com/siwc/token-sharing-open-source/sign-in.md)

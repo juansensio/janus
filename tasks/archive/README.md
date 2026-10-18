@@ -23,3 +23,4 @@ When `/plan` starts a new `docs/specs/SPEC-<module-id>.md`, move the previous pa
 | `ship-gate-fixes/` | library / languages / library-root specs | `/ship` NO-GO fixes — unique dirs, settings, DRY i18n (2026-10-18) |
 | `desktop-release/` | `SPEC-desktop-release` + command spec | macOS CI package + `/release` (2026-10-18; optional first `v*` tag) |
 | `html-manuscript-ai-assist/` | `SPEC-manuscript-slice-2` + `SPEC-ai-assist` | Build phase Tasks 1–13 (2026-10-18; SIWC Connect deferred) |
+| `ai-assist-siwc/` | `SPEC-ai-assist` + ADR SIWC | Sign in with ChatGPT Connect, refresh, revoke (2026-10-18; manual sign-off) |

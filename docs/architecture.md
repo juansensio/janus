@@ -102,6 +102,7 @@ Templates and UI code **display** values and **invoke** the bridge. They do not 
 
 ## Related docs
 
+- Desktop OpenAI sign-in (SIWC, storage, token lifetime): [`docs/ai-auth-desktop.md`](ai-auth-desktop.md)
 - Install and manual gates: [`docs/install-macos.md`](install-macos.md)
 - Shell toolchain and bridge introduction: [`docs/specs/SPEC-shell.md`](specs/SPEC-shell.md)
 - Library slice 1 (shelf CRUD): [`docs/specs/SPEC-library.md`](specs/SPEC-library.md)

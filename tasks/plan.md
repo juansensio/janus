@@ -1,121 +1,89 @@
-# Implementation Plan: AI assist — SIWC Connect completion
+# Implementation Plan: AI Write — editor feedback (loading + inline errors)
 
-**Status:** Planned 2026-10-18 (completion phase). Tasks: `tasks/todo.md`.
+**Source spec:** [`docs/specs/SPEC-ai-assist.md`](../docs/specs/SPEC-ai-assist.md) — acceptance: “Write button … **loading state**; **errors inline** (not shelf banner).”
 
-**Source specs:**
-
-- `docs/specs/SPEC-ai-assist.md` (approved 2026-10-18)
-- `docs/adrs/ADR-ai-openai-auth.md` (SIWC **go**)
-- Manuscript editor/transforms: `docs/specs/SPEC-manuscript-slice-2.md` (approved)
-
-**Archived build phase:** `tasks/archive/html-manuscript-ai-assist/` (Tasks 1–13; code landed, Connect stub + manual gates open).
+**Archived:** N/A (no prior active module plan).
 
 ## Overview
 
-The HTML manuscript + AI assist **build** is largely done: ProseMirror editor, comment/draft nodes, Accept/Reject, `@janus/ai-assist` provider (`/v1/responses`), desktop IPC, Settings Connect/Write UI, mobile `AI_NOT_SUPPORTED`.
+When the writer clicks **Write** on an AI comment, the UI should show that work is in progress (seconds to tens of seconds for provider generation) and, on failure, show a **specific, actionable message next to that comment**. Today `render-editor.ts` tracks `writeInFlight` but does not change the comment chrome; failures only set a generic string on a header `.editor-error`, which is easy to miss. The terminal error `{ message: 'Library operation failed', code: 'UNKNOWN' }` on `janus:ai:writeForComment` means the renderer often cannot map failures to `ai.*` copy even when main knows more.
 
-**What is missing vs `SPEC-ai-assist.md`:**
+This plan is a **vertical polish slice** on `packages/ui` + a thin **desktop IPC error** fix so codes reach the UI.
 
-| Spec expectation | Current state |
-|------------------|---------------|
-| Connect opens system browser + OAuth; user signs in with ChatGPT/Codex subscription | `connectOpenAiCodex` copies `JANUS_OPENAI_ACCESS_TOKEN` from env (dev stub only) |
-| Refresh token in main; access token refreshed before inference | Session stores a single `accessToken` string; no refresh |
-| Disconnect revokes refresh token at OpenAI | Clears local file only |
-| Connected across restart until disconnect/expiry | Works **if** dev env was used at Connect time |
-| Manual gate: real Connect + Write on maintainer Mac | Blocked on SIWC |
+## Current gaps (vs spec)
 
-This plan finishes **consumer Sign in with ChatGPT (SIWC)** in the Electron main process per the ADR, then closes manual MVP smoke and archives the milestone.
+| Area | Today | Target |
+|------|--------|--------|
+| Loading | `writeInFlight` blocks double-submit only | **All relevant controls disabled** until IPC returns; active comment shows “Writing…” + `aria-busy` |
+| Progress | No change until draft appears | Inline status (`aria-live="polite"`) on the comment that started Write |
+| Button guard | Write/Delete stay clickable during slow requests | On that comment: **Write + Delete disabled** until success/failure; **every** AI comment’s Write/Delete disabled while any write is in flight; **Add AI comment** disabled in editor chrome for same period |
+| Errors | Header `transformError` + generic `ai.writeFailed` | Inline under comment actions; map `AI_*` codes like Settings connect |
+| IPC | Some failures become `UNKNOWN` in main log | Stable `code` on reject for write path (tests) |
 
 ## Architecture decisions
 
-| Topic | Decision |
-|--------|----------|
-| OAuth implementation | **Hand-rolled PKCE + loopback** in `apps/desktop/src/ai-oauth*` (ADR option 1). No new npm dependency unless `/build` proves `@siwc/local` is clearly cheaper — decide in Task 1 spike-in-code, not in plan. |
-| Callback | `http://127.0.0.1:<port>/auth/callback` — bind ephemeral port, persist **scheme + host `127.0.0.1` + path** for re-sign-in per OpenAI docs |
-| Host identity | Persist `ext_agent_host_id` (`urn:uuid:…`) once per install before first sign-in |
-| Client ID | First sign-in: `dynamic_agent_client`; store issued `oaiapp_…` with credentials; re-sign-in uses issued `client_id` + optional `id_token_hint` |
-| Credential storage | Extend encrypted blob in main (`safeStorage`); fields: `clientId`, `refreshToken`, `accessToken`, `accessTokenExpiresAt`, `idToken` (for hint), `extAgentHostId`. Renderer never sees tokens. |
-| Dev override | Keep optional `JANUS_OPENAI_ACCESS_TOKEN` **only** for local maintainer testing behind explicit check; **not** the default Connect path. Document in `docs/install-macos.md`. |
-| Refresh | Main process refreshes access token before `writeForComment` (and on Connect status if expired); atomic rotate of refresh token |
-| Disconnect | OIDC revocation + delete local credentials |
-| Domain | `services/ai-assist/` unchanged for OAuth; shell owns auth |
+- **Own comment chrome state in `manuscript-editor.ts`** — ProseMirror `nodeView` owns Write/Delete; on Write click, disable **both** buttons on that comment until `onWriteComment` settles, show “Writing…” on Write, set `aria-busy` on the comment, and show inline status text (same pattern as shelf dialog inline errors, not page banner).
+- **Global write lock** — `render-editor` already sets `writeInFlight`; expose `isWriteInFlight()` (or callback) into `createManuscriptEditor` so **every** comment nodeView disables Write/Delete while any write runs, and the header **Add AI comment** button is disabled for the same window (re-enable only after response).
+- **Mirror Settings connect mapping** — Add `packages/ui/src/editor/ai-write-error.ts` (like `ai-connect-error.ts`) mapping `bridgeErrorCode(error)` → `ai.*` locale keys; add missing keys in `services/languages/locales/en.json` and `es.json`.
+- **Single error surface for Write** — Inline on the comment; stop duplicating generic failures in header `transformError` for Write (keep header for accept/reject transform failures unless we inline those later).
+- **`onWriteComment` contract** — `render-editor` propagates rejection (mapped message on `Error` + `code`) so the nodeView can display inline copy; remove the redundant `.catch(() => onTransformError(...))` on Write in `manuscript-editor.ts`.
+- **Desktop** — In `rejectForBridge` / `writeForComment` path, ensure thrown values are `AiAssistError` or `{ code, message }` (wrap unexpected provider/manuscript errors as `AI_PROVIDER_ERROR` where appropriate). Do not change provider logic in the same task as UI unless needed for code propagation.
 
 ## Dependency graph
 
 ```
-Task 1 Credential schema + host ID persistence
-    └── Task 2 PKCE + loopback callback (unit-tested)
-            └── Task 3 Connect vertical (browser → tokens → connected status)
-                    └── Task 4 Refresh on write + expiry handling
-                            └── Task 5 Disconnect + revoke
-                                    └── Task 6 Wire ai-service; demote env stub
-                                            └── Task 7 Settings error mapping + i18n (auth errors)
-                                                    └── Task 8 Manual MVP smoke + docs
-                                                            └── Task 9 Archive milestone
+Locale strings (ai.writing, ai.notConnected, …)
+        │
+        ├── ai-write-error.ts (code → key)
+        │
+        ▼
+manuscript-editor nodeView (busy + inline status)
+        │
+        ▼
+render-editor (reject with coded Error; no header write errors)
+        │
+        ▼
+desktop ai-ipc / ai-service (stable codes on failure) ──► enables specific inline copy
 ```
 
-## Task list (summary)
+## Task list
 
-| # | Title | Delivers |
-|---|--------|----------|
-| 1 | SIWC credential model | Host ID + encrypted session shape; migration from today’s `accessToken`-only blob |
-| 2 | Loopback + PKCE | Testable authorize URL builder + callback server |
-| 3 | Connect flow | Real user sign-in; status connected across restart |
-| 4 | Token refresh | Write works after ~1h without re-Connect |
-| 5 | Disconnect + revoke | Spec-compliant logout |
-| 6 | Replace dev Connect stub | `connectOpenAiCodex` runs SIWC; env override documented |
-| 7 | Auth error UX | Map `AI_AUTH_FAILED` / usage limits to settings copy (`en`/`es`) |
-| 8 | Manual gate + install doc | Maintainer smoke; no CI secrets |
-| 9 | Milestone archive | Move this pair to `tasks/archive/` when Task 8 signed off |
+### Phase 1: Comment-level UX (UI-only path)
 
-Details: `tasks/todo.md`.
+- Task 1: Write in-flight UI — disable comment + chrome buttons until response, busy label, CSS, unit tests
+- Task 2: Inline error region + `ai-write-error.ts` + en/es strings + unit tests
 
-## Checkpoints
+### Checkpoint: UI with mock bridge
 
-### After Tasks 1–3
+- [ ] Mock bridge: delayed `writeForComment` shows busy then draft
+- [ ] Mock bridge: reject with `AI_NOT_CONNECTED` shows inline “connect first” style copy
+- [ ] `bun run test packages/ui` and `bun run lint` pass
 
-- [ ] Unit tests: PKCE, callback parsing, token response → stored session (mocked HTTP)
-- [ ] Manual: Connect opens browser, return to app, Settings shows **Connected**, restart keeps status
+### Phase 2: Wire editor shell + IPC fidelity
 
-### After Tasks 4–6
+- Task 3: `render-editor.ts` — propagate write failures to nodeView; editor flow test for Write
+- Task 4: Desktop — preserve/map write failure codes; extend `ai-ipc.test.ts`
 
-- [ ] `bun run test` && `bun run lint` green (no live network in CI)
-- [ ] Manual: Write produces draft with subscription (no `JANUS_OPENAI_ACCESS_TOKEN` unless testing override)
+### Checkpoint: Desktop manual
 
-### After Tasks 7–8 (MVP done)
-
-- [ ] Full smoke: legacy `.md` migration (if needed), comment, Connect, Write, Accept, Shelf, reopen
-- [ ] `CAPABILITY-MAP.md` ai-assist row matches shipped behavior (OAuth, not env var)
-- [ ] Human sign-off on manual notes
+- [ ] Connect OpenAI → Write disables comment + header buttons until draft returns → controls re-enable
+- [ ] Disconnect → Write shows inline not-connected guidance (not silent / generic UNKNOWN)
+- [ ] Main log shows structured `code` on intentional failures (not only `UNKNOWN`)
 
 ## Risks and mitigations
 
 | Risk | Impact | Mitigation |
 |------|--------|------------|
-| Loopback port conflict / firewall | Med | Ephemeral port; clear error if bind fails |
-| OpenAI policy (OSS vs paid distribution) | High | ADR already flags waitlist; product decision before broad marketing |
-| `subscription_sharing_usage_limit_exceeded` | Med | Task 7 maps to `ai.*` strings per SIWC errors doc |
-| Token refresh race during Write | Med | Single-flight refresh in main; retry once on 401 |
-| `safeStorage` unavailable (rare Linux) | Low | Fail Connect with `AI_AUTH_FAILED`; document macOS primary gate |
+| ProseMirror nodeView not updating if DOM mutated incorrectly | Med | Only toggle classes/text on stable elements; test in jsdom |
+| Long writes feel stuck | Low | Busy label + `aria-live`; no streaming in v1 per spec |
+| UNKNOWN errors persist for some provider bugs | Med | Task 4 wraps/logs root cause in main; UI still shows `ai.writeFailed` fallback |
 
-## Parallelization
+## Open questions
 
-- **Sequential** Tasks 1→6 (shared session + connect contract).
-- Task 7 can overlap Task 6 if error codes are stable.
-- Task 8 is human-only after Task 6.
+- **Global editor status line** — Should “Writing…” also appear in `.editor-status` next to autosave? Default **no** (comment-inline is enough); revisit if writers miss it.
+- **Second Write while one in flight** — **Resolved:** global guard stays; other comments’ Write/Delete are **disabled** (not merely no-ops) until the in-flight request completes.
+- **Draft Accept/Reject during Write** — Default **leave enabled** (orthogonal to comment Write); disable only if manual testing shows confusion.
 
-## Out of scope (this plan)
+## Human review
 
-- API-key settings path (ADR pivot only)
-- Streaming tokens to UI
-- Cursor / second provider
-- CI live OAuth integration tests
-- Windows desktop SIWC (macOS manual gate first)
-
-## Completed baseline (build phase)
-
-See `tasks/archive/html-manuscript-ai-assist/todo.md` for Tasks 1–13. Key paths:
-
-- `services/ai-assist/`, `apps/desktop/src/ai-service.ts`, `ai-session-store.ts`, `ai-ipc.ts`
-- `packages/ui` editor + settings Connect/Write
-- Specs approved; **Connect acceptance criterion not met** until this plan ships.
+Confirm scope: **disable comment + Add-comment buttons until write completes**, **inline status + errors on the active comment**, **fix IPC codes** so failure copy is specific (not streaming tokens).

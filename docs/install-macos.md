@@ -88,16 +88,14 @@ After the shelf checks above:
 
 ### OpenAI assist (desktop — Sign in with ChatGPT)
 
-Requires a **ChatGPT Plus or Pro** plan with plan usage enabled for local tools (see [`docs/adrs/ADR-ai-openai-auth.md`](adrs/ADR-ai-openai-auth.md)).
+Requires a **ChatGPT Plus or Pro** plan with plan usage enabled for local tools.
+
+**How sign-in, storage, and token lifetime work:** [`docs/ai-auth-desktop.md`](ai-auth-desktop.md).
 
 1. Run `bun run dev:desktop` or `bun run desktop:prod`.
 2. Open **Settings** → **OpenAI (Codex)** → **Connect OpenAI**. The system browser opens; complete sign-in and approve access.
 3. Confirm status shows **Connected**. Quit and relaunch; status should remain connected until **Disconnect**.
 4. Open a book, add an AI comment, press **Write**, and confirm a highlighted draft appears; use **Accept** or **Reject** as needed.
-
-Tokens stay in the Electron **main** process (encrypted on disk). The renderer never sees refresh tokens.
-
-**Maintainer override (optional):** set `JANUS_OPENAI_ACCESS_TOKEN` in the environment before starting Electron to skip SIWC for local HTTP testing only. This is not the normal user path.
 
 **Production desktop (`bun run desktop:prod`):**
 

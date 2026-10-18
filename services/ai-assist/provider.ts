@@ -1,6 +1,8 @@
 export type AiProviderSession = {
     provider: "openai-codex";
     accessToken: string;
+    /** Account-specific slug from GET /v1/models; resolved automatically when omitted */
+    model?: string;
 };
 
 export type GenerateDraftInput = {

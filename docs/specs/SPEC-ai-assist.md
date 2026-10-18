@@ -47,6 +47,8 @@ On desktop, the writer connects **OpenAI (Codex)** inside Janus, places an AI co
 - `apps/desktop/src/ai-*`: IPC, OAuth callback handling, token persistence, invokes domain + provider.
 - No provider code in `packages/ui` or renderer beyond bridge calls.
 
+**Desktop auth (user + maintainer guide):** [`docs/ai-auth-desktop.md`](../ai-auth-desktop.md).
+
 ## Commands
 
 ```

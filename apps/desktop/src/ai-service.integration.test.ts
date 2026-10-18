@@ -15,22 +15,31 @@ describe("writeForComment manuscript integration", () => {
     });
 
     it("inserts draft html after provider generation", async () => {
-        const fetchImpl = vi.fn(async () => ({
-            ok: true,
-            status: 200,
-            json: async () => ({
-                output: [
-                    {
-                        content: [
-                            {
-                                type: "output_text",
-                                text: "<janus-p>Generated prose</janus-p>",
-                            },
-                        ],
-                    },
-                ],
-            }),
-        }));
+        const fetchImpl = vi.fn(async (url: string) => {
+            if (url.endsWith("/v1/models")) {
+                return {
+                    ok: true,
+                    status: 200,
+                    json: async () => ({
+                        models: [{ slug: "gpt-test", visibility: "list" }],
+                    }),
+                };
+            }
+            return {
+                ok: true,
+                status: 200,
+                headers: new Headers({
+                    "content-type": "text/event-stream",
+                }),
+                text: async () =>
+                    `data: ${JSON.stringify({
+                        type: "response.output_text.delta",
+                        delta: "<janus-p>Generated prose</janus-p>",
+                    })}\n\ndata: ${JSON.stringify({
+                        type: "response.completed",
+                    })}\n\n`,
+            };
+        });
         const provider = createOpenAiCodexProvider(fetchImpl as typeof fetch);
         const html =
             '<janus-manuscript version="1"><janus-ai-comment id="c1">Go</janus-ai-comment></janus-manuscript>';
