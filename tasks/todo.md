@@ -1,184 +1,202 @@
-# Tasks: AI Write — editor feedback
+# Tasks: AI Write — instruction, prose context, refusal
 
-**Spec:** `docs/specs/SPEC-ai-assist.md` (UI acceptance: loading + inline errors)  
+**Spec:** `docs/specs/SPEC-ai-assist.md` (revise in Task 1)  
+**Intent:** `docs/intent/ai-assist-mvp.md` (revise in Task 1)  
 **Plan:** `tasks/plan.md`
 
 ---
 
-## Task 1: Write in-flight — disable buttons + busy feedback
+## Task 1: Prose context for one comment
 
-**Description:** When Write is clicked, the UI must stay in a locked, informative state until `writeForComment` resolves (success or error). On the **active** comment: disable **Write and Delete**, change Write label to localized “Writing…”, set `aria-busy="true"` on the comment, and show inline status text (e.g. same `ai.writing` string in a `role="status"` region). While **any** write is in flight (`writeInFlight` in `render-editor`): disable Write and Delete on **all** AI comments and disable the header **Add AI comment** button; re-enable everything in `finally` after the bridge returns.
+**Description:** Build the text the model is allowed to read. Given manuscript HTML and a comment id, return paragraph text in reading order with a `<<<WRITE>>>` line where that comment sits. Omit other comments and drafts. Depend on `@janus/manuscript` `parseManuscriptBlocks` rather than parsing tags again. Update the spec and intent so Write is an instruction to add or change prose, the context is this prose view of the whole book, and a non-instruction gets a refusal on the comment with no draft.
 
 **Acceptance criteria:**
 
-- [x] New locale key `ai.writing` in `en` and `es`
-- [x] Active comment: Write + Delete `disabled` for the full pending duration; Write shows busy label; inline status visible
-- [x] Other comments: Write + Delete disabled while a write is in flight elsewhere (via shared `isWriteInFlight` hook from shell)
-- [x] Header `Add AI comment` disabled for the same period
-- [x] All controls restore on both success and failure (failure details come in Task 2)
-- [x] Tests assert `disabled` on buttons during a pending `onWriteComment` promise
+- [ ] `buildWriteContext` places `<<<WRITE>>>` at the target comment and includes surrounding paragraph text only
+- [ ] Other comments, draft blocks, and tags are absent from the result
+- [ ] Missing comment id throws `AI_COMMENT_NOT_FOUND`
+- [ ] `SPEC-ai-assist.md` assumption 4 and `docs/intent/ai-assist-mvp.md` describe this contract
 
 **Verification:**
 
-- [x] `bun run test packages/ui/src/editor/manuscript-editor.test.ts`
-- [x] `bun run lint`
-- [x] Manual: delayed `writeForComment` — cannot click Delete or second Write until response; Add comment stays disabled
+- [ ] `bun run test services/ai-assist/write-context.test.ts`
+- [ ] `bun run lint`
 
 **Dependencies:** None
 
 **Files likely touched:**
 
-- `packages/ui/src/editor/manuscript-editor.ts`
-- `packages/ui/src/editor/render-editor.ts`
-- `packages/ui/src/styles/editor.css`
-- `services/languages/locales/en.json`
-- `services/languages/locales/es.json`
-- `packages/ui/src/editor/manuscript-editor.test.ts`
+- `services/ai-assist/write-context.ts`
+- `services/ai-assist/write-context.test.ts`
+- `services/ai-assist/package.json`
+- `docs/specs/SPEC-ai-assist.md`
+- `docs/intent/ai-assist-mvp.md`
 
-**Estimated scope:** Medium (4–6 files)
+**Estimated scope:** Medium (5 files)
 
 ---
 
-## Task 2: Inline Write errors + code mapping
+## Task 2: Prompt and result parser
 
-**Description:** Add an inline status element under each comment’s actions (`aria-live="polite"`, `role="status"`). On Write failure, show mapped copy from `ai-write-error.ts` (pattern from `ai-connect-error.ts`). Add locale keys for `AI_NOT_CONNECTED`, `AI_CONTEXT_TOO_LARGE`, `AI_PROVIDER_ERROR`, `AI_COMMENT_NOT_FOUND`, `AI_AUTH_FAILED`, and keep generic `ai.writeFailed` as fallback.
+**Description:** `buildGenerateDraftMessages` sends the prose context, the instruction (comment text), and the app `locale`. The system prompt requires JSON only: a draft of plain-text paragraphs in the manuscript’s language, or a refusal whose `message` is a short sentence in `locale` meaning the comment is not an instruction to add or change prose. `parseWriteResult` returns `{ kind: "draft", paragraphs }` or `{ kind: "refusal", message }`. Anything else throws `AI_PROVIDER_ERROR`.
 
 **Acceptance criteria:**
 
-- [x] `packages/ui/src/editor/ai-write-error.ts` maps known `AI_*` codes to `ai.*` keys
-- [x] Inline error appears on the comment that triggered Write; cleared on new Write attempt
-- [x] Write click handler no longer calls `onTransformError` with a duplicate generic message
-- [x] Unit tests for mapper + comment inline error display (jsdom)
+- [ ] Prompt for a comment contains the prose view and `<<<WRITE>>>`, and does not contain the raw manuscript HTML
+- [ ] Prompt tells the model to write draft paragraphs in the manuscript’s language and the refusal message in `locale`
+- [ ] Parser accepts a draft payload and a refusal payload
+- [ ] Parser rejects prose, HTML, and JSON without `kind`
 
 **Verification:**
 
-- [x] `bun run test packages/ui/src/editor/ai-write-error.test.ts` (new) and manuscript editor tests
-- [x] `bun run lint`
+- [ ] `bun run test services/ai-assist/ai-assist.test.ts`
+- [ ] `bun run lint`
 
 **Dependencies:** Task 1
 
 **Files likely touched:**
 
-- `packages/ui/src/editor/ai-write-error.ts`
-- `packages/ui/src/editor/ai-write-error.test.ts`
-- `packages/ui/src/editor/manuscript-editor.ts`
-- `packages/ui/src/styles/editor.css`
-- `services/languages/locales/en.json`
-- `services/languages/locales/es.json`
+- `services/ai-assist/prompt.ts`
+- `services/ai-assist/write-result.ts`
+- `services/ai-assist/write-result.test.ts`
+- `services/ai-assist/ai-assist.test.ts`
+- `services/ai-assist/index.ts`
 
-**Estimated scope:** Medium (3–5 files)
+**Estimated scope:** Medium (5 files)
 
 ---
 
 ## Checkpoint: After Tasks 1–2
 
-- [x] UI tests pass without desktop
-- [x] Mock bridge write flow shows busy + inline error paths
-- [x] Review with human before IPC work
+- [ ] Context and parser tests pass without a live provider
+- [ ] Spec and intent match `tasks/plan.md`
+- [ ] Review with human before wiring the provider
 
 ---
 
-## Task 3: Editor shell wiring + integration test
+## Task 3: Provider branches on the parsed result
 
-**Description:** Update `render-editor.ts` so `onWriteComment` rejects with `Error` carrying `code` from the bridge (use `bridgeErrorCode`). Remove setting header `transformError` for Write failures. Add an editor flow test: open book with AI comment HTML, click Write, assert busy then result (success or inline error).
+**Description:** `generateDraft` reads the full response, then `parseWriteResult`. A draft becomes `<janus-p>` fragments and `onDraftHtmlDelta` runs once with that final fragment. A refusal throws `AI_COMMENT_NOT_INSTRUCTION` with the model message and runs no delta. Add the code to `AiAssistErrorCode`.
 
 **Acceptance criteria:**
 
-- [x] Write failures do not populate header `transformError`
-- [x] Accept/Reject still use header `transformError` (unchanged)
-- [x] `editor-flow.test.ts` (or colocated test) covers Write success and `AI_NOT_CONNECTED` inline message
+- [ ] Streamed draft JSON yields `draftHtml` of `<janus-p>` paragraphs and a single delta with that HTML
+- [ ] A refusal JSON throws `AI_COMMENT_NOT_INSTRUCTION` and invokes no delta
+- [ ] A non-JSON body throws `AI_PROVIDER_ERROR` and invokes no delta
 
 **Verification:**
 
-- [x] `bun run test packages/ui`
-- [x] `bun run lint`
-- [x] Manual desktop: visible inline error when not connected
+- [ ] `bun run test services/ai-assist`
+- [ ] `bun run lint`
 
 **Dependencies:** Task 2
 
 **Files likely touched:**
 
-- `packages/ui/src/editor/render-editor.ts`
-- `packages/ui/src/editor/editor-flow.test.ts`
-- `packages/bridge/src/mock-janus-bridge.ts` (if mock needs write hook)
+- `services/ai-assist/provider.ts`
+- `services/ai-assist/openai-codex-provider.ts`
+- `services/ai-assist/ai-assist.test.ts`
 
-**Estimated scope:** Medium (3–4 files)
+**Estimated scope:** Medium (3 files)
 
 ---
 
-## Task 4: Desktop write IPC — stable error codes
+## Task 4: Desktop persists only a draft
 
-**Description:** Investigate `janus:ai:writeForComment` logging `code: 'UNKNOWN'`. Ensure `rejectForBridge` returns specific codes for expected failures (`AiAssistError`, manuscript read/write, provider errors). Wrap unexpected errors as `AI_PROVIDER_ERROR` with a safe message in main where appropriate. Add/extend `apps/desktop/src/ai-ipc.test.ts` asserting reject shape for `AI_NOT_CONNECTED` and one provider failure path (mocked).
+**Description:** `writeForComment` inserts a draft only when `generateDraft` returns one. A refusal leaves the manuscript file unchanged and rejects with `AI_COMMENT_NOT_INSTRUCTION` plus the model message, using the same IPC error shape as the other `AI_*` codes. The outer catch must not wrap that code as `AI_PROVIDER_ERROR`.
 
 **Acceptance criteria:**
 
-- [x] IPC test: write without session → renderer-receivable `AI_NOT_CONNECTED`
-- [x] No regression: existing `ai-assist` and `ai-ipc` tests pass
-- [x] Real failure from dev desktop surfaces non-`UNKNOWN` code when root cause is a known `AiAssistError`
+- [ ] IPC test: refusal body → reject `code` is `AI_COMMENT_NOT_INSTRUCTION` and `message` is the model sentence
+- [ ] That path does not call manuscript write
+- [ ] A draft result still returns updated HTML containing `janus-ai-draft`
 
 **Verification:**
 
-- [x] `bun run test apps/desktop/src/ai-ipc.test.ts`
-- [x] `bun run test services/ai-assist`
-- [x] Manual: reproduce terminal case — UI inline message matches code (not only generic library message)
+- [ ] `bun run test apps/desktop/src/ai-ipc.test.ts`
+- [ ] `bun run test services/ai-assist`
+- [ ] `bun run lint`
 
-**Dependencies:** Task 3 (UI ready to display codes)
+**Dependencies:** Task 3
 
 **Files likely touched:**
 
-- `apps/desktop/src/ai-ipc.ts`
 - `apps/desktop/src/ai-service.ts`
+- `apps/desktop/src/ai-ipc.ts`
 - `apps/desktop/src/ai-ipc.test.ts`
+- `apps/desktop/src/ai-service.integration.test.ts`
 
-**Estimated scope:** Medium (2–4 files)
+**Estimated scope:** Medium (4 files)
 
 ---
 
-## Task 5: Stream draft tokens to editor during Write
+## Checkpoint: After Tasks 3–4
 
-**Description:** Surface OpenAI response deltas in the UI while `writeForComment` runs. Provider parses SSE incrementally; desktop forwards chunks over IPC; renderer updates the draft block without autosave until the final HTML returns.
+- [ ] Refusal does not write the manuscript file
+- [ ] A draft still inserts `janus-ai-draft`
+- [ ] `bun run test services/ai-assist apps/desktop/src/ai-ipc.test.ts` passes
+
+---
+
+## Task 5: Locale string and error-code mapping
+
+**Description:** Add `ai.commentNotInstruction` in `en` and `es`. Map `AI_COMMENT_NOT_INSTRUCTION` to that key. When the error has a non-empty `message`, the displayed string is that message; otherwise the locale string.
 
 **Acceptance criteria:**
 
-- [x] `generateDraft` accepts `onDraftHtmlDelta` and fires on each accumulated chunk
-- [x] Desktop `writeForComment` + `janus:ai:writeDraftDelta` IPC when renderer passes `onDraftDelta`
-- [x] Editor `applyStreamingDraft` updates draft in place without marking autosave dirty
-- [x] Tests: provider stream body, SSE delta callback, editor flow with partial then final text
+- [ ] Keys exist in `en` and `es`
+- [ ] Mapper returns the model message when the code is `AI_COMMENT_NOT_INSTRUCTION` and `message` is non-empty
+- [ ] Empty message maps to `ai.commentNotInstruction`
 
 **Verification:**
 
-- [x] `bun run test services/ai-assist packages/ui/src/editor`
-- [x] `bun run lint`
-- [ ] Manual desktop: Write shows draft text growing before request completes
+- [ ] `bun run test packages/ui/src/editor/ai-write-error.test.ts`
+- [ ] `bun run lint`
 
 **Dependencies:** Task 4
 
+**Files likely touched:**
+
+- `packages/ui/src/editor/ai-write-error.ts`
+- `packages/ui/src/editor/ai-write-error.test.ts`
+- `services/languages/locales/en.json`
+- `services/languages/locales/es.json`
+
+**Estimated scope:** Small (4 files)
+
 ---
 
-## Task 6: OpenAI model — Settings default + per-comment override
+## Task 6: Comment status shows the refusal
 
-**Description:** Settings picks the default OpenAI model (`openAiModel` in `janus-settings.json`). Each AI comment shows a model `<select>` (`Default (from Settings)` or explicit slug); choice persists as `model` on `<janus-ai-comment>`. Write resolves comment model, else settings, via `resolveWriteModelSlug`.
+**Description:** The comment status line uses the Task 5 string. The existing write lock stays: Write, Delete, the model select, and Add AI comment stay disabled until the promise settles, with “Writing…” on the active comment. A refusal must not leave a draft in the editor.
 
 **Acceptance criteria:**
 
-- [x] Allowlist + Auto in `openai-model-catalog.ts`; bridge `getOpenAiModelSettings` / `setOpenAiModelPreference`
-- [x] Settings model `<select>` on desktop
-- [x] Comment chrome model `<select>`; `model` attribute round-trips in manuscript HTML
-- [x] `writeForComment` uses per-comment model when set
-- [x] Tests: catalog, manuscript HTML, settings UI, comment model persistence
+- [ ] Editor flow: bridge rejects with `AI_COMMENT_NOT_INSTRUCTION` and a message → that message is on the comment, manuscript HTML unchanged, buttons enabled again
+- [ ] Empty message shows the locale string
+- [ ] A successful Write still ends in a draft and re-enables the buttons
 
 **Verification:**
 
-- [x] `bun run test`
-- [x] `bun run lint`
-- [ ] Manual: set default in Settings; override on one comment; Write uses each model
+- [ ] `bun run test packages/ui/src/editor`
+- [ ] `bun run lint`
+- [ ] Manual: comment `hola` → refusal on the comment, book unchanged; comment `continue` → draft in the book’s language
 
 **Dependencies:** Task 5
+
+**Files likely touched:**
+
+- `packages/ui/src/editor/manuscript-editor.ts`
+- `packages/ui/src/editor/render-editor.ts`
+- `packages/ui/src/editor/editor-flow.test.ts`
+
+**Estimated scope:** Medium (3 files)
 
 ---
 
 ## Checkpoint: Complete
 
-- [x] Spec UI bullets satisfied: loading on Write, buttons disabled until response, errors inline on comment
-- [x] `bun run test` and `bun run lint` pass
-- [ ] Maintainer manual: Connect → Write → draft; disconnect → Write → clear inline guidance
+- [ ] `hola` shows the refusal on the comment and the book is unchanged
+- [ ] “Continue”, “make this colder”, and “rewrite the jam-jar sentence” produce a draft
+- [ ] Write and Delete stay disabled until the response, with “Writing…” on the active comment
+- [ ] `bun run test` and `bun run lint` pass
