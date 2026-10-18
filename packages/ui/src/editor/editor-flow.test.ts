@@ -203,9 +203,6 @@ describe("editor autosave flow", () => {
             expect(root.querySelector(".editor-add-comment")).not.toBeNull(),
         );
         const addBtn = root.querySelector<HTMLButtonElement>(".editor-add-comment");
-        await vi.waitFor(() =>
-            expect(root.querySelector(".editor-ai-comment-write")).not.toBeNull(),
-        );
         root.querySelector<HTMLButtonElement>(".editor-ai-comment-write")?.click();
         await vi.waitFor(() => expect(addBtn?.disabled).toBe(true));
         resolveWrite();

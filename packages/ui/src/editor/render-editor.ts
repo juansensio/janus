@@ -112,21 +112,9 @@ export async function renderEditor(
         commentId: null,
     };
 
-    let openAiModelOptions: string[] = ["auto"];
-    if (showAiChrome) {
-        try {
-            openAiModelOptions = (
-                await bridge.getOpenAiModelSettings()
-            ).options;
-        } catch {
-            openAiModelOptions = ["auto"];
-        }
-    }
-
     const editor = createManuscriptEditor(field, loadedHtml, {
         lang: locale,
         showAiChrome,
-        openAiModelOptions,
         getWriteFlight: () => writeFlight,
         onDocChange: () => {
             autosaveRef.current?.onInput(editor.getHtml());
@@ -136,12 +124,9 @@ export async function renderEditor(
             writeFlight.commentId = commentId;
             addCommentButton.disabled = true;
             editor.refreshAiCommentChrome();
-            const streamingDraftId = crypto.randomUUID();
             let writeError: unknown;
+            const streamingDraftId = crypto.randomUUID();
             try {
-                if (autosaveRef.current?.isDirty()) {
-                    await autosaveRef.current.flush();
-                }
                 const html = await bridge.writeForComment(
                     book.id,
                     commentId,
@@ -168,7 +153,6 @@ export async function renderEditor(
             }
             if (writeError) {
                 editor.showWriteErrorForComment(commentId, writeError);
-                throw writeError;
             }
         },
         onAcceptDraft: async (draftId) => {

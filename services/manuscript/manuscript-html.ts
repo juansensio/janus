@@ -16,7 +16,7 @@ export type ManuscriptDocument = {
 
 export type ManuscriptBlock =
     | { kind: "p"; text: string }
-    | { kind: "comment"; id: string; text: string; model?: string }
+    | { kind: "comment"; id: string; text: string }
     | {
           kind: "draft";
           id: string;
@@ -92,13 +92,7 @@ function parseComment(el: HTMLElement): ManuscriptBlock {
     if (childElements(el).length > 0) {
         invalid(`${TAG_COMMENT} must contain plain text only`);
     }
-    const model = el.getAttribute("model")?.trim();
-    return {
-        kind: "comment",
-        id,
-        text: elementTextContent(el),
-        ...(model ? { model } : {}),
-    };
+    return { kind: "comment", id, text: elementTextContent(el) };
 }
 
 function parseDraft(el: HTMLElement): ManuscriptBlock {
@@ -150,11 +144,7 @@ function serializeBlock(block: ManuscriptBlock): string {
         return `<${TAG_P}>${escapeText(block.text)}</${TAG_P}>`;
     }
     if (block.kind === "comment") {
-        const modelAttr =
-            block.model?.trim()
-                ? ` model="${escapeAttr(block.model.trim())}"`
-                : "";
-        return `<${TAG_COMMENT} id="${escapeAttr(block.id)}"${modelAttr}>${escapeText(block.text)}</${TAG_COMMENT}>`;
+        return `<${TAG_COMMENT} id="${escapeAttr(block.id)}">${escapeText(block.text)}</${TAG_COMMENT}>`;
     }
     const inner = block.paragraphs
         .map((text) => `<${TAG_P}>${escapeText(text)}</${TAG_P}>`)

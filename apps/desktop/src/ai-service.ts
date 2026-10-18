@@ -1,17 +1,9 @@
 import { randomUUID } from "node:crypto";
 import { shell } from "electron";
-import type { OpenAiModelSettings } from "@janus/bridge";
 import {
     assertManuscriptContextSize,
     AiAssistError,
-    buildOpenAiModelOptions,
     createOpenAiCodexProvider,
-    fetchListedModelSlugs,
-    isAllowedOpenAiModelPreference,
-    normalizeOpenAiModelPreference,
-    resolveProviderModelSlug,
-    OPENAI_MODEL_PREFERENCE_AUTO,
-    resolveWriteModelSlug,
     type FetchFn,
 } from "@janus/ai-assist";
 import {
@@ -35,33 +27,19 @@ import {
     type AnyStoredAiSession,
     type StoredAiSession,
 } from "./ai-session-store";
-import { LibraryBridgeError } from "./library-errors";
-import {
-    loadJanusSettings,
-    saveJanusSettings,
-    type LibraryRootFs,
-} from "./library-root";
 
-function findComment(
-    html: string,
-    commentId: string,
-): { text: string; model?: string } | null {
+function findCommentText(html: string, commentId: string): string | null {
     const blocks = parseManuscriptBlocks(html);
     const comment = blocks.find(
         (block) => block.kind === "comment" && block.id === commentId,
     );
-    if (comment?.kind !== "comment") {
-        return null;
-    }
-    return { text: comment.text, model: comment.model };
+    return comment?.kind === "comment" ? comment.text : null;
 }
 
 export type AiBridgeServiceDeps = {
     fetchImpl?: FetchFn;
     openExternal?: (url: string) => Promise<void>;
     connectSiwc?: typeof connectSiwcOpenAi;
-    userDataPath?: string;
-    settingsFs?: Pick<LibraryRootFs, "readFile" | "writeFile" | "mkdir">;
 };
 
 async function ensureFreshAccessToken(
@@ -95,64 +73,8 @@ export function createAiBridgeService(
     const openExternal =
         deps.openExternal ?? ((url: string) => shell.openExternal(url));
     const connectSiwc = deps.connectSiwc ?? connectSiwcOpenAi;
-    const userDataPath = deps.userDataPath;
-    const settingsFs = deps.settingsFs;
 
     const provider = createOpenAiCodexProvider(fetchImpl);
-
-    async function resolveOpenAiModelSettings(): Promise<OpenAiModelSettings> {
-        if (!userDataPath || !settingsFs) {
-            throw new LibraryBridgeError(
-                "AI_NOT_SUPPORTED",
-                "OpenAI model settings are unavailable",
-            );
-        }
-        const settings = await loadJanusSettings(userDataPath, settingsFs);
-        const preference = normalizeOpenAiModelPreference(
-            settings.openAiModel,
-        );
-        const session = await loadAiSession();
-        let listedSlugs: string[] | null = null;
-        if (session) {
-            try {
-                let active = session;
-                if (!isDevOverrideSession(session)) {
-                    active = await ensureFreshAccessToken(
-                        fetchImpl,
-                        session as StoredAiSession,
-                    );
-                }
-                listedSlugs = await fetchListedModelSlugs(
-                    accessTokenForSession(active),
-                    fetchImpl,
-                );
-            } catch {
-                listedSlugs = null;
-            }
-        }
-        const options = buildOpenAiModelOptions(listedSlugs);
-        const resolvedPreference = options.includes(preference)
-            ? preference
-            : normalizeOpenAiModelPreference(undefined);
-        return { preference: resolvedPreference, options };
-    }
-
-    async function providerSessionForWrite(
-        accessToken: string,
-        commentModel?: string,
-    ): Promise<{ provider: "openai-codex"; accessToken: string; model?: string }> {
-        let settingsPreference = OPENAI_MODEL_PREFERENCE_AUTO;
-        if (userDataPath && settingsFs) {
-            const settings = await loadJanusSettings(userDataPath, settingsFs);
-            settingsPreference = normalizeOpenAiModelPreference(
-                settings.openAiModel,
-            );
-        }
-        const model = resolveWriteModelSlug(commentModel, settingsPreference);
-        return model
-            ? { provider: "openai-codex", accessToken, model }
-            : { provider: "openai-codex", accessToken };
-    }
 
     return {
         async getAiProviderStatus(): Promise<{ connected: boolean }> {
@@ -180,34 +102,6 @@ export function createAiBridgeService(
                 await revokeRefreshToken(fetchImpl, session.refreshToken);
             }
             await clearAiSession();
-        },
-
-        async getOpenAiModelSettings(): Promise<OpenAiModelSettings> {
-            return resolveOpenAiModelSettings();
-        },
-
-        async setOpenAiModelPreference(
-            preference: string,
-        ): Promise<OpenAiModelSettings> {
-            if (!userDataPath || !settingsFs) {
-                throw new LibraryBridgeError(
-                    "AI_NOT_SUPPORTED",
-                    "OpenAI model settings are unavailable",
-                );
-            }
-            if (!isAllowedOpenAiModelPreference(preference)) {
-                throw new LibraryBridgeError(
-                    "AI_PROVIDER_ERROR",
-                    "Unknown OpenAI model preference",
-                );
-            }
-            const settings = await loadJanusSettings(userDataPath, settingsFs);
-            await saveJanusSettings(
-                userDataPath,
-                { ...settings, openAiModel: preference },
-                settingsFs,
-            );
-            return resolveOpenAiModelSettings();
         },
 
         async writeForComment(
@@ -242,24 +136,22 @@ export function createAiBridgeService(
                     }
                 }
                 const html = await manuscript.readManuscript(bookId);
-                const comment = findComment(html, commentId);
-                if (comment === null) {
+                const commentText = findCommentText(html, commentId);
+                if (commentText === null) {
                     throw new AiAssistError(
                         "AI_COMMENT_NOT_FOUND",
                         "AI comment not found",
                     );
                 }
-                const commentText = comment.text;
                 assertManuscriptContextSize(html);
                 const accessToken = accessTokenForSession(session);
                 const draftId = randomUUID();
-                const providerSession = await providerSessionForWrite(
-                    accessToken,
-                    comment.model,
-                );
                 try {
                     const { draftHtml } = await provider.generateDraft(
-                        providerSession,
+                        {
+                            provider: "openai-codex",
+                            accessToken,
+                        },
                         {
                             manuscriptHtml: html,
                             commentId,
@@ -289,12 +181,11 @@ export function createAiBridgeService(
                             session as StoredAiSession,
                         );
                         await saveAiSession(refreshed);
-                        const retrySession = await providerSessionForWrite(
-                            refreshed.accessToken,
-                            comment.model,
-                        );
                         const { draftHtml } = await provider.generateDraft(
-                            retrySession,
+                            {
+                                provider: "openai-codex",
+                                accessToken: refreshed.accessToken,
+                            },
                             {
                                 manuscriptHtml: html,
                                 commentId,

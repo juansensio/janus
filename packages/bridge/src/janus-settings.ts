@@ -1,8 +1,6 @@
 export type JanusSettings = {
     libraryRoot?: string;
     uiLocale?: string;
-    /** `"auto"` or an allowlisted OpenAI model slug */
-    openAiModel?: string;
 };
 
 export function normalizeJanusSettings(raw: unknown): JanusSettings {
@@ -16,9 +14,6 @@ export function normalizeJanusSettings(raw: unknown): JanusSettings {
     }
     if (typeof record.uiLocale === "string") {
         settings.uiLocale = record.uiLocale;
-    }
-    if (typeof record.openAiModel === "string") {
-        settings.openAiModel = record.openAiModel;
     }
     return settings;
 }

@@ -7,7 +7,6 @@ import { EditorView } from "prosemirror-view";
 import { aiWriteErrorKey } from "./ai-write-error";
 import { t } from "../i18n";
 import { manuscriptSchema } from "./manuscript-schema";
-import { openAiModelOptionLabel } from "../settings/open-ai-model-label";
 import { parseManuscriptHtml, serializeManuscriptHtml } from "./manuscript-html";
 
 export type AiWriteFlight = {
@@ -24,7 +23,6 @@ export type ManuscriptEditorOptions = {
     onAcceptDraft: (draftId: string) => Promise<void>;
     onRejectDraft: (draftId: string) => Promise<void>;
     onTransformError: (message: string) => void;
-    openAiModelOptions: string[];
 };
 
 export type ManuscriptEditor = {
@@ -72,34 +70,6 @@ export function createManuscriptEditor(
         }
     }
 
-    function updateCommentModel(commentId: string, model: string): void {
-        const { state } = view;
-        let targetPos: number | null = null;
-        state.doc.descendants((node, pos) => {
-            if (
-                node.type.name === "janus_ai_comment" &&
-                String(node.attrs.id) === commentId
-            ) {
-                targetPos = pos;
-                return false;
-            }
-            return undefined;
-        });
-        if (targetPos === null) {
-            return;
-        }
-        const node = state.doc.nodeAt(targetPos);
-        if (!node) {
-            return;
-        }
-        const tr = state.tr.setNodeMarkup(targetPos, undefined, {
-            ...node.attrs,
-            model,
-        });
-        view.dispatch(tr);
-        options.onDocChange();
-    }
-
     function removeAiComment(commentId: string): void {
         try {
             const html = deleteAiComment(
@@ -143,7 +113,6 @@ export function createManuscriptEditor(
                 contentDOM.className = "editor-ai-comment-body";
                 let write: HTMLButtonElement | null = null;
                 let del: HTMLButtonElement | null = null;
-                let modelSelect: HTMLSelectElement | null = null;
                 let status: HTMLParagraphElement | null = null;
 
                 function applyChromeState(): void {
@@ -156,9 +125,6 @@ export function createManuscriptEditor(
                         locked && flight.commentId === commentId;
                     write.disabled = locked;
                     del.disabled = locked;
-                    if (modelSelect) {
-                        modelSelect.disabled = locked;
-                    }
                     if (isActive) {
                         write.textContent = t("ai.writing");
                         status.textContent = t("ai.writing");
@@ -171,30 +137,6 @@ export function createManuscriptEditor(
                 }
 
                 if (options.showAiChrome) {
-                    const modelRow = document.createElement("div");
-                    modelRow.className = "editor-ai-comment-model-row";
-                    const modelLabel = document.createElement("label");
-                    modelLabel.className = "editor-ai-comment-model-label";
-                    modelLabel.textContent = t("ai.modelLabel");
-                    modelSelect = document.createElement("select");
-                    modelSelect.className = "editor-ai-comment-model";
-                    const defaultOption = document.createElement("option");
-                    defaultOption.value = "";
-                    defaultOption.textContent = t("ai.modelUseDefault");
-                    modelSelect.append(defaultOption);
-                    for (const value of options.openAiModelOptions) {
-                        const option = document.createElement("option");
-                        option.value = value;
-                        option.textContent = openAiModelOptionLabel(value);
-                        modelSelect.append(option);
-                    }
-                    modelSelect.value = String(node.attrs.model ?? "");
-                    modelSelect.addEventListener("change", () => {
-                        updateCommentModel(commentId, modelSelect?.value ?? "");
-                    });
-                    modelLabel.append(modelSelect);
-                    modelRow.append(modelLabel);
-
                     const actions = document.createElement("div");
                     actions.className = "editor-ai-comment-actions";
                     write = document.createElement("button");
@@ -217,13 +159,18 @@ export function createManuscriptEditor(
                             );
                             try {
                                 await options.onWriteComment(commentId);
-                            } catch (error) {
-                                if (status) {
-                                    status.textContent = t(aiWriteErrorKey(error));
-                                    status.classList.add(
+                                if (
+                                    !status.classList.contains(
                                         "editor-ai-comment-status-error",
-                                    );
+                                    )
+                                ) {
+                                    status.textContent = "";
                                 }
+                            } catch (error) {
+                                status.textContent = t(aiWriteErrorKey(error));
+                                status.classList.add(
+                                    "editor-ai-comment-status-error",
+                                );
                             }
                         })();
                     });
@@ -234,7 +181,7 @@ export function createManuscriptEditor(
                         removeAiComment(commentId);
                     });
                     actions.append(write, del);
-                    dom.append(modelRow, actions, status, contentDOM);
+                    dom.append(actions, status, contentDOM);
                     chromeRefreshers.add(applyChromeState);
                     applyChromeState();
                 } else {
@@ -243,20 +190,6 @@ export function createManuscriptEditor(
                 return {
                     dom,
                     contentDOM,
-                    update(updatedNode) {
-                        if (updatedNode.type !== node.type) {
-                            return false;
-                        }
-                        if (modelSelect) {
-                            const nextModel = String(
-                                updatedNode.attrs.model ?? "",
-                            );
-                            if (modelSelect.value !== nextModel) {
-                                modelSelect.value = nextModel;
-                            }
-                        }
-                        return true;
-                    },
                     destroy() {
                         chromeRefreshers.delete(applyChromeState);
                     },
@@ -327,10 +260,7 @@ export function createManuscriptEditor(
         },
         insertAiComment() {
             const id = crypto.randomUUID();
-            const comment = manuscriptSchema.node("janus_ai_comment", {
-                id,
-                model: "",
-            });
+            const comment = manuscriptSchema.node("janus_ai_comment", { id });
             const { state } = view;
             const tr = state.tr.insert(state.doc.content.size, comment);
             view.dispatch(tr);
@@ -338,7 +268,7 @@ export function createManuscriptEditor(
         },
         refreshAiCommentChrome,
         showWriteErrorForComment(commentId: string, error: unknown): void {
-            const comment = view.dom.querySelector(
+            const comment = mount.querySelector(
                 `[data-comment-id="${commentId}"]`,
             );
             const statusEl = comment?.querySelector(

@@ -155,28 +155,6 @@
 
 ---
 
-## Task 6: OpenAI model — Settings default + per-comment override
-
-**Description:** Settings picks the default OpenAI model (`openAiModel` in `janus-settings.json`). Each AI comment shows a model `<select>` (`Default (from Settings)` or explicit slug); choice persists as `model` on `<janus-ai-comment>`. Write resolves comment model, else settings, via `resolveWriteModelSlug`.
-
-**Acceptance criteria:**
-
-- [x] Allowlist + Auto in `openai-model-catalog.ts`; bridge `getOpenAiModelSettings` / `setOpenAiModelPreference`
-- [x] Settings model `<select>` on desktop
-- [x] Comment chrome model `<select>`; `model` attribute round-trips in manuscript HTML
-- [x] `writeForComment` uses per-comment model when set
-- [x] Tests: catalog, manuscript HTML, settings UI, comment model persistence
-
-**Verification:**
-
-- [x] `bun run test`
-- [x] `bun run lint`
-- [ ] Manual: set default in Settings; override on one comment; Write uses each model
-
-**Dependencies:** Task 5
-
----
-
 ## Checkpoint: Complete
 
 - [x] Spec UI bullets satisfied: loading on Write, buttons disabled until response, errors inline on comment

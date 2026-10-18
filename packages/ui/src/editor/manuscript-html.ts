@@ -21,9 +21,7 @@ function serializeBlock(node: PmNode): string {
     }
     if (node.type.name === "janus_ai_comment") {
         const id = String(node.attrs.id ?? "");
-        const model = String(node.attrs.model ?? "").trim();
-        const modelAttr = model ? ` model="${escapeAttr(model)}"` : "";
-        return `<janus-ai-comment id="${escapeAttr(id)}"${modelAttr}>${escapeText(node.textContent)}</janus-ai-comment>`;
+        return `<janus-ai-comment id="${escapeAttr(id)}">${escapeText(node.textContent)}</janus-ai-comment>`;
     }
     if (node.type.name === "janus_ai_draft") {
         const id = String(node.attrs.id ?? "");
@@ -74,11 +72,10 @@ export function parseManuscriptHtml(html: string): PmNode {
         }
         if (tag === "janus-ai-comment") {
             const id = child.getAttribute("id") ?? "";
-            const model = child.getAttribute("model") ?? "";
             blocks.push(
                 manuscriptSchema.node(
                     "janus_ai_comment",
-                    { id, model },
+                    { id },
                     child.textContent
                         ? [manuscriptSchema.text(child.textContent)]
                         : undefined,

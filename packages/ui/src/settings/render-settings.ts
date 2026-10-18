@@ -1,7 +1,6 @@
 import type { JanusBridge } from "@janus/bridge";
 import { initI18n, t } from "../i18n";
 import { aiConnectErrorKey } from "./ai-connect-error";
-import { openAiModelOptionLabel } from "./open-ai-model-label";
 
 export type RenderSettingsOptions = {
     onBack: () => void;
@@ -117,61 +116,10 @@ export async function renderSettings(
                 })();
             });
             aiActions.append(toggle);
-
-            const modelLabel = document.createElement("p");
-            modelLabel.className = "settings-label";
-            modelLabel.textContent = t("ai.modelLabel");
-
-            const modelSelect = document.createElement("select");
-            modelSelect.className = "settings-openai-model";
-            modelSelect.setAttribute("aria-label", t("ai.modelLabel"));
-
-            const modelHint = document.createElement("p");
-            modelHint.className = "settings-note";
-
-            try {
-                const modelSettings = await bridge.getOpenAiModelSettings();
-                for (const value of modelSettings.options) {
-                    const option = document.createElement("option");
-                    option.value = value;
-                    option.textContent = openAiModelOptionLabel(value);
-                    modelSelect.append(option);
-                }
-                modelSelect.value = modelSettings.preference;
-                if (!status.connected) {
-                    modelHint.textContent = t("ai.modelNotConnectedHint");
-                }
-            } catch {
-                modelHint.textContent = t("settings.chooseFailed");
-                modelSelect.disabled = true;
-            }
-
-            modelSelect.addEventListener("change", () => {
-                void (async () => {
-                    error.textContent = "";
-                    try {
-                        const result = await bridge.setOpenAiModelPreference(
-                            modelSelect.value,
-                        );
-                        modelSelect.value = result.preference;
-                    } catch {
-                        error.textContent = t("settings.chooseFailed");
-                    }
-                })();
-            });
-
-            host.append(
-                aiTitle,
-                aiStatus,
-                aiActions,
-                modelLabel,
-                modelSelect,
-                modelHint,
-            );
         } catch {
             aiStatus.textContent = t("ai.notConnected");
-            host.append(aiTitle, aiStatus, aiActions);
         }
+        host.append(aiTitle, aiStatus, aiActions);
     }
 
     let rootInfo: Awaited<ReturnType<JanusBridge["getLibraryRoot"]>>;

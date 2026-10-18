@@ -39,25 +39,6 @@ describe("renderSettings", () => {
         expect(host.textContent).toContain(t("settings.devDefaultNote"));
     });
 
-    it("shows OpenAI model selector on desktop", async () => {
-        initTestI18n("en");
-        const host = document.createElement("div");
-        const bridge = createMockJanusBridge({
-            getLibraryRoot: async () => ({
-                path: "/data/library",
-                source: "user-data",
-            }),
-        });
-        await renderSettings(host, bridge, { onBack: () => {} });
-        const modelSelect = host.querySelector(
-            ".settings-openai-model",
-        ) as HTMLSelectElement;
-        expect(modelSelect).not.toBeNull();
-        const labels = [...modelSelect.options].map((o) => o.textContent);
-        expect(labels).toContain("Auto");
-        expect(labels).toContain("GPT-4o");
-    });
-
     it("lists English and Español in the language select", async () => {
         initTestI18n("en");
         const host = document.createElement("div");
