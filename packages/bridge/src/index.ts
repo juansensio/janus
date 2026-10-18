@@ -61,7 +61,8 @@ export type JanusBridgeErrorCode =
     | "AI_COMMENT_NOT_FOUND"
     | "AI_CONTEXT_TOO_LARGE"
     | "AI_PROVIDER_ERROR"
-    | "AI_AUTH_FAILED";
+    | "AI_AUTH_FAILED"
+    | "AI_AUTH_CANCELLED";
 
 export type { UiLanguageResult } from "./ui-language";
 export { buildUiLanguage, buildUiLanguageForCode } from "./ui-language";

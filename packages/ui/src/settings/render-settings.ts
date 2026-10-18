@@ -1,5 +1,6 @@
 import type { JanusBridge } from "@janus/bridge";
 import { initI18n, t } from "../i18n";
+import { aiConnectErrorKey } from "./ai-connect-error";
 
 export type RenderSettingsOptions = {
     onBack: () => void;
@@ -107,8 +108,10 @@ export async function renderSettings(
                             await bridge.connectOpenAiCodex();
                         }
                         await renderSettings(host, bridge, options);
-                    } catch {
-                        error.textContent = t("ai.connectFailed");
+                    } catch (connectError) {
+                        error.textContent = t(
+                            aiConnectErrorKey(connectError),
+                        );
                     }
                 })();
             });
