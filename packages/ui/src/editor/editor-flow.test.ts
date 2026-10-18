@@ -114,9 +114,9 @@ describe("editor autosave flow", () => {
             '<janus-manuscript version="1"><janus-ai-comment id="c1">hola</janus-ai-comment></janus-manuscript>';
         const write = vi.fn(async () => commentHtml);
         const writeForComment = vi.fn(async () => {
-            throw Object.assign(new Error("Not an instruction."), {
-                code: "AI_COMMENT_NOT_INSTRUCTION",
-            });
+            throw new Error(
+                "Error invoking remote method 'janus:ai:writeForComment': Please provide an instruction to add or change the prose.",
+            );
         });
         const bridge = createMockJanusBridge({
             listBooks: async () => [sampleBook],
@@ -138,7 +138,9 @@ describe("editor autosave flow", () => {
         await vi.waitFor(() => expect(writeForComment).toHaveBeenCalled());
         await vi.waitFor(() => {
             const status = root.querySelector(".editor-ai-comment-status");
-            expect(status?.textContent ?? "").toContain("Not an instruction.");
+            expect(status?.textContent ?? "").toContain(
+                "instruction to add or change",
+            );
             expect(
                 status?.classList.contains("editor-ai-comment-status-error"),
             ).toBe(true);

@@ -27,4 +27,19 @@ describe("library-ipc-error", () => {
         );
     });
 
+    it("rebuilds Error with code for AI write instruction refusals", () => {
+        const err = libraryErrorFromIpcFailure(
+            toLibraryIpcReject(
+                "Please provide an instruction to add or change the prose.",
+                "AI_COMMENT_NOT_INSTRUCTION",
+            ),
+        );
+        expect(err.message).toBe(
+            "Please provide an instruction to add or change the prose.",
+        );
+        expect((err as Error & { code: string }).code).toBe(
+            "AI_COMMENT_NOT_INSTRUCTION",
+        );
+    });
+
 });

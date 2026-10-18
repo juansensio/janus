@@ -16,6 +16,18 @@ function isDuplicateBookTitleMessage(message: string): boolean {
     return DUPLICATE_BOOK_TITLE_MARKERS.some((phrase) => lower.includes(phrase));
 }
 
+const AI_COMMENT_NOT_INSTRUCTION_MARKERS = [
+    "instruction to add or change",
+    "instrucción para añadir o cambiar",
+] as const;
+
+function isAiCommentNotInstructionMessage(message: string): boolean {
+    const lower = message.toLowerCase();
+    return AI_COMMENT_NOT_INSTRUCTION_MARKERS.some((phrase) =>
+        lower.includes(phrase),
+    );
+}
+
 export function bridgeErrorCode(error: unknown): string | undefined {
     if (
         error !== null &&
@@ -28,6 +40,9 @@ export function bridgeErrorCode(error: unknown): string | undefined {
     const message = extractErrorMessage(error);
     if (message.length > 0 && isDuplicateBookTitleMessage(message)) {
         return "DUPLICATE_BOOK_TITLE";
+    }
+    if (message.length > 0 && isAiCommentNotInstructionMessage(message)) {
+        return "AI_COMMENT_NOT_INSTRUCTION";
     }
     return undefined;
 }

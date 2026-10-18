@@ -47,6 +47,17 @@ describe("aiWriteErrorMessage", () => {
         ).toBe("Use an instruction.");
     });
 
+    it("shows refusal text when IPC omits code but message is present", () => {
+        expect(
+            aiWriteErrorMessage(
+                new Error(
+                    "Error invoking remote method 'janus:ai:writeForComment': Please provide an instruction to add or change the prose.",
+                ),
+                t,
+            ),
+        ).toBe("Please provide an instruction to add or change the prose.");
+    });
+
     it("falls back to locale string when the refusal message is empty", () => {
         expect(
             aiWriteErrorMessage(

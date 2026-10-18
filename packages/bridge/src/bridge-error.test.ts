@@ -39,6 +39,16 @@ describe("bridgeErrorCode", () => {
             ),
         ).toBe("DUPLICATE_BOOK_TITLE");
     });
+
+    it("infers AI_COMMENT_NOT_INSTRUCTION from ipc-wrapped write refusal without code", () => {
+        expect(
+            bridgeErrorCode(
+                new Error(
+                    "Error invoking remote method 'janus:ai:writeForComment': Please provide an instruction to add or change the prose.",
+                ),
+            ),
+        ).toBe("AI_COMMENT_NOT_INSTRUCTION");
+    });
 });
 
 describe("extractErrorMessage", () => {

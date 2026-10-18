@@ -1,4 +1,4 @@
-import { bridgeErrorCode } from "@janus/bridge";
+import { bridgeErrorCode, extractErrorMessage } from "@janus/bridge";
 
 /** Maps IPC write failures to `ai.*` locale keys. */
 export function aiWriteErrorKey(error: unknown): string {
@@ -28,8 +28,7 @@ export function aiWriteErrorMessage(
 ): string {
     const code = bridgeErrorCode(error);
     if (code === "AI_COMMENT_NOT_INSTRUCTION") {
-        const message =
-            error instanceof Error ? error.message.trim() : "";
+        const message = extractErrorMessage(error).trim();
         if (message.length > 0) {
             return message;
         }
