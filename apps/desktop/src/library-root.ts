@@ -1,13 +1,14 @@
 import path from "node:path";
+import {
+    normalizeJanusSettings,
+    type JanusSettings,
+} from "@janus/bridge";
 import { LibraryBridgeError } from "./library-errors";
 
 export const JANUS_SETTINGS_FILENAME = "janus-settings.json";
 export const DEV_LIBRARY_DIRNAME = ".janus-library";
 
-export type JanusSettings = {
-    libraryRoot?: string;
-    uiLocale?: string;
-};
+export type { JanusSettings };
 
 export type LibraryRootSource =
     | "env"
@@ -83,11 +84,7 @@ export async function loadJanusSettings(
     const settingsPath = path.join(userDataPath, JANUS_SETTINGS_FILENAME);
     try {
         const raw = await fs.readFile(settingsPath, "utf8");
-        const parsed = JSON.parse(raw) as JanusSettings;
-        if (parsed === null || typeof parsed !== "object") {
-            return {};
-        }
-        return parsed;
+        return normalizeJanusSettings(JSON.parse(raw));
     } catch {
         return {};
     }

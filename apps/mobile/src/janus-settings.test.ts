@@ -32,6 +32,13 @@ describe("janus-settings", () => {
         await expect(loadJanusSettings()).resolves.toEqual({});
     });
 
+    it("ignores non-string fields when loading", async () => {
+        readFile.mockResolvedValueOnce({
+            data: JSON.stringify({ libraryRoot: false, uiLocale: 1 }),
+        });
+        await expect(loadJanusSettings()).resolves.toEqual({});
+    });
+
     it("merges uiLocale on save without dropping libraryRoot", async () => {
         readFile.mockResolvedValue({
             data: JSON.stringify({ libraryRoot: "/custom" }),

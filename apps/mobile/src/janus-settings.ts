@@ -1,4 +1,8 @@
 import {
+    normalizeJanusSettings,
+    type JanusSettings,
+} from "@janus/bridge";
+import {
     Directory,
     Encoding,
     Filesystem,
@@ -6,10 +10,7 @@ import {
 
 export const JANUS_SETTINGS_FILENAME = "janus-settings.json";
 
-export type JanusSettings = {
-    libraryRoot?: string;
-    uiLocale?: string;
-};
+export type { JanusSettings };
 
 const DATA_DIRECTORY = Directory.Data;
 
@@ -22,8 +23,7 @@ export async function loadJanusSettings(): Promise<JanusSettings> {
         });
         const raw =
             typeof result.data === "string" ? result.data : "";
-        const parsed = JSON.parse(raw) as JanusSettings;
-        return parsed && typeof parsed === "object" ? parsed : {};
+        return normalizeJanusSettings(JSON.parse(raw));
     } catch {
         return {};
     }

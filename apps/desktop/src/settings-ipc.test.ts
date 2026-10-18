@@ -74,7 +74,7 @@ describe("registerSettingsIpc", () => {
         });
     });
 
-    it("persists chosen folder and returns needsReload", async () => {
+    it("persists chosen folder and preserves uiLocale", async () => {
         const handlers = new Map<string, (...args: unknown[]) => unknown>();
         const writeFile = vi.fn(async () => {});
         const ipcMain = {
@@ -86,12 +86,13 @@ describe("registerSettingsIpc", () => {
             ipcMain as import("electron").IpcMain,
             () => ({
                 resolved: { path: "/data/library", source: "user-data" },
-                settings: {},
+                settings: { uiLocale: "es" },
             }),
             {
                 userDataPath: "/user",
                 fs: {
-                    readFile: async () => "{}",
+                    readFile: async () =>
+                        JSON.stringify({ uiLocale: "es" }),
                     writeFile,
                     mkdir: async () => {},
                     rename: async () => {},
@@ -109,6 +110,16 @@ describe("registerSettingsIpc", () => {
             needsReload: true,
         });
         expect(writeFile).toHaveBeenCalled();
+        const settingsWrite = writeFile.mock.calls.find((call) =>
+            String(call[1]).includes("uiLocale"),
+        );
+        expect(settingsWrite).toBeDefined();
+        const payload = JSON.parse(String(settingsWrite![1])) as {
+            libraryRoot?: string;
+            uiLocale?: string;
+        };
+        expect(payload.libraryRoot).toBe("/Volumes/Books/Janus");
+        expect(payload.uiLocale).toBe("es");
     });
 
     it("reloads library context after choosing a new folder", async () => {

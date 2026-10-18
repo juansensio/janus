@@ -56,6 +56,11 @@ export type JanusBridgeErrorCode =
 
 export type { UiLanguageResult } from "./ui-language";
 export { buildUiLanguage, buildUiLanguageForCode } from "./ui-language";
+export { formatMessage } from "@janus/languages";
+export {
+    normalizeJanusSettings,
+    type JanusSettings,
+} from "./janus-settings";
 
 export interface JanusBridge {
     platform(): Platform;
