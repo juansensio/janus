@@ -16,6 +16,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@janus/bridge": "workspace:*",
+        "@janus/library": "workspace:*",
         "electron": "33.2.1",
       },
     },
@@ -45,6 +46,10 @@
       "devDependencies": {
         "vite": "6.0.3",
       },
+    },
+    "services/library": {
+      "name": "@janus/library",
+      "version": "0.0.0",
     },
   },
   "packages": {
@@ -125,6 +130,8 @@
     "@janus/bridge": ["@janus/bridge@workspace:packages/bridge"],
 
     "@janus/desktop": ["@janus/desktop@workspace:apps/desktop"],
+
+    "@janus/library": ["@janus/library@workspace:services/library"],
 
     "@janus/mobile": ["@janus/mobile@workspace:apps/mobile"],
 

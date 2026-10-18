@@ -1,6 +1,8 @@
+import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { app, BrowserWindow } from "electron";
+import { app, BrowserWindow, ipcMain } from "electron";
+import { registerLibraryIpc } from "./library-ipc";
 import {
     evaluateNavigationUrl,
     evaluateWindowOpen,
@@ -78,7 +80,21 @@ function createWindow(): void {
     }
 }
 
+function libraryRootPath(): string {
+    return path.join(app.getPath("userData"), "library");
+}
+
 app.whenReady().then(() => {
+    registerLibraryIpc(ipcMain, libraryRootPath(), {
+        mkdir: (p, options) => fs.mkdir(p, options),
+        readdir: (p, options) =>
+            fs.readdir(p, options as { withFileTypes?: boolean }),
+        readFile: (p, encoding) => fs.readFile(p, encoding),
+        writeFile: (p, data, encoding) => fs.writeFile(p, data, encoding),
+        rm: (p, options) => fs.rm(p, options),
+        stat: (p) => fs.stat(p),
+    });
+
     app.on("web-contents-created", (_event, contents) => {
         attachSecureNavigationPolicy(contents);
     });

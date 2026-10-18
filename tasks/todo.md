@@ -56,13 +56,13 @@ Sizing: **S** = 1–2 files, **M** = 3–5 files.
 **Description:** Implement library bridge methods on desktop: `libraryRoot` under `app.getPath("userData")`, use `@janus/library` for manifests, titles, paths, sort. `ipcMain.handle` + preload `invoke` wrappers on `window.janus`. `listBooks` skips corrupt entries; `deleteBook` throws `BOOK_NOT_FOUND` when missing; `createBook` writes UUID dir + `book.json`. Vitest for pure helpers and error mapping.
 
 **Acceptance criteria:**
-- [ ] Preload uses `contextBridge`; no Node `fs` in preload
-- [ ] create/list/delete round-trip on temp dir via tests
-- [ ] `bun run dev:desktop` and `desktop:prod` still open without bridge errors
+- [x] Preload uses `contextBridge`; no Node `fs` in preload
+- [x] create/list/delete round-trip on temp dir via tests
+- [x] `bun run dev:desktop` and `desktop:prod` still open without bridge errors
 
 **Verification:**
-- [ ] `bun run test`
-- [ ] `bun run lint`
+- [x] `bun run test`
+- [x] `bun run lint`
 
 **Dependencies:** Tasks 1, 2
 

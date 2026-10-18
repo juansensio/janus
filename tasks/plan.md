@@ -49,7 +49,7 @@ Full acceptance criteria: **`tasks/todo.md`** Tasks **1–8**.
 - [x] `bun run test` includes `services/library/`; bridge mocks updated
 
 ### Phase 2: Shell I/O
-- [ ] Task 3: Desktop library IPC and FS
+- [x] Task 3: Desktop library IPC and FS
 - [ ] Task 4: Mobile Capacitor FS adapter
 
 ### Checkpoint: Adapters
