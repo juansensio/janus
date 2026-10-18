@@ -38,7 +38,7 @@ function uiIndexPath(): string {
 }
 
 function isJanusDevMode(): boolean {
-    return process.env.JANUS_DEV === "1";
+    return !app.isPackaged && process.env.JANUS_DEV === "1";
 }
 
 function navigationOptions(): NavigationPolicyOptions {
@@ -112,26 +112,27 @@ app.whenReady().then(async () => {
         rename: (from, to) => fs.rename(from, to),
     };
     const userDataPath = app.getPath("userData");
+    const documentsPath = app.getPath("documents");
     const rootFs = {
         ...libraryFs,
         readdir: (p: string) =>
             fs.readdir(p).then((entries) => entries as string[]),
     };
+    const libraryContextOptions = () => ({
+        env: process.env,
+        userDataPath,
+        documentsPath,
+        isDev: isJanusDevMode(),
+        isPackaged: app.isPackaged,
+        fs: rootFs,
+    });
     let libraryContext: DesktopLibraryContext = await initDesktopLibraryContext(
-        {
-            env: process.env,
-            userDataPath,
-            isDev: isJanusDevMode(),
-            fs: rootFs,
-        },
+        libraryContextOptions(),
     );
     const reloadLibraryContext = async (): Promise<void> => {
-        libraryContext = await initDesktopLibraryContext({
-            env: process.env,
-            userDataPath,
-            isDev: isJanusDevMode(),
-            fs: rootFs,
-        });
+        libraryContext = await initDesktopLibraryContext(
+            libraryContextOptions(),
+        );
     };
     registerLibraryIpc(
         ipcMain,

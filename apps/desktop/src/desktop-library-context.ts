@@ -23,7 +23,9 @@ export type DesktopLibraryContext = {
 export async function initDesktopLibraryContext(options: {
     env: NodeJS.ProcessEnv;
     userDataPath: string;
+    documentsPath: string;
     isDev: boolean;
+    isPackaged: boolean;
     fs: LibraryRootFs;
 }): Promise<DesktopLibraryContext> {
     const settings = await loadJanusSettings(options.userDataPath, options.fs);
@@ -31,8 +33,10 @@ export async function initDesktopLibraryContext(options: {
         env: options.env,
         repoRoot: desktopRepoRoot(),
         userDataPath: options.userDataPath,
+        documentsPath: options.documentsPath,
         settings,
         isDev: options.isDev,
+        isPackaged: options.isPackaged,
     });
     if (resolved.source === "dev-default") {
         await migrateUserDataLibraryToDevRoot(

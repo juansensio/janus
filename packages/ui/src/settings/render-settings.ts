@@ -13,6 +13,8 @@ function formatSourceLabel(source: string): string {
             return t("settings.source.devDefault");
         case "settings":
             return t("settings.source.settings");
+        case "documents":
+            return t("settings.source.documents");
         default:
             return t("settings.source.userData");
     }

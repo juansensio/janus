@@ -38,5 +38,6 @@
     "settings.source.env": "Variable de entorno",
     "settings.source.settings": "Carpeta personalizada",
     "settings.source.userData": "Ubicación predeterminada",
+    "settings.source.documents": "Carpeta Documentos",
     "settings.title": "Ajustes"
 }

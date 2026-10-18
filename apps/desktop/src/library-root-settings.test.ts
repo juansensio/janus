@@ -18,9 +18,11 @@ describe("resolveLibraryRoot with normalized settings", () => {
                 env: {},
                 repoRoot: "/repo",
                 userDataPath: "/user",
+                documentsPath: "/Users/me/Documents",
                 settings: {},
                 isDev: false,
+                isPackaged: false,
             }).path,
-        ).toContain("/user/library");
+        ).toBe("/Users/me/Documents/Janus");
     });
 });

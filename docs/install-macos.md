@@ -144,7 +144,7 @@ Use this when you want Janus **without** cloning the repo or installing Bun.
    xattr -cr /Applications/Janus.app
    ```
    If it still fails: `codesign --force --deep --sign - /Applications/Janus.app` then open again. Full trust for strangers on the internet needs Apple **notarization** (not in v1).
-5. Confirm the shelf appears (`data-platform="desktop"` on `<main id="app">`). Books live under **Application Support** (or a folder you choose in **Settings**), not in the repo.
+5. Confirm the shelf appears (`data-platform="desktop"` on `<main id="app">`). Books default to **`~/Documents/Janus/books/`** (or a folder you choose in **Settings**). The repo’s **`.janus-library/`** is for **`bun run dev:desktop` only**, not for Release builds.
 
 Maintainers: run `/release verify` (or `bun run validate:desktop-release` after `bun run desktop:package`) before pushing a `v*` tag.
 

@@ -38,5 +38,6 @@
     "settings.source.env": "Environment override",
     "settings.source.settings": "Custom folder",
     "settings.source.userData": "Default location",
+    "settings.source.documents": "Documents folder",
     "settings.title": "Settings"
 }

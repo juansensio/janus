@@ -14,6 +14,7 @@ export type LibraryRootSource =
     | "env"
     | "dev-default"
     | "settings"
+    | "documents"
     | "user-data";
 
 export type ResolvedLibraryRoot = {
@@ -38,12 +39,22 @@ export function devLibraryPath(repoRoot: string): string {
     return path.join(repoRoot, DEV_LIBRARY_DIRNAME);
 }
 
+export function defaultDocumentsLibraryPath(documentsPath: string): string {
+    return path.join(documentsPath, "Janus");
+}
+
+export function isDevLibraryDirectory(absolutePath: string): boolean {
+    return path.basename(path.resolve(absolutePath)) === DEV_LIBRARY_DIRNAME;
+}
+
 export function resolveLibraryRoot(options: {
     env: NodeJS.ProcessEnv;
     repoRoot: string;
     userDataPath: string;
+    documentsPath: string;
     settings: JanusSettings;
     isDev: boolean;
+    isPackaged: boolean;
 }): ResolvedLibraryRoot {
     const envRoot = options.env.JANUS_LIBRARY_ROOT?.trim();
     if (envRoot) {
@@ -63,7 +74,13 @@ export function resolveLibraryRoot(options: {
                 "Saved library path must be absolute",
             );
         }
-        return { path: path.resolve(settingsRoot), source: "settings" };
+        const resolvedSettings = path.resolve(settingsRoot);
+        const staleDevPath =
+            isDevLibraryDirectory(resolvedSettings) &&
+            (options.isPackaged || !options.isDev);
+        if (!staleDevPath) {
+            return { path: resolvedSettings, source: "settings" };
+        }
     }
     if (options.isDev) {
         return {
@@ -72,8 +89,8 @@ export function resolveLibraryRoot(options: {
         };
     }
     return {
-        path: defaultUserDataLibraryPath(options.userDataPath),
-        source: "user-data",
+        path: defaultDocumentsLibraryPath(options.documentsPath),
+        source: "documents",
     };
 }
 

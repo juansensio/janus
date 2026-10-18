@@ -1,11 +1,20 @@
 import { describe, expect, it } from "vitest";
 import {
+    defaultDocumentsLibraryPath,
     defaultUserDataLibraryPath,
     devLibraryPath,
     migrateUserDataLibraryToDevRoot,
     resolveLibraryRoot,
     type LibraryRootFs,
 } from "./library-root";
+
+const baseResolveOptions = {
+    repoRoot: "repo",
+    userDataPath: "user",
+    documentsPath: "/Users/me/Documents",
+    settings: {},
+    isPackaged: false,
+};
 
 function createMemoryFs(): LibraryRootFs & {
     files: Map<string, string>;
@@ -99,10 +108,8 @@ function createMemoryFs(): LibraryRootFs & {
 describe("resolveLibraryRoot", () => {
     it("prefers JANUS_LIBRARY_ROOT over dev default", () => {
         const resolved = resolveLibraryRoot({
+            ...baseResolveOptions,
             env: { JANUS_LIBRARY_ROOT: "/tmp/custom-lib" },
-            repoRoot: "repo",
-            userDataPath: "user",
-            settings: {},
             isDev: true,
         });
         expect(resolved).toEqual({ path: "/tmp/custom-lib", source: "env" });
@@ -110,9 +117,8 @@ describe("resolveLibraryRoot", () => {
 
     it("uses saved settings before dev default when env override unset", () => {
         const resolved = resolveLibraryRoot({
+            ...baseResolveOptions,
             env: {},
-            repoRoot: "repo",
-            userDataPath: "user",
             settings: { libraryRoot: "/saved" },
             isDev: true,
         });
@@ -124,10 +130,8 @@ describe("resolveLibraryRoot", () => {
 
     it("uses dev default in dev when no saved library root", () => {
         const resolved = resolveLibraryRoot({
+            ...baseResolveOptions,
             env: {},
-            repoRoot: "repo",
-            userDataPath: "user",
-            settings: {},
             isDev: true,
         });
         expect(resolved).toEqual({
@@ -138,9 +142,8 @@ describe("resolveLibraryRoot", () => {
 
     it("uses settings in production before user-data fallback", () => {
         const resolved = resolveLibraryRoot({
+            ...baseResolveOptions,
             env: {},
-            repoRoot: "repo",
-            userDataPath: "user",
             settings: { libraryRoot: "/Volumes/Books/Janus" },
             isDev: false,
         });
@@ -150,18 +153,30 @@ describe("resolveLibraryRoot", () => {
         });
     });
 
-    it("falls back to userData/library", () => {
+    it("falls back to Documents/Janus in production", () => {
         const resolved = resolveLibraryRoot({
+            ...baseResolveOptions,
             env: {},
-            repoRoot: "repo",
-            userDataPath: "user",
-            settings: {},
             isDev: false,
         });
         expect(resolved).toEqual({
-            path: defaultUserDataLibraryPath("user"),
-            source: "user-data",
+            path: defaultDocumentsLibraryPath("/Users/me/Documents"),
+            source: "documents",
         });
+    });
+
+    it("ignores saved .janus-library path when packaged", () => {
+        const resolved = resolveLibraryRoot({
+            ...baseResolveOptions,
+            env: {},
+            settings: { libraryRoot: "/Users/dev/janus/.janus-library" },
+            isDev: false,
+            isPackaged: true,
+        });
+        expect(resolved.source).toBe("documents");
+        expect(resolved.path).toBe(
+            defaultDocumentsLibraryPath("/Users/me/Documents"),
+        );
     });
 });
 

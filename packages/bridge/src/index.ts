@@ -29,6 +29,7 @@ export type LibraryRootSource =
     | "env"
     | "dev-default"
     | "settings"
+    | "documents"
     | "user-data";
 
 export type LibraryRootInfo = {
