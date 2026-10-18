@@ -15,6 +15,8 @@ Read the existing spec (`docs/specs/SPEC-*.md`, `SPEC.md`, or equivalent) and th
 5. Add checkpoints between phases
 6. Present the plan for human review
 
-Save the plan to tasks/plan.md and task list to tasks/todo.md.
+Save the plan to `tasks/plan.md` and the task list to `tasks/todo.md`.
 
-If tasks/plan.md or tasks/todo.md already exists with unchecked tasks for different work, stop and ask before writing — never silently overwrite an incomplete plan.
+Follow **Janus plan/todo lifecycle** in `.cursor/rules/janus-planning.mdc` (archive previous module, fresh root `tasks/plan.md` + `tasks/todo.md`, tasks restart at 1).
+
+If the current plan still has **unchecked tasks for in-progress work** on the same module, stop and ask before archiving or overwriting.

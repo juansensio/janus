@@ -1,0 +1,24 @@
+---
+description: Janus plan/todo lifecycle — one active module, archive on spec change
+alwaysApply: true
+---
+
+# Planning artifacts (`/plan`, `/build`)
+
+Module specs: `docs/specs/SPEC-<module-id>.md` per `CAPABILITY-MAP.md`.
+
+## One active plan
+
+`tasks/plan.md` and `tasks/todo.md` are the **active** plan for **one** capability at a time. `/build` reads only these files.
+
+When `/plan` targets a **new** approved module spec and the root pair describes **finished or different** work:
+
+1. **Archive** the current pair to `tasks/archive/<module-id>/plan.md` and `tasks/archive/<module-id>/todo.md` (use the previous module id, e.g. `shell`, `library`).
+2. **Replace** `tasks/plan.md` and `tasks/todo.md` with a fresh plan and task list for the new spec only. **Renumber tasks from 1** — do not append tasks from a closed module.
+3. At the top of the new files, note the source spec path and `Archived: tasks/archive/<module-id>/`.
+
+Do not grow a single `todo.md` across modules. History lives in git and under `tasks/archive/` (see `tasks/archive/README.md`).
+
+**Same module, replan:** Edit the root pair in place; do not archive.
+
+**In progress:** If `tasks/todo.md` still has unchecked acceptance criteria for the **current** module, stop and ask before archiving — unless the user explicitly discards or archives anyway.

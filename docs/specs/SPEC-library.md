@@ -1,6 +1,6 @@
 # Spec: library
 
-> Status: **not approved**. Depends on implemented **shell** (`docs/specs/SPEC-shell.md`). **Slice 1** (this spec) intentionally ships **before** `languages` and `manuscript` per product direction; full “open and write” waits on `manuscript`.
+> Status: **approved** (2026-10-18). Depends on signed-off **shell** (`docs/specs/SPEC-shell.md`). **Slice 1** (this spec) ships **before** `languages` and `manuscript` per product direction; full “open and write” waits on `manuscript`.
 
 ## Assumptions
 
@@ -223,16 +223,16 @@ Coverage gate: none until project sets one. Slice 1 is done when unit tests pass
 - Documented dev commands run; bookshelf visible in `#app` on desktop and Simulator.
 - Writer can create and delete books; persistence survives app restart.
 - `services/library` tests green; UI shelf tests green with mocked bridge.
-- `CAPABILITY-MAP.md` footnote documents slice 1 vs full library (after approval).
+- `CAPABILITY-MAP.md` footnote documents slice 1 vs full library.
 
-## Open Questions
+## Decisions (approved with spec)
 
-1. **Library root:** Is app user-data (`userData` / Capacitor data directory) acceptable, or do you want an explicit “Choose library folder” in slice 1?
-2. **Create flow:** Is one-click **New book** with auto `Untitled` titles correct, or should slice 1 prompt for a title?
-3. **Delete:** Is `window.confirm` acceptable for slice 1, or do you want a custom in-app dialog now?
-4. **Corrupt books:** If `book.json` is invalid, should the shelf hide that folder, show an error card, or block startup?
-5. **Capability map:** Approve adding a footnote that **library slice 1** (shelf CRUD only) may ship after **shell**, before **languages** / **manuscript**?
+1. **Library root:** App user-data (`userData` / Capacitor data directory) for slice 1; no “Choose folder” UI yet.
+2. **Create flow:** One-click **New book** with auto `Untitled` / `Untitled 2` titles (assumption 4).
+3. **Delete:** `window.confirm` (or platform-native equivalent via shell) for slice 1.
+4. **Corrupt books:** Skip corrupt entries on the shelf; domain policy unit-tested; shell may log (assumption + domain table).
+5. **Capability map:** **Library slice 1** (shelf CRUD only) may build after **shell**, before **languages** / **manuscript** — see `CAPABILITY-MAP.md` footnote.
 
 ---
 
-**Next step after approval:** **Plan** (`tasks/plan.md`) — slice 1 tasks: domain + bridge + desktop FS + mobile FS + shelf UI + install-doc checks. Do not implement until this spec is approved.
+**Next step:** **`/build`** from `tasks/todo.md` (active plan in `tasks/plan.md`). When this module ships, archive that pair to `tasks/archive/library/` before planning the next spec.

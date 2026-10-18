@@ -8,9 +8,11 @@
 | library | Bookshelf: create, open, and arrange books | manuscript |
 | ai-assist | A comment on the text, assigned to the AI. A Write button fills that text from the comment. | manuscript |
 
-Build order: shell → languages → manuscript → library, ai-assist
+Build order (full Neo loop): shell → languages → manuscript → library, ai-assist
 
-`library` and `ai-assist` can be specified in parallel after `manuscript`.
+**Library slice 1** (`docs/specs/SPEC-library.md`, approved): shelf CRUD only — **build after shell**, before `languages` and `manuscript`. Open-book / manuscript integration stays blocked until `manuscript` exists.
+
+`library` (full) and `ai-assist` can be specified in parallel after `manuscript`.
 
 **Module specs** live in `docs/specs/SPEC-<module-id>.md` (for example `docs/specs/SPEC-shell.md`). This map is the index; do not add module specs at the repo root.
 

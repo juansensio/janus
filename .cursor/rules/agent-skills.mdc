@@ -11,4 +11,4 @@ Before non-trivial technical work:
 4. Prefer project skills over guessing; user does not need to say "read skill" each time.
 5. When the user invokes a project slash command (`/build`, `/plan`, `/spec`, …), follow `.cursor/commands/<name>.md` for that phase.
 
-Janus specs: capability index is `CAPABILITY-MAP.md` (repo root). Each module spec is `docs/specs/SPEC-<module-id>.md`. Build tasks: `tasks/todo.md`; next task only unless `/build auto`.
+Janus specs: `CAPABILITY-MAP.md`; module specs `docs/specs/SPEC-<module-id>.md`. Plan/todo lifecycle: `.cursor/rules/janus-planning.mdc`. `/build`: next task in `tasks/todo.md` unless `/build auto`.
