@@ -1,3 +1,10 @@
+import { assertSupported } from "@janus/languages";
+import {
+    buildUiLanguage,
+    buildUiLanguageForCode,
+    type UiLanguageResult,
+} from "./ui-language";
+
 export {
     bridgeErrorCode,
     extractErrorMessage,
@@ -44,7 +51,11 @@ export type JanusBridgeErrorCode =
     | "INVALID_LIBRARY_ROOT"
     | "LIBRARY_ROOT_CANCELLED"
     | "LIBRARY_ROOT_NOT_EMPTY"
-    | "LIBRARY_ROOT_NOT_SUPPORTED";
+    | "LIBRARY_ROOT_NOT_SUPPORTED"
+    | "UNSUPPORTED_LANGUAGE";
+
+export type { UiLanguageResult } from "./ui-language";
+export { buildUiLanguage, buildUiLanguageForCode } from "./ui-language";
 
 export interface JanusBridge {
     platform(): Platform;
@@ -57,6 +68,8 @@ export interface JanusBridge {
     writeManuscript(id: string, text: string): Promise<void>;
     getLibraryRoot(): Promise<LibraryRootInfo>;
     chooseLibraryRoot(): Promise<ChooseLibraryRootResult>;
+    getUiLanguage(): Promise<UiLanguageResult>;
+    setUiLanguage(code: string): Promise<UiLanguageResult>;
 }
 
 export function createShellLabel(): string {
@@ -80,6 +93,7 @@ export function createMockJanusBridge(
     overrides: Partial<JanusBridge> = {},
 ): JanusBridge {
     const manuscripts = createMockManuscriptStore();
+    let mockSavedLocale: string | null = null;
     return {
         platform: () => "desktop",
         listBooks: async () => EMPTY_BOOKS,
@@ -104,6 +118,13 @@ export function createMockJanusBridge(
             path: "/tmp/janus-mock-library",
             needsReload: true,
         }),
+        getUiLanguage: async () =>
+            buildUiLanguage(mockSavedLocale, "en"),
+        setUiLanguage: async (code: string) => {
+            assertSupported(code);
+            mockSavedLocale = code;
+            return buildUiLanguageForCode(code);
+        },
         ...overrides,
     };
 }

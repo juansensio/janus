@@ -35,6 +35,23 @@ describe("createMockJanusBridge", () => {
         await expect(bridge.listBooks()).resolves.toBe(books);
     });
 
+    it("starts at English and switches to Spanish via setUiLanguage", async () => {
+        const bridge = createMockJanusBridge();
+        const en = await bridge.getUiLanguage();
+        expect(en.locale).toBe("en");
+        expect(en.messages["library.shelfLabel"]).toBe("Books");
+        const es = await bridge.setUiLanguage("es");
+        expect(es.locale).toBe("es");
+        expect(es.messages["library.shelfLabel"]).toBe("Libros");
+    });
+
+    it("rejects unsupported setUiLanguage codes", async () => {
+        const bridge = createMockJanusBridge();
+        await expect(bridge.setUiLanguage("fr")).rejects.toMatchObject({
+            code: "UNSUPPORTED_LANGUAGE",
+        });
+    });
+
     it("stores manuscript text per book id in the mock", async () => {
         const id = "550e8400-e29b-41d4-a716-446655440000";
         const bridge = createMockJanusBridge();
