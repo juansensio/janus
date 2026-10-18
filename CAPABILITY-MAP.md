@@ -1,0 +1,30 @@
+# Capability Map: Janus
+
+| Module id | Responsibility | Depends on |
+|---|---|---|
+| shell | Monorepo toolchain, Electron desktop, Capacitor mobile, shared UI mount, bridge contract, install journey | — |
+| languages | Interface strings, and the set of languages a book may be written in. English and Spanish. | shell |
+| manuscript | One book: page, chapters, section breaks, autosave to plain files | languages |
+| library | Bookshelf: create, open, and arrange books | manuscript |
+| ai-assist | A comment on the text, assigned to the AI. A Write button fills that text from the comment. | manuscript |
+
+Build order: shell → languages → manuscript → library, ai-assist
+
+`library` and `ai-assist` can be specified in parallel after `manuscript`.
+
+**Module specs** live in `docs/specs/SPEC-<module-id>.md` (for example `docs/specs/SPEC-shell.md`). This map is the index; do not add module specs at the repo root.
+
+## Decisions recorded with this map
+
+- **Bun** for install, scripts, and workspaces; lockfile `bun.lock` is committed.
+- **Shared TypeScript core** in `packages/` and `services/<domain>/` (domain modules are pure TS; no Electron/Capacitor/DOM in domain code).
+- **Desktop:** Electron (`apps/desktop`). **Mobile:** Capacitor (`apps/mobile`), iOS Simulator as the first mobile gate on Mac.
+- **Presentation:** shared web UI in `packages/ui`; shells only implement `JanusBridge` and host the bundle.
+- Books will be plain files on disk. No accounts. Local-first.
+- The writing loop follows Neo: a shelf, a page, chapters, autosave. The code is original.
+- English and Spanish cover the interface and the language of a book. Those are two separate values. The interface language is chosen for the app. The book language is chosen per book. AI writes in the book language.
+- AI v1 is only the comment-and-Write action in the table. The writer marks a passage with a comment for the AI, then presses Write, and the model fills that text from the comment. More AI actions require a revision of this map.
+
+**Withdrawn:** Python/Flask local web app on `127.0.0.1:5000` (see git history / prior shell spec if needed).
+
+Left for a later map: restored cut passages, placeholders, outline cards, word goals, import and export, screenplays, generated covers, binding several books into one.

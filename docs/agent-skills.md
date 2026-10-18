@@ -6,6 +6,11 @@ Janus follows the [Cursor setup](https://github.com/addyosmani/agent-skills/blob
 
 ```text
 .cursor/
+├── commands/
+│   ├── build.md               # /build — one task or /build auto
+│   ├── plan.md                # /plan
+│   ├── spec.md                # /spec
+│   └── …                      # test, review, ship, constraints, webperf, code-simplify
 ├── rules/
 │   ├── agent-skills.mdc       # always on: route through project skills
 │   └── agents-constraints.mdc # always on: Janus constraints
@@ -14,13 +19,24 @@ Janus follows the [Cursor setup](https://github.com/addyosmani/agent-skills/blob
 skills-lock.json               # which upstream skills were installed
 ```
 
+Lifecycle slash commands (`/spec`, `/plan`, `/build`, …) are **Cursor project commands** in `.cursor/commands/`. They point at the same skills under `.cursor/skills/`. Type `/` in Agent chat to pick one. **`/build`** implements the *next* unchecked task in `tasks/todo.md` and stops; use **`/build auto`** only when you want the full plan in one approved pass (one commit per task).
+
 Cursor loads `.cursor/skills/`. That directory is the copy the agent sees. Upstream lives at [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills); editing only the GitHub repo does not change this project.
 
 `AGENTS.md` repeats the same constraints as `agents-constraints.mdc`. Both are loaded, so that text is in context twice.
 
+## Janus specs
+
+- **Capability map:** `CAPABILITY-MAP.md` at the repo root (module ids, build order, decisions).
+- **Module specs:** `docs/specs/SPEC-<module-id>.md` (for example `docs/specs/SPEC-shell.md`).
+
+## Slash commands vs free-form chat
+
+Prefer slash commands when you want the upstream lifecycle contract (especially `/build` for one task at a time). You can still describe work in plain language; the always-on rule routes through skills either way.
+
 ## A normal chat
 
-You do not name a skill file. Describe the work.
+You do not have to name a skill file. Describe the work, or use `/plan`, `/build`, etc.
 
 1. The always-on rule tells the agent to open `.cursor/skills/using-agent-skills/SKILL.md` and pick the workflow for the phase (clarify, plan, build, test, review, ship).
 2. The agent reads that skill’s `SKILL.md` and follows it, including its verification step.
@@ -39,5 +55,17 @@ npx skills add addyosmani/agent-skills
 ```
 
 That refreshes `.cursor/skills/` and `skills-lock.json`. Commit both so the team shares the same workflows.
+
+Commands are **not** installed by `npx skills add`. To refresh them from upstream:
+
+```bash
+mkdir -p .cursor/commands
+for f in build code-simplify constraints plan review ship spec test webperf; do
+  curl -sL "https://raw.githubusercontent.com/addyosmani/agent-skills/main/.claude/commands/${f}.md" \
+    -o ".cursor/commands/${f}.md"
+done
+```
+
+Re-apply the Cursor/Janus header and skill-path edits in those files if you overwrite local adaptations (see git history for `.cursor/commands/`).
 
 The skills CLI copies each skill folder. It does not copy the repo-level `references/` directory those skills link to (`definition-of-done.md`, security and performance checklists, and others). Those paths (`../../references/...`) are missing here. Skill-local files, such as `security-and-hardening/references/`, are present. To get the shared checklists, clone [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) and copy its `references/` directory to `.cursor/references/`.
