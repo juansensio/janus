@@ -51,8 +51,8 @@ Full acceptance criteria: **`tasks/todo.md`** (12 tasks, all **S** or **M**).
 - [x] Task 7: Preload + `window.janus` + visible Janus
 
 ### Phase 4: Mobile shell
-- [ ] Task 8: Capacitor package + iOS project
-- [ ] Task 9: Mobile bridge + `cap:sync:ios` / `cap:open:ios` + Simulator
+- [x] Task 8: Capacitor package + iOS project
+- [x] Task 9: Mobile bridge + `cap:sync:ios` / `cap:open:ios` + Simulator
 
 ### Checkpoint: Both shells
 - [ ] Desktop and Simulator show `<main id="app">`, `Janus`, correct `data-platform`

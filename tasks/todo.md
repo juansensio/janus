@@ -180,9 +180,9 @@ Sizing: **S** = 1–2 files, **M** = 3–5 files. No task should exceed ~5 files
 **Description:** `native-bridge.ts` (or entry) injects mobile `JanusBridge` with `platform(): "mobile"` before mount. Root scripts `cap:sync:ios` (runs `build:ui` then sync) and `cap:open:ios`. Verify Simulator shows `Janus` and `data-platform="mobile"`.
 
 **Acceptance criteria:**
-- [ ] `bun run cap:sync:ios` updates web assets
-- [ ] `bun run cap:open:ios` works from repo root
-- [ ] Simulator shows same shell UI as desktop
+- [x] `bun run cap:sync:ios` updates web assets
+- [x] `bun run cap:open:ios` works from repo root
+- [x] Simulator shows same shell UI as desktop
 
 **Verification:**
 - [ ] `bun run build:ui` + `bun run cap:sync:ios`
@@ -198,8 +198,8 @@ Sizing: **S** = 1–2 files, **M** = 3–5 files. No task should exceed ~5 files
 
 ## Checkpoint: After Tasks 6–9
 
-- [ ] Desktop and Simulator show `Janus` in `#app`
-- [ ] Only `platform()` differs between bridge implementations
+- [x] Desktop and Simulator show `Janus` in `#app`
+- [x] Only `platform()` differs between bridge implementations
 
 ---
 
