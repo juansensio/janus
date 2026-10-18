@@ -301,9 +301,9 @@ Plan: `tasks/plan.md` § Shell ship-fixes. Do **not** start `languages` until Ch
 **Description:** Extend `scripts/validate-install.ts` to fail if built `index.html` contains absolute asset URLs (e.g. `src="/assets/`). Optionally assert at least one built JS file under `dist/ui/assets/` contains the shell label text `Janus` (proves bundle includes mount path).
 
 **Acceptance criteria:**
-- [ ] `validate:install` exits non-zero when `index.html` uses `/assets/` paths (regression test via fixture or documented manual negative check once)
-- [ ] `validate:install` passes on a clean tree after Task 13
-- [ ] Error messages name the failing check clearly
+- [x] `validate:install` exits non-zero when `index.html` uses `/assets/` paths (regression test via fixture or documented manual negative check once)
+- [x] `validate:install` passes on a clean tree after Task 13
+- [x] Error messages name the failing check clearly
 
 **Verification:**
 - [ ] `bun run validate:install`
