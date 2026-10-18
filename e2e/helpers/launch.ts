@@ -36,12 +36,18 @@ export async function launchJanusApp(
     await fs.mkdir(dirs.userDataDir, { recursive: true });
     await fs.mkdir(dirs.libraryRoot, { recursive: true });
 
+    const linuxCiArgs =
+        process.platform === "linux"
+            ? ["--no-sandbox", "--disable-dev-shm-usage"]
+            : [];
+
     const app = await electron.launch({
         executablePath: electronExecutablePath(),
         cwd: repoRoot,
         args: [
             desktopAppDir,
             `--user-data-dir=${dirs.userDataDir}`,
+            ...linuxCiArgs,
         ],
         env: {
             ...process.env,
