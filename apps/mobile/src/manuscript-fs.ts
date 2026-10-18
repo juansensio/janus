@@ -1,8 +1,4 @@
-import {
-    Directory,
-    Encoding,
-    Filesystem,
-} from "@capacitor/filesystem";
+import { Directory, Filesystem } from "@capacitor/filesystem";
 import type { ManuscriptFs } from "@janus/manuscript";
 import { createCapacitorShelfFs } from "./library-fs";
 

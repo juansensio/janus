@@ -4,6 +4,7 @@ import {
     type OpenBookNameDialogOptions,
 } from "./book-name-dialog";
 import { coverClassForBookId } from "./cover-palette";
+import { EDITOR_STRINGS } from "../editor/strings";
 import { SHELF_STRINGS } from "./strings";
 
 function appendShelfError(host: HTMLElement, message: string): void {
@@ -117,9 +118,14 @@ async function refreshAfterAction(
     }
 }
 
+export type RenderShelfOptions = {
+    onOpenBook?: (book: BookSummary) => void;
+};
+
 export async function renderShelf(
     host: HTMLElement,
     bridge: JanusBridge,
+    options: RenderShelfOptions = {},
 ): Promise<void> {
     host.replaceChildren();
     appendShelfChrome(host);
@@ -163,10 +169,21 @@ export async function renderShelf(
         card.className = `shelf-card ${coverClassForBookId(book.id)}`;
         card.setAttribute("title", book.title);
 
-        const title = document.createElement("h2");
+        const openButton = document.createElement("button");
+        openButton.type = "button";
+        openButton.className = "shelf-card-open";
+        openButton.setAttribute(
+            "aria-label",
+            EDITOR_STRINGS.openBook(book.title),
+        );
+        const title = document.createElement("span");
         title.className = "shelf-card-title";
         title.textContent = book.title;
-        card.append(title);
+        openButton.append(title);
+        openButton.addEventListener("click", () => {
+            options.onOpenBook?.(book);
+        });
+        card.append(openButton);
 
         const editButton = document.createElement("button");
         editButton.type = "button";
@@ -176,7 +193,8 @@ export async function renderShelf(
             `${SHELF_STRINGS.rename} ${book.title}`,
         );
         editButton.append(createEditIcon());
-        editButton.addEventListener("click", () => {
+        editButton.addEventListener("click", (event) => {
+            event.stopPropagation();
             openBookNameDialogThenRefreshShelf(host, bridge, {
                 mode: "rename",
                 initialValue: book.title,
@@ -196,7 +214,8 @@ export async function renderShelf(
             `${SHELF_STRINGS.delete} ${book.title}`,
         );
         deleteButton.append(createDeleteIcon());
-        deleteButton.addEventListener("click", () => {
+        deleteButton.addEventListener("click", (event) => {
+            event.stopPropagation();
             const confirmed = window.confirm(
                 SHELF_STRINGS.deleteConfirm(book.title),
             );
