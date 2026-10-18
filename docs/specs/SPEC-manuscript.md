@@ -10,7 +10,7 @@ This is one module from [`CAPABILITY-MAP.md`](../../CAPABILITY-MAP.md). It is no
 ASSUMPTIONS I'M MAKING:
 1. Slice 1 is one plain writing surface. The characters in the field are the file. No preview, toolbar, chapters, or section breaks.
 2. Each book has at most one UTF-8 file, `manuscript.md`, beside `book.json`. A missing file means an empty book.
-3. Autosave waits 400ms after the last change, and also runs immediately when leaving the editor. There is no Save button.
+3. Autosave runs at most once per second, and only when the text differs from the last successful save. Leaving the editor flushes any unsaved text immediately. There is no Save button.
 4. Leaving uses a **Shelf** control. Edit and delete stay on the shelf; those controls do not open the editor.
 5. The book title is shown read-only in the editor. Rename stays the shelf dialog.
 6. Desktop and mobile both get the same screen. UI copy is English literals until `languages`.
@@ -42,7 +42,7 @@ The user is one writer on one machine. No accounts, no network.
 
 - Clicking a book card opens the editor. The shelf’s edit and delete controls do not.
 - A book with no `manuscript.md` opens as an empty field and does not create the file until the first save.
-- After the writer changes the text, the file on disk matches the field within one debounce (400ms) once the write finishes.
+- After the writer changes the text, the file on disk catches up within about one second (at most one save per second while there are unsaved changes).
 - Activating **Shelf** writes any pending text first, then shows the shelf. If that write fails, the editor stays open and shows an error; the typed text remains in the field.
 - Opening the same book again shows the saved text, including blank lines and characters outside ASCII.
 - Quit and relaunch, then open the book: the same text is there.
@@ -166,7 +166,7 @@ The shell shows either the shelf or the editor, not both.
 - A status the writer can see: saving while a write is in flight, saved after it succeeds, and a short error if it fails.
 - One text field. Its value is the file. Focus moves there when the editor opens, with the cursor at the end.
 
-**Autosave.** 400ms after the last change, call `writeManuscript` with the current value. If the writer types again during a write, the write that lands last must be the latest value, not an older one. Do not write when the value matches the last successful save. **Shelf** cancels the wait and writes immediately when the field differs from that save.
+**Autosave.** Track the last successfully saved string. When the field differs from that value, the editor is **dirty**. While dirty, call `writeManuscript` at most **once per second** (for example a 1s interval or a timer that cannot fire again until 1s after the previous save attempt). Each save sends the current field value. If the writer types during a write, the in-flight write must not mark the field clean unless its payload still matches the field when it completes; schedule another save so the latest text wins. When the field matches the last successful save, do not call `writeManuscript` and do not keep a save timer running. **Shelf** flushes immediately when dirty, then returns to the shelf.
 
 **Load failure.** Show the error and **Shelf**. **Shelf** does not need to write.
 
@@ -187,7 +187,7 @@ Visual: same dark chrome as the shelf. No new font and no markdown library.
 
 - **Domain** (`services/manuscript/manuscript.test.ts`): missing file reads as `""`; write then read round-trip; Unicode and blank lines preserved; second write replaces the first; successful write leaves no temp file; `book.json` is not required and is not modified.
 - **Bridge:** mock read/write round-trip.
-- **UI** (happy-dom): card opens the editor with loaded text; edit and delete do not; a change calls `writeManuscript` after the debounce; **Shelf** flushes then shows the shelf; a failed flush stays on the editor with the error and the typed text; open again shows the saved text.
+- **UI** (happy-dom): card opens the editor with loaded text; edit and delete do not; a change eventually calls `writeManuscript` at the 1s rate while dirty; no `writeManuscript` when the text was not changed since the last save; **Shelf** flushes then shows the shelf; a failed flush stays on the editor with the error and the typed text; open again shows the saved text.
 - **Desktop:** IPC tests for read, write, `BOOK_NOT_FOUND`, and `INVALID_BOOK_ID`, following the library IPC tests.
 - **Mobile:** native bridge forwards the same two methods.
 
@@ -196,7 +196,7 @@ Visual: same dark chrome as the shelf. No new font and no markdown library.
 ## Boundaries
 
 - **Always:** Keep manuscript path and filename rules in `services/manuscript/`. Keep shelf identity rules in `services/library/`. Run `bun run test` before treating the slice complete. Preserve text exactly. Flush before leaving the editor. Both shells.
-- **Ask first:** A rich-text or markdown editor dependency (CodeMirror, ProseMirror, and similar). Chapters, section breaks, preview, or a formatting toolbar. A `language` field or any other change to `book.json`. A manuscript size limit. Changing the 400ms wait.
+- **Ask first:** A rich-text or markdown editor dependency (CodeMirror, ProseMirror, and similar). Chapters, section breaks, preview, or a formatting toolbar. A `language` field or any other change to `book.json`. A manuscript size limit. Changing the 1s autosave interval.
 - **Never:** Store the manuscript inside `book.json`. Import `services/*` from `packages/ui`. Create `manuscript.md` from library create/rename. Open the editor from the edit or delete controls. Add AI actions in this slice.
 
 ## Success Criteria

@@ -1,56 +1,83 @@
-# Implementation Plan: library (slice 1d — wrapping shelf track)
+# Implementation Plan: manuscript (slice 1 — open, write, autosave)
 
-**Source spec:** `docs/specs/SPEC-library.md` — **Slice 1d** (wrap track; supersedes slice 1b horizontal scroll)  
-**Archived:** `tasks/archive/library-slice-1c/` (slice 1c book naming)
+**Source spec:** `docs/specs/SPEC-manuscript.md` — Slice 1  
+**Archived:** `tasks/archive/library-slice-1d/` (library slice 1d wrapping shelf; shelf work complete per human)
 
 ## Overview
 
-The shelf track is a non-wrapping flex row with `overflow-x: auto`, so extra books scroll off the right edge. Change it so cards and the dashed **+** tile **wrap within the available width**. Every book stays visible without horizontal scrolling; only the **page** may scroll vertically. Presentation-only in `packages/ui`; no bridge or domain changes.
+Deliver library **slice 2** behavior in the **manuscript** module: clicking a book card opens a single plain-text editor backed by `books/<id>/manuscript.md`, with 1s throttled autosave and an immediate flush when the writer taps **Shelf**. The shell shows shelf **or** editor, never both. Domain rules stay in `services/manuscript/`; path and book existence checks use `@janus/library` helpers from shell code only; `packages/ui` calls the bridge only.
 
-**Prerequisites:** Slice 1c (naming) complete.
+**Prerequisites:** Shell signed off; library slice 1c+ (shelf CRUD, naming, dark shelf, wrap track) shipped.
 
 ## Architecture decisions
 
-- **Spec override:** Slice 1b assumption 9 and horizontal-scroll acceptance criteria are superseded by slice 1d (wrap + Y-only overflow).
-- **CSS in `.shelf-track`:** `flex-wrap: wrap`, no horizontal overflow scroll; remove horizontal scrollbar styles.
-- **Narrow viewports:** `flex: 0 1 var(--shelf-card-width)` and `max-width: 100%` on `.shelf-card` and `.shelf-add` so a single card can shrink instead of clipping.
-- **DOM:** Unchanged (`render-shelf.ts`).
+- **Module boundary:** `services/manuscript/` owns `MANUSCRIPT_FILENAME`, read/write, and atomic replace-via-temp-file. It does **not** import `@janus/library`. Shell adapters resolve `libraryBooksDir` + `validateBookId`, verify the book directory exists (e.g. readable `book.json`), then call manuscript with the book directory path.
+- **Bridge:** Add `readManuscript(id)` and `writeManuscript(id, text)` to `JanusBridge` with codes `MANUSCRIPT_READ_FAILED` / `MANUSCRIPT_WRITE_FAILED` plus existing `INVALID_BOOK_ID` / `BOOK_NOT_FOUND`. Reuse desktop IPC reject shape (`library-ipc-error.ts` pattern).
+- **UI routing:** Extend `mountJanusShell` (or a thin orchestrator it calls) to swap between `renderShelf` and `renderEditor`. Opening passes `BookSummary` (id + title from shelf list); editor loads text via `readManuscript`.
+- **Autosave:** Pure scheduling logic colocated under `packages/ui/src/editor/` (testable without DOM where possible). At most one `writeManuscript` per second while dirty; reconcile in-flight writes so stale payloads do not clear dirty state; **Shelf** awaits flush when dirty.
+- **Shelf cards:** Main card surface is activatable (`button` or `role="button"` + keyboard) with label `Open {title}`; edit/delete buttons keep `stopPropagation` so they never open the editor.
+- **Styling:** New `editor.css` alongside shelf tokens (dark chrome, no new font, `<textarea>` not a rich-text dependency).
+- **Spec status:** `SPEC-manuscript.md` is marked not approved in the file; treat this `/plan` as intent to build slice 1. Task 7 records approval + `CAPABILITY-MAP.md` footnote per spec.
 
 ## Dependency graph
 
 ```
-Task 1: shelf.css wrap + shrink + shelf-styles.test.ts contract
-    → Task 2: SPEC slice 1d + install-macos.md + archive README
+Task 1: @janus/manuscript domain + tests
+    → Task 2: bridge contract + mock
+        → Task 3: desktop IPC + adapter
+        → Task 4: mobile native bridge
+            → Task 5: shelf open + mount routing + editor load/display
+                → Task 6: autosave, flush, errors + UI tests
+                    → Task 7: docs + manual journey
 ```
 
 ## Task list
 
-Full acceptance criteria: **`tasks/todo.md`** Tasks **1–2**.
+Full acceptance criteria: **`tasks/todo.md`** Tasks **1–7**.
 
-### Phase 1: Layout
-- [x] Task 1: Wrap `.shelf-track`; shrink cards on narrow widths; drop x-scrollbar styles
+### Phase 1: Domain and contract
+- [ ] Task 1: `services/manuscript` read/write + Vitest
+- [ ] Task 2: `JanusBridge` manuscript methods + mock store
 
-### Checkpoint: Layout
-- [x] CSS contract test green; manual desktop with enough books for multiple rows
+### Checkpoint: Contract
+- [ ] `bun run test` green for manuscript + bridge packages
+- [ ] Mock bridge round-trips text per book id
 
-### Phase 2: Source of truth
-- [ ] Task 2: Slice 1d in SPEC-library.md; install doc scroll step; archive README row
+### Phase 2: Shells
+- [ ] Task 3: Desktop manuscript IPC + preload + tests
+- [ ] Task 4: Mobile `native-bridge` manuscript methods + tests
+
+### Checkpoint: Shells
+- [ ] Desktop and mobile tests pass; invalid/missing id reject with stable `code`
+
+### Phase 3: Writer flow
+- [ ] Task 5: Card opens editor; load failure UX; editor chrome + styles
+- [ ] Task 6: Autosave (1s), Shelf flush, save failure stays on editor
+
+### Checkpoint: Core flow
+- [ ] UI tests cover open, autosave rate, flush, failed save
+- [ ] Manual: type, return to shelf, reopen, quit/relaunch (desktop)
+
+### Phase 4: Sign-off
+- [ ] Task 7: Approve spec status, CAPABILITY-MAP footnote, `install-macos.md` manuscript steps
 
 ### Checkpoint: Complete
 - [ ] `bun run test` && `bun run lint`
-- [ ] Manual: no horizontal scroll; all books visible; vertical scroll only when needed
+- [ ] Rename/delete on shelf unchanged; delete removes `manuscript.md` with book dir
 
 ## Risks and mitigations
 
 | Risk | Impact | Mitigation |
 |------|--------|------------|
-| `overflow-x: hidden` clips covers | Med | `flex-shrink` + `max-width: 100%` on cards and add tile |
-| jsdom cannot prove wrap | Low | CSS source contract + manual check |
+| Autosave races mark field clean with stale text | High | Compare field value to payload on write completion; reschedule if still dirty |
+| Card click vs edit/delete hit target | Med | Dedicated open control; stop propagation on icon buttons |
+| Duplicating book path rules in manuscript | Med | Shell-only use of `libraryBooksDir` + `validateBookId`; manuscript takes `bookDir` only |
+| Large manuscripts + 1s saves | Low | Slice 1: no size limit per spec; full replace writes acceptable for v1 |
 
 ## Out of scope
 
-Multi-shelf rows, bridge/domain, card size redesign.
+Chapters, section breaks, `languages`, rich-text/markdown preview, AI assist, creating `manuscript.md` on book create, changing `book.json`.
 
 ## Human approval
 
-`/build` Task 1 first.
+Review this plan and **`tasks/todo.md`**, then `/build` Task 1. Confirm the seven assumptions in `SPEC-manuscript.md` if anything should change before implementation.
