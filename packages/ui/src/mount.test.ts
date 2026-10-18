@@ -14,6 +14,12 @@ describe("mountJanusShell", () => {
         expect(root.dataset.platform).toBe("desktop");
     });
 
+    it("applies dark shelf shell class on root", () => {
+        const root = document.createElement("main");
+        mountJanusShell(root, mockBridge("desktop"));
+        expect(root.classList.contains("janus-shelf-shell")).toBe(true);
+    });
+
     it("sets mobile platform", () => {
         const root = document.createElement("main");
         mountJanusShell(root, mockBridge("mobile"));

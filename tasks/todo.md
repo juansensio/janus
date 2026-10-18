@@ -1,142 +1,141 @@
-# Library module — slice 1
+# Library module — slice 1b (Neo-inspired shelf visual)
 
-**Source spec:** `docs/specs/SPEC-library.md` (approved 2026-10-18)  
+**Source spec:** `docs/specs/SPEC-library.md` — Slice 1b  
 **Plan:** `tasks/plan.md`  
-**Archived:** `tasks/archive/shell/`
+**Archived:** `tasks/archive/library/` (slice 1 CRUD)
 
 Sizing: **S** = 1–2 files, **M** = 3–5 files.
 
-**Out of scope:** open book → manuscript, i18n (`languages`), rename UI, custom delete modal.
+**Out of scope:** bridge/domain changes, multi-shelf, Import, cover images, open book, custom delete modal, new CSS frameworks.
 
 ---
 
-## Task 1: `@janus/library` domain package
+## Task 1: Shelf CSS tokens and global dark shell
 
-**Description:** Add `services/library/` workspace package (`@janus/library`): `titles.ts` (`allocateUntitledTitle`), `book-manifest.ts` (`parseManifest`, `serializeManifest`, version 1 schema), `index.ts` (`sortBooksForShelf`, `validateBookId`, `libraryBooksDir`, public types). Root `package.json` workspaces include `services/`*. Vitest discovers `services/**/*.test.ts`. Colocated `library.test.ts` covers title allocation, sort tie-break (`createdAt` then `id`), manifest errors, id validation (`..`, slashes).
-
-**Acceptance criteria:**
-
-- [x] No Electron, Capacitor, DOM, or `fs` imports in `services/library/`
-- [x] Unit tests cover corrupt manifest parse failures and skip-policy helpers if extracted
-- [x] `bun run test` passes
-
-**Verification:**
-
-- [x] `bun run test`
-- [x] `bun run lint`
-
-**Dependencies:** None (shell complete)
-
-**Files likely touched:** `package.json`, `services/library/package.json`, `services/library/index.ts`, `services/library/titles.ts`, `services/library/book-manifest.ts`, `services/library/library.test.ts`, `vitest.config.ts` (if needed)
-
-**Estimated scope:** M
-
----
-
-## Task 2: Extend `JanusBridge` contract
-
-**Description:** Add `BookSummary` type and async `listBooks()`, `createBook()`, `deleteBook(id: string)` to `@janus/bridge` `JanusBridge`. Document error `code` convention. Update all Vitest mocks with minimal async stubs so the suite stays green.
+**Description:** Add `packages/ui/src/styles/shelf.css` with design tokens (near-black background, gold wordmark, shelf rule, card 2:3, track flex + horizontal overflow, dashed add tile, cover modifier classes, error/empty/sr-only utilities). Import the stylesheet from `packages/ui/src/shell-entry.ts`. Apply dark background to `body` / `#app` via classes set in `mount.ts` or shelf root (e.g. `janus-shelf-shell` on `#app`).
 
 **Acceptance criteria:**
 
-- [x] UI and shells import types from `@janus/bridge` only (not from `services/library` in `packages/ui`)
-- [x] `bun run test` and `bun run lint` pass
+- [x] CSS file exists and is imported from UI entry so `bun run build:ui` includes styles in built artifacts
+- [x] No new npm dependencies for styling
+- [x] Card width uses `rem`; palette defines at least 8 `.shelf-cover--*` modifier classes
 
 **Verification:**
 
+- [x] `bun run build:ui`
 - [x] `bun run test`
 - [x] `bun run lint`
 
-**Dependencies:** Task 1
+**Dependencies:** None
 
-**Files likely touched:** `packages/bridge/src/index.ts`, various `*.test.ts` mocks
+**Files likely touched:** `packages/ui/src/styles/shelf.css`, `packages/ui/src/shell-entry.ts`, `packages/ui/src/mount.ts` (optional shell class)
 
 **Estimated scope:** S
 
 ---
 
-## Task 3: Desktop library IPC and filesystem adapter
+## Task 2: Cover palette helper
 
-**Description:** Implement library bridge methods on desktop: `libraryRoot` under `app.getPath("userData")`, use `@janus/library` for manifests, titles, paths, sort. `ipcMain.handle` + preload `invoke` wrappers on `window.janus`. `listBooks` skips corrupt entries; `deleteBook` throws `BOOK_NOT_FOUND` when missing; `createBook` writes UUID dir + `book.json`. Vitest for pure helpers and error mapping.
+**Description:** Add `packages/ui/src/shelf/cover-palette.ts` with `coverClassForBookId(id: string)` per spec (stable hash into fixed class list). Colocated `cover-palette.test.ts` asserts same id → same class, different ids can differ.
 
 **Acceptance criteria:**
 
-- [x] Preload uses `contextBridge`; no Node `fs` in preload
-- [x] create/list/delete round-trip on temp dir via tests
-- [x] `bun run dev:desktop` and `desktop:prod` still open without bridge errors
+- [ ] Pure function; no DOM or bridge imports
+- [ ] Unit tests cover stability and bounds
 
 **Verification:**
 
-- [x] `bun run test`
-- [x] `bun run lint`
+- [ ] `bun run test`
+- [ ] `bun run lint`
+
+**Dependencies:** Task 1 (CSS modifier class names must match palette output)
+
+**Files likely touched:** `packages/ui/src/shelf/cover-palette.ts`, `packages/ui/src/shelf/cover-palette.test.ts`
+
+**Estimated scope:** S
+
+---
+
+## Task 3: Neo-style shelf markup and behavior
+
+**Description:** Refactor `render-shelf.ts`: shelf header with spaced gold wordmark (`createShellLabel()`), **BOOKS** label, horizontal `<ul class="shelf-track">` of cover cards (uppercase title, `title` attr, cover class from palette), icon delete with existing confirm flow, dashed add tile calling `createBook()`. Remove top toolbar **New book** button. Load errors unchanged; empty list shows add tile + visually hidden empty message. No `<a>` on cards; default cursor.
+
+**Acceptance criteria:**
+
+- [ ] Matches slice 1b acceptance criteria in spec (chrome, row, cards, add tile, delete icon)
+- [ ] Still no title allocation or sorting in UI
+- [ ] `SHELF_STRINGS` updated (`shelfLabel`, `addBook` aria label, etc.)
+
+**Verification:**
+
+- [ ] `bun run test` (may fail until Task 5 — complete Task 5 before treating shelf green)
+- [ ] Manual: `bun run dev:desktop` — visual spot-check against reference
 
 **Dependencies:** Tasks 1, 2
 
-**Files likely touched:** `apps/desktop/package.json`, `apps/desktop/src/preload.ts`, `apps/desktop/src/main.ts`, `apps/desktop/src/library-ipc.ts`, `apps/desktop/src/library-ipc.test.ts`
+**Files likely touched:** `packages/ui/src/shelf/render-shelf.ts`, `packages/ui/src/shelf/strings.ts`, `packages/ui/src/shelf/index.ts` (if re-exports)
 
 **Estimated scope:** M
 
 ---
 
-## Task 4: Mobile Capacitor filesystem adapter
+## Task 4: Mount wiring (wordmark in shelf only)
 
-**Description:** Add pinned `@capacitor/filesystem` to `apps/mobile`. Implement `listBooks`, `createBook`, `deleteBook` on mobile `JanusBridge` using app data directory and domain manifest helpers. Extend `native-bridge.test.ts`.
+**Description:** `mountJanusShell` removes standalone `<h1>Janus</h1>`; only `section.janus-shelf` hosts `renderShelf` (header inside shelf). Keep `root.dataset.platform`. Update `mount.test.ts` to assert wordmark inside shelf chrome (e.g. `.shelf-wordmark`) and single heading.
 
 **Acceptance criteria:**
 
-- [x] Mobile bridge methods match desktop semantics
-- [x] Default `capacitor.config.ts` has no permanent dev `server.url`
-- [x] `bun run test` green
+- [ ] No duplicate headings outside shelf
+- [ ] `data-platform` still on `#app` root
+- [ ] `mount.test.ts` updated and passing
 
 **Verification:**
 
-- [x] `bun run test`
-- [ ] Manual Simulator after Task 5
+- [ ] `bun run test`
+- [ ] `bun run lint`
 
-**Dependencies:** Tasks 1, 2
+**Dependencies:** Task 3
 
-**Files likely touched:** `apps/mobile/package.json`, `apps/mobile/src/native-bridge.ts`, `apps/mobile/src/library-fs.ts`, `apps/mobile/src/native-bridge.test.ts`
+**Files likely touched:** `packages/ui/src/mount.ts`, `packages/ui/src/mount.test.ts`
+
+**Estimated scope:** S
+
+---
+
+## Task 5: Shelf unit tests
+
+**Description:** Update `packages/ui/src/shelf.test.ts` for new DOM: add tile triggers `createBook` (query `.shelf-add` or agreed class), N cards + 1 add tile, delete via card icon button, empty state uses sr-only empty text, no reliance on toolbar **New book** button.
+
+**Acceptance criteria:**
+
+- [ ] All prior behaviors covered (create, delete confirm/cancel, load/create errors)
+- [ ] `bun run test` and `bun run lint` pass
+
+**Verification:**
+
+- [ ] `bun run test`
+- [ ] `bun run lint`
+
+**Dependencies:** Tasks 3, 4
+
+**Files likely touched:** `packages/ui/src/shelf.test.ts`
 
 **Estimated scope:** M
 
 ---
 
-## Task 5: Bookshelf UI and mount wiring
+## Task 6: Install doc — shelf visual checks
 
-**Description:** Add `packages/ui/src/shelf/`: empty state, **New book**, card grid with title + delete; `window.confirm` with spec English strings; bridge list/create/delete; `data-platform` on `#app`. Wire mount/bootstrap to shelf. Vitest with mocked bridge.
-
-**Acceptance criteria:**
-
-- [x] No title/sort/manifest logic in UI beyond display and confirm copy
-- [x] Cards are not navigation links (slice 1)
-- [x] `bun run build:ui` succeeds; shelf visible in `dev:desktop` and `desktop:prod`
-
-**Verification:**
-
-- [x] `bun run test`
-- [x] `bun run lint`
-- [x] Manual: create/delete; quit and reopen — persistence
-
-**Dependencies:** Tasks 2, 3, 4
-
-**Files likely touched:** `packages/ui/src/mount.ts`, `packages/ui/src/shelf/`*, `packages/ui/src/shelf.test.ts`, `packages/ui/src/bootstrap.ts`, `packages/ui/src/main.test.ts`
-
-**Estimated scope:** M
-
----
-
-## Task 6: Install doc — library manual checks
-
-**Description:** Add **Library (slice 1)** subsection to `docs/install-macos.md`: empty shelf, New book, Untitled titles, delete confirm, restart persistence on desktop and Simulator. Note `validate:install` remains shell-only.
+**Description:** Update `docs/install-macos.md` library section: dark shelf, **BOOKS** row, + tile, cover cards, icon delete; remove references to plain **New book** toolbar and visible-only empty copy.
 
 **Acceptance criteria:**
 
-- [x] Contributor can verify library without reading `tasks/plan.md`
-- [x] English UI strings match spec table
+- [ ] Manual steps match slice 1b UI
+- [ ] Still notes that `validate:install` is shell/toolchain only
 
 **Verification:**
 
-- [x] Manual read-through
+- [ ] Read-through against running app
 
 **Dependencies:** Task 5
 
@@ -146,41 +145,21 @@ Sizing: **S** = 1–2 files, **M** = 3–5 files.
 
 ---
 
-## Task 7 (optional): Desktop library integration test
+## Task 7: Library slice 1b sign-off (human)
 
-**Description:** Vitest (Node, temp dir): create → list → delete one book; assert on-disk layout and sorted list. Skip with documented reason if too costly.
-
-**Acceptance criteria:**
-
-- [x] Test passes locally or skip documented
-
-**Verification:**
-
-- [x] `bun run test`
-
-**Dependencies:** Task 3
-
-**Files likely touched:** `apps/desktop/src/library-ipc.test.ts` or `tests/integration/library-desktop.test.ts`
-
-**Estimated scope:** S
-
----
-
-## Task 8: Library slice 1 sign-off (human)
-
-**Description:** Run install doc library checks on desktop and Simulator. Confirm `bun run validate:install` passes. Mark checkpoints in `tasks/plan.md`.
+**Description:** Desktop + iOS Simulator visual pass (reference screenshot parity for layout/mood, not Neo branding). Confirm create/delete/persistence still work. Run `bun run validate:install`.
 
 **Acceptance criteria:**
 
-- [x] Persistence across restart verified
-- [x] `bun run test` and `bun run lint` green
+- [ ] Horizontal scroll with many books (optional: create 5+ books)
+- [ ] `bun run test`, `bun run lint`, `bun run validate:install` green
 
 **Verification:**
 
-- [x] Manual desktop + Simulator
-- [x] `bun run validate:install`
+- [ ] Manual desktop + Simulator
+- [ ] `bun run validate:install`
 
-**Dependencies:** Tasks 5, 6 (7 optional)
+**Dependencies:** Task 6
 
 **Files likely touched:** `tasks/plan.md`, `tasks/todo.md` (checkpoint checkboxes)
 
@@ -190,13 +169,12 @@ Sizing: **S** = 1–2 files, **M** = 3–5 files.
 
 ## Checkpoint: Foundation (after Tasks 1–2)
 
-- [x] Domain and bridge contract tested
+- [x] CSS bundled (Task 1); cover palette tested (Task 2)
 
-## Checkpoint: Adapters (after Tasks 3–4)
+## Checkpoint: Shelf visual (after Tasks 3–5)
 
-- [x] Both shells expose working library bridge methods
+- [ ] Unit tests green; dev desktop shows Neo-like shelf
 
-## Checkpoint: Complete (after Tasks 5–8)
+## Checkpoint: Complete (after Tasks 6–7)
 
-- [x] Shelf CRUD on desktop and Simulator; install doc updated
-- [ ] Ready for `languages` when `SPEC-languages.md` is approved; open book blocked on `manuscript`
+- [ ] Install doc updated; human sign-off done

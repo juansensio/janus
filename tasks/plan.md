@@ -1,89 +1,86 @@
-# Implementation Plan: library (slice 1)
+# Implementation Plan: library (slice 1b — Neo-inspired shelf visual)
 
-**Source spec:** `docs/specs/SPEC-library.md` (approved 2026-10-18)  
-**Archived:** `tasks/archive/shell/` (shell module complete)
+**Source spec:** `docs/specs/SPEC-library.md` — **Slice 1b** (Neo-inspired shelf visual)  
+**Archived:** `tasks/archive/library/` (slice 1 CRUD complete)
 
 ## Overview
 
-Bookshelf **list / create / delete** with on-disk `book.json` under `<libraryRoot>/books/<bookId>/`. Domain rules live in **`services/library/`** (`@janus/library`). Desktop and mobile shells perform filesystem I/O only through **extended `JanusBridge`** methods; **`packages/ui`** renders the shelf and forwards actions (no title allocation, sort, or manifest parsing in UI).
+Reskin the existing bookshelf **without** changing bridge, domain, or on-disk format. `packages/ui` gains dark Neo-like chrome (gold spaced **Janus** wordmark), one horizontal **BOOKS** row with cover-style cards (2:3, palette from `book.id`), a dashed **+** add tile for `createBook()`, and icon delete with `window.confirm`. Slice 1 CRUD behavior and sort order stay the same.
 
-**Prerequisite:** Shell signed off (`tasks/archive/shell/`).
+**Prerequisite:** Slice 1 signed off (`tasks/archive/library/`).
 
-**Not in slice 1:** Open book → `manuscript`, rename UI, `languages` catalog, custom delete modal (use `window.confirm`).
+**Not in slice 1b:** Multi-shelf UI, Import, author line, cover images, open-book navigation, custom delete modal, new npm UI/CSS frameworks.
 
 ## Architecture decisions
 
-- **Workspace:** Add `services/*` to root Bun workspaces; package name **`@janus/library`**.
-- **Bridge contract:** `BookSummary` and async `listBooks()`, `createBook()`, `deleteBook(id)` on `JanusBridge`; reject with `Error` carrying string **`code`** (e.g. `BOOK_NOT_FOUND`).
-- **Desktop I/O:** No `fs` in preload. **`ipcMain.handle`** in main uses Node `fs`; preload exposes `ipcRenderer.invoke`. Library root: `path.join(app.getPath("userData"), "library")`.
-- **Mobile I/O:** Capacitor **`@capacitor/filesystem`** in `apps/mobile` only; same domain helpers for manifest bytes and paths.
-- **Corrupt entries:** Shells skip invalid dirs when listing; policy unit-tested in domain.
-- **UI:** Shelf in `packages/ui`; English literals per spec; delete via **`window.confirm`**.
-- **Validation:** `validate:install` stays shell-focused; library manual checks in **`docs/install-macos.md`**.
+- **Presentation only:** `coverClassForBookId` and all layout live in `packages/ui`; no `services/library` changes.
+- **Stylesheet:** `packages/ui/src/styles/shelf.css` imported once from `shell-entry.ts` (Vite bundles CSS into desktop/mobile artifacts).
+- **Wordmark:** `createShellLabel()` from `@janus/bridge` inside shelf header (`<h1 class="shelf-wordmark">`); remove duplicate heading from `mount.ts`. System **serif** stack for wordmark; sans for shelf UI (no bundled font).
+- **Empty shelf:** Always show add tile; **No books yet** as visually hidden text (`shelf-empty` + screen-reader-only utility) for a11y — no visible empty paragraph.
+- **Create:** Add tile only (no header **New book** button); `aria-label` on add tile uses `SHELF_STRINGS.addBook` (rename from `newBook` or alias in strings).
+- **Delete:** Icon button (inline SVG minus/bar); visible on **focus** and on **`@media (hover: hover)`** hover; unchanged confirm copy.
+- **DOM:** `<header class="shelf-header">`, `<section class="shelf-row">`, `<ul class="shelf-track" role="list">` with `<li role="listitem">` for cards + add tile.
+- **Validate guard:** Built JS must still include `Janus` and `data-platform` markers (`scripts/validate-built-ui.ts`); wordmark text satisfies label check.
 
 ## Dependency graph
 
 ```
-Task 1 @janus/library domain + unit tests
-    → Task 2 JanusBridge + BookSummary (+ fix test mocks)
-        ├→ Task 3 Desktop IPC + FS adapter
-        └→ Task 4 Mobile Capacitor FS adapter
-Task 2 + 3 + 4
-    → Task 5 Shelf UI + mount wiring
-        → Task 6 Install doc library section
-Task 3
-    → Task 7 (optional) Desktop integration test
-Task 6 + 7
-    → Task 8 Human sign-off
+Task 1 shelf.css + shell-entry import + base #app dark shell
+    → Task 2 cover-palette.ts + unit tests
+Task 1 + 2
+    → Task 3 render-shelf DOM/chrome/row/cards/add/delete icons
+        → Task 4 mount.ts (shelf-only root) + mount.test.ts
+Task 3 + 4
+    → Task 5 shelf.test.ts alignment + strings
+        → Task 6 docs/install-macos.md visual checklist
+Task 6
+    → Task 7 Human sign-off
 ```
 
 ## Task list
 
-Full acceptance criteria: **`tasks/todo.md`** Tasks **1–8**.
+Full acceptance criteria: **`tasks/todo.md`** Tasks **1–7**.
 
 ### Phase 1: Foundation
-- [x] Task 1: `@janus/library` domain package
-- [x] Task 2: Extend `JanusBridge` contract
+- [x] Task 1: Shelf CSS tokens and global dark shell
+- [ ] Task 2: Cover palette helper
 
 ### Checkpoint: Foundation
-- [x] `bun run test` includes `services/library/`; bridge mocks updated
+- [ ] `bun run test` green; CSS loads in dev desktop
 
-### Phase 2: Shell I/O
-- [x] Task 3: Desktop library IPC and FS
-- [x] Task 4: Mobile Capacitor FS adapter
+### Phase 2: Shelf UI
+- [ ] Task 3: Neo-style shelf markup and behavior
+- [ ] Task 4: Mount wiring (wordmark in shelf only)
 
-### Checkpoint: Adapters
-- [x] Both shells expose `listBooks` / `createBook` / `deleteBook`
+### Checkpoint: Shelf visual
+- [ ] Create/delete/list unchanged; horizontal row + add tile work in jsdom tests
 
-### Phase 3: Shelf
-- [x] Task 5: Bookshelf UI and mount wiring
-- [x] Task 6: Install doc — library manual checks
-
-### Checkpoint: Shelf CRUD
-- [ ] Desktop + Simulator create/delete; persistence across restart
-- [ ] `bun run validate:install` still passes
-
-### Phase 4: Sign-off
-- [x] Task 7 (optional): Desktop integration test
-- [ ] Task 8: Human sign-off
+### Phase 3: Docs and sign-off
+- [ ] Task 5: Shelf unit tests
+- [ ] Task 6: Install doc — shelf visual checks
+- [ ] Task 7: Human sign-off
 
 ### Checkpoint: Complete
-- [ ] Install doc library section verified
-- [ ] `bun run test` && `bun run lint` green
+- [ ] Desktop + Simulator visual pass; `bun run test` && `bun run lint` && `bun run validate:install`
 
 ## Risks and mitigations
 
 | Risk | Impact | Mitigation |
 |------|--------|------------|
-| First desktop IPC; sandbox/preload mistakes | High | Thin handlers; colocated tests; no `fs` in preload |
-| Capacitor FS paths differ from Electron | Med | Domain path helpers; Simulator manual gate (Task 8) |
-| Shelf UI breaks shell validate label guard | Med | Keep `data-platform` on `#app`; extend guard only if needed |
+| Mount test expected `h1` at root | Low | Task 4 updates `mount.test.ts` to assert shelf wordmark |
+| Built UI guard breaks on DOM change | Low | Keep `Janus` string and `data-platform` on `#app` |
+| jsdom lacks layout | Low | Test behavior/selectors, not scroll metrics; manual check for overflow |
+| Delete icon hard to discover | Med | Focus-visible styles; sr-only labels; manual a11y spot-check |
 
-## Open questions
+## Open questions (resolved for build)
 
-- **Task 7:** Required for sign-off or optional (like shell desktop smoke)?
-- **Capacitor:** Pin `@capacitor/filesystem` when Task 4 starts.
+| Spec open question | Plan decision |
+|--------------------|---------------|
+| Empty copy | Visually hidden `shelf-empty`; add tile always visible |
+| Header New book | Add tile only |
+| Typography | System serif wordmark |
+| Delete on hover | Hover + focus-within |
 
 ## Human approval
 
-Review **Tasks 1–8** in `tasks/todo.md` before `/build` Task 1.
+Review **Tasks 1–7** in `tasks/todo.md`, then **`/build`** Task 1.

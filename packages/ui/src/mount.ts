@@ -3,6 +3,7 @@ import { renderShelf } from "./shelf";
 
 export function mountJanusShell(root: HTMLElement, bridge: JanusBridge): void {
     root.replaceChildren();
+    root.classList.add("janus-shelf-shell");
     root.dataset.platform = bridge.platform();
 
     const heading = document.createElement("h1");
