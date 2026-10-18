@@ -20,7 +20,8 @@ export type AiAssistErrorCode =
     | "AI_COMMENT_NOT_FOUND"
     | "AI_CONTEXT_TOO_LARGE"
     | "AI_PROVIDER_ERROR"
-    | "AI_AUTH_FAILED";
+    | "AI_AUTH_FAILED"
+    | "AI_AUTH_CANCELLED";
 
 export class AiAssistError extends Error {
     readonly code: AiAssistErrorCode;
