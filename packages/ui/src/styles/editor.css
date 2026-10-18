@@ -152,6 +152,33 @@
     font-size: 0.95rem;
 }
 
+.editor-ai-comment-model-row {
+    margin-bottom: 0.35rem;
+}
+
+.editor-ai-comment-model-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    color: var(--editor-page-muted);
+}
+
+.editor-ai-comment-model {
+    font: inherit;
+    font-size: 0.75rem;
+    padding: 0.15rem 0.35rem;
+    border-radius: 0.25rem;
+    border: 1px solid rgba(184, 160, 102, 0.45);
+    background: transparent;
+    color: var(--editor-page-fg);
+}
+
+.editor-ai-comment-model:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
 .editor-ai-comment-actions {
     display: flex;
     gap: 0.5rem;

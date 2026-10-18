@@ -3,7 +3,9 @@ import { MANUSCRIPT_FILENAME } from "./manuscript-service";
 import {
     createEmptyManuscriptHtml,
     migrateLegacyMarkdownToHtml,
+    parseManuscriptBlocks,
     parseManuscriptHtml,
+    serializeManuscriptBlocks,
     serializeManuscriptDocument,
 } from "./manuscript-html";
 import { ManuscriptServiceError } from "./manuscript-service";
@@ -51,6 +53,17 @@ describe("parseManuscriptHtml / serializeManuscriptDocument", () => {
         const doc = parseManuscriptHtml(input);
         expect(doc.html).toBe(input);
         expect(serializeManuscriptDocument(doc)).toBe(input);
+    });
+
+    it("round-trips optional model on janus-ai-comment", () => {
+        const html =
+            '<janus-manuscript version="1"><janus-ai-comment id="c1" model="gpt-4o">Prompt</janus-ai-comment></janus-manuscript>';
+        const blocks = parseManuscriptBlocks(html);
+        expect(blocks[0]).toMatchObject({
+            kind: "comment",
+            model: "gpt-4o",
+        });
+        expect(serializeManuscriptBlocks(blocks)).toContain('model="gpt-4o"');
     });
 
     it("stores janus-ai-comment body as plain text", () => {

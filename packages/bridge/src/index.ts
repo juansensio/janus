@@ -41,6 +41,11 @@ export type AiProviderStatus = {
     connected: boolean;
 };
 
+export type OpenAiModelSettings = {
+    preference: string;
+    options: string[];
+};
+
 export type JanusBridgeErrorCode =
     | "BOOK_NOT_FOUND"
     | "INVALID_BOOK_ID"
@@ -92,6 +97,8 @@ export interface JanusBridge {
     getAiProviderStatus(): Promise<AiProviderStatus>;
     connectOpenAiCodex(): Promise<void>;
     disconnectOpenAiCodex(): Promise<void>;
+    getOpenAiModelSettings(): Promise<OpenAiModelSettings>;
+    setOpenAiModelPreference(preference: string): Promise<OpenAiModelSettings>;
     writeForComment(
         id: string,
         commentId: string,

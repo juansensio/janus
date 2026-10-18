@@ -149,7 +149,10 @@ app.whenReady().then(async () => {
         () => libraryContext.resolved.path,
         manuscriptFs,
     );
-    registerAiIpc(ipcMain, () => libraryContext.resolved.path, manuscriptFs);
+    registerAiIpc(ipcMain, () => libraryContext.resolved.path, manuscriptFs, {
+        userDataPath,
+        settingsFs: rootFs,
+    });
     registerSettingsIpc(
         ipcMain,
         () => libraryContext,
