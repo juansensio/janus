@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import path from "node:path";
 const root = path.resolve(import.meta.dir, "..");
@@ -36,6 +37,17 @@ async function main(): Promise<void> {
     const assetsDir = path.join(appPath, "Contents/Resources/ui/assets");
     if (!existsSync(assetsDir)) {
         fail(`validate-desktop-release: missing ui assets: ${assetsDir}`);
+    }
+    if (process.platform === "darwin") {
+        try {
+            execFileSync("codesign", ["--verify", "--deep", appPath], {
+                stdio: "pipe",
+            });
+        } catch {
+            fail(
+                `validate-desktop-release: codesign --verify failed for ${appPath}\nEnsure after-pack ad-hoc signing ran (see apps/desktop/scripts/after-pack-adhoc-sign.cjs).`,
+            );
+        }
     }
     console.log(`validate-desktop-release: ok (${appPath})`);
 }

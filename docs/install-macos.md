@@ -137,10 +137,13 @@ Use this when you want Janus **without** cloning the repo or installing Bun.
 1. Open the repository **Releases** page on GitHub and pick a tag (for example `v0.1.0`).
 2. Download **`Janus-*-arm64-mac.zip`** or the **`.dmg`** (arm64 / Apple Silicon only in v1).
 3. **Zip:** unzip, then drag **Janus.app** into **Applications**.
-4. **First launch (unsigned build):** macOS may block the app. Either right-click **Janus** → **Open**, or remove quarantine:
+4. **First launch:** Releases from **v0.1.1** onward are ad-hoc signed in CI; macOS may still block downloads from Chrome. If you see **“Janus is damaged and can’t be opened”**, the app is usually fine — that message often means **quarantine**, not a corrupt file. Do **not** click **Move to Bin** until you try:
+   - **Right-click** **Janus** → **Open** → **Open** again, or
+   - Remove quarantine (replace the path if Janus is not in Applications):
    ```bash
    xattr -cr /Applications/Janus.app
    ```
+   If it still fails: `codesign --force --deep --sign - /Applications/Janus.app` then open again. Full trust for strangers on the internet needs Apple **notarization** (not in v1).
 5. Confirm the shelf appears (`data-platform="desktop"` on `<main id="app">`). Books live under **Application Support** (or a folder you choose in **Settings**), not in the repo.
 
 Maintainers: run `/release verify` (or `bun run validate:desktop-release` after `bun run desktop:package`) before pushing a `v*` tag.

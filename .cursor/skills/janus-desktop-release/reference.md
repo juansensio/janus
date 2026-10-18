@@ -51,8 +51,11 @@ File: `.github/workflows/desktop-release.yml`
 - `productName`: `Janus`
 - `extraResources`: repo `dist/ui` → `Resources/ui`
 - `mac.target`: `zip`, `dmg` (arm64 on Apple Silicon runners)
+- `afterPack`: `scripts/after-pack-adhoc-sign.cjs` — `codesign --sign -` on `.app` (CI + local package)
 
 Workspace packages are **devDependencies**; main/preload are pre-bundled with Bun into `apps/desktop/dist/`.
+
+**User install:** “damaged” after Chrome download → quarantine; see `docs/install-macos.md` (`xattr -cr` or right-click Open). Notarization is a later slice.
 
 ## Install docs
 
