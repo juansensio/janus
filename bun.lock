@@ -17,6 +17,7 @@
       "dependencies": {
         "@janus/bridge": "workspace:*",
         "@janus/library": "workspace:*",
+        "@janus/manuscript": "workspace:*",
         "electron": "33.2.1",
       },
     },
@@ -51,6 +52,10 @@
     },
     "services/library": {
       "name": "@janus/library",
+      "version": "0.0.0",
+    },
+    "services/manuscript": {
+      "name": "@janus/manuscript",
       "version": "0.0.0",
     },
   },
@@ -136,6 +141,8 @@
     "@janus/desktop": ["@janus/desktop@workspace:apps/desktop"],
 
     "@janus/library": ["@janus/library@workspace:services/library"],
+
+    "@janus/manuscript": ["@janus/manuscript@workspace:services/manuscript"],
 
     "@janus/mobile": ["@janus/mobile@workspace:apps/mobile"],
 

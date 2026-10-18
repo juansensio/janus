@@ -3,6 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { app, BrowserWindow, ipcMain } from "electron";
 import { registerLibraryIpc } from "./library-ipc";
+import { registerManuscriptIpc } from "./manuscript-ipc";
 import {
     evaluateNavigationUrl,
     evaluateWindowOpen,
@@ -85,7 +86,7 @@ function libraryRootPath(): string {
 }
 
 app.whenReady().then(() => {
-    registerLibraryIpc(ipcMain, libraryRootPath(), {
+    const libraryFs = {
         mkdir: (p, options) => fs.mkdir(p, options),
         readdir: (p, options) =>
             fs.readdir(p, options as { withFileTypes?: boolean }),
@@ -94,6 +95,12 @@ app.whenReady().then(() => {
         rm: (p, options) => fs.rm(p, options),
         stat: (p) => fs.stat(p),
         realpath: (p) => fs.realpath(p),
+    };
+    const root = libraryRootPath();
+    registerLibraryIpc(ipcMain, root, libraryFs);
+    registerManuscriptIpc(ipcMain, root, {
+        ...libraryFs,
+        rename: (from, to) => fs.rename(from, to),
     });
 
     app.on("web-contents-created", (_event, contents) => {

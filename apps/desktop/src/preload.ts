@@ -13,6 +13,9 @@ const bridge: JanusBridge = {
     renameBook: (id: string, title: string) =>
         invoke("janus:library:renameBook", id, title),
     deleteBook: (id: string) => invoke("janus:library:deleteBook", id),
+    readManuscript: (id: string) => invoke("janus:manuscript:readManuscript", id),
+    writeManuscript: (id: string, text: string) =>
+        invoke("janus:manuscript:writeManuscript", id, text),
 };
 
 contextBridge.exposeInMainWorld("janus", bridge);
