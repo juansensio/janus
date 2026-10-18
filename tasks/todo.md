@@ -36,15 +36,15 @@
 
 **Acceptance criteria:**
 
-- [ ] `MANUSCRIPT_FILENAME` → `manuscript.html` in domain (callers updated in Task 3)
-- [ ] Round-trip tests for empty doc, single `janus-p`, Unicode
-- [ ] Invalid/unknown tag → `ManuscriptServiceError` with `MANUSCRIPT_INVALID`
-- [ ] Comment body shape: plain text inside `janus-ai-comment` (locked in tests)
+- [x] `MANUSCRIPT_FILENAME` → `manuscript.html` in domain (callers updated in Task 3)
+- [x] Round-trip tests for empty doc, single `janus-p`, Unicode
+- [x] Invalid/unknown tag → `ManuscriptServiceError` with `MANUSCRIPT_INVALID`
+- [x] Comment body shape: plain text inside `janus-ai-comment` (locked in tests)
 
 **Verification:**
 
-- [ ] `bun run test services/manuscript`
-- [ ] `bun run lint`
+- [x] `bun run test services/manuscript`
+- [x] `bun run lint`
 
 **Dependencies:** None (parallel with Task 1)
 

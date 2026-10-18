@@ -5,3 +5,9 @@ export {
     type ManuscriptErrorCode,
     type ManuscriptFs,
 } from "./manuscript-service";
+export {
+    createEmptyManuscriptHtml,
+    parseManuscriptHtml,
+    serializeManuscriptDocument,
+    type ManuscriptDocument,
+} from "./manuscript-html";

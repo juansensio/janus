@@ -1,4 +1,4 @@
-export const MANUSCRIPT_FILENAME = "manuscript.md";
+export const MANUSCRIPT_FILENAME = "manuscript.html";
 
 const TEMP_SUFFIX = ".janus-manuscript.tmp";
 
@@ -11,7 +11,8 @@ export type ManuscriptFs = {
 
 export type ManuscriptErrorCode =
     | "MANUSCRIPT_READ_FAILED"
-    | "MANUSCRIPT_WRITE_FAILED";
+    | "MANUSCRIPT_WRITE_FAILED"
+    | "MANUSCRIPT_INVALID";
 
 export class ManuscriptServiceError extends Error {
     readonly code: ManuscriptErrorCode;
