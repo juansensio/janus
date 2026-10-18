@@ -6,6 +6,7 @@ import {
     evaluateWindowOpen,
     type NavigationPolicyOptions,
 } from "./navigation-policy";
+import { resolveDesktopUiLoadTarget } from "./ui-load-url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -64,7 +65,17 @@ function createWindow(): void {
         },
     });
 
-    void win.loadFile(uiIndexPath());
+    const port = Number(process.env.JANUS_UI_DEV_PORT ?? 5173);
+    const target = resolveDesktopUiLoadTarget({
+        devMode: isJanusDevMode(),
+        devPort: port,
+        indexHtmlPath: uiIndexPath(),
+    });
+    if (target.kind === "url") {
+        void win.loadURL(target.url);
+    } else {
+        void win.loadFile(target.path);
+    }
 }
 
 app.whenReady().then(() => {
