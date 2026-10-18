@@ -68,7 +68,8 @@ export type JanusBridgeErrorCode =
     | "AI_CONTEXT_TOO_LARGE"
     | "AI_PROVIDER_ERROR"
     | "AI_AUTH_FAILED"
-    | "AI_AUTH_CANCELLED";
+    | "AI_AUTH_CANCELLED"
+    | "INVALID_EDITOR_ZOOM";
 
 export type { UiLanguageResult } from "./ui-language";
 export { buildUiLanguage, buildUiLanguageForCode } from "./ui-language";
@@ -77,6 +78,10 @@ export {
     normalizeJanusSettings,
     type JanusSettings,
 } from "./janus-settings";
+export {
+    buildEditorZoomResult,
+    type EditorZoomResult,
+} from "./editor-zoom";
 
 export interface JanusBridge {
     platform(): Platform;
@@ -110,6 +115,8 @@ export interface JanusBridge {
     chooseLibraryRoot(): Promise<ChooseLibraryRootResult>;
     getUiLanguage(): Promise<UiLanguageResult>;
     setUiLanguage(code: string): Promise<UiLanguageResult>;
+    getEditorZoom(): Promise<EditorZoomResult>;
+    setEditorZoom(percent: number): Promise<EditorZoomResult>;
 }
 
 export function createShellLabel(): string {

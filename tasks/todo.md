@@ -11,9 +11,9 @@
 
 ## Task 2: Bridge contract and mock
 
-- [ ] `getEditorZoom` / `setEditorZoom` on `JanusBridge` + `INVALID_EDITOR_ZOOM`
-- [ ] Mock bridge defaults and set/get behavior
-- [ ] Vitest
+- [x] `getEditorZoom` / `setEditorZoom` on `JanusBridge` + `INVALID_EDITOR_ZOOM`
+- [x] Mock bridge defaults and set/get behavior
+- [x] Vitest
 
 ## Task 3: Desktop zoom IPC
 
