@@ -73,6 +73,10 @@
     font-size: 0.875rem;
 }
 
+.janus-editor-shell {
+    --editor-page-zoom: 1;
+}
+
 .editor-page {
     flex: 1;
     display: flex;
@@ -96,7 +100,7 @@
 .editor-title {
     margin: 0 0 2.25rem;
     font-family: var(--shelf-font-serif);
-    font-size: 0.8125rem;
+    font-size: calc(0.8125rem * var(--editor-page-zoom, 1));
     font-weight: 400;
     letter-spacing: 0.28em;
     line-height: 1.4;
@@ -134,7 +138,7 @@
     min-height: 55vh;
     outline: none;
     font-family: var(--shelf-font-serif);
-    font-size: 1.125rem;
+    font-size: calc(1.125rem * var(--editor-page-zoom, 1));
     line-height: 1.72;
     caret-color: var(--editor-page-fg);
 }

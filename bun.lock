@@ -37,6 +37,7 @@
         "@janus/library": "workspace:*",
         "@janus/manuscript": "workspace:*",
         "@janus/ui": "workspace:*",
+        "@janus/zoom": "workspace:*",
       },
       "devDependencies": {
         "@capacitor/cli": "6.2.0",

@@ -3,6 +3,7 @@ import { getUiLocale, t } from "../i18n";
 import { createAutosaveController, type EditorSaveStatus } from "./autosave";
 import { aiWriteErrorMessage } from "./ai-write-error";
 import type { AiWriteFlight } from "./manuscript-editor";
+import { loadAndApplyEditorZoom } from "./editor-zoom";
 import { createManuscriptEditor } from "./manuscript-editor";
 
 const AUTOSAVE_INTERVAL_MS = 1000;
@@ -103,6 +104,8 @@ export async function renderEditor(
 
     page.append(title, field);
     host.append(page);
+
+    await loadAndApplyEditorZoom(host, bridge);
 
     const autosaveRef: {
         current: ReturnType<typeof createAutosaveController> | null;

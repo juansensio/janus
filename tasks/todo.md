@@ -28,10 +28,10 @@
 
 ## Task 5: Apply zoom in editor UI
 
-- [ ] `editor-zoom.ts` apply CSS variable on shell
-- [ ] Load zoom in `render-editor.ts`
-- [ ] `editor.css` use `--editor-page-zoom`
-- [ ] Vitest
+- [x] `editor-zoom.ts` apply CSS variable on shell
+- [x] Load zoom in `render-editor.ts`
+- [x] `editor.css` use `--editor-page-zoom`
+- [x] Vitest
 
 ## Task 6: Settings control + catalogs
 
