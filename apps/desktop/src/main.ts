@@ -6,6 +6,7 @@ import {
     initDesktopLibraryContext,
     type DesktopLibraryContext,
 } from "./desktop-library-context";
+import { registerLanguageIpc } from "./language-ipc";
 import {
     createElectronDirectoryPicker,
     registerSettingsIpc,
@@ -146,6 +147,11 @@ app.whenReady().then(async () => {
             reloadLibraryContext,
         },
     );
+    registerLanguageIpc(ipcMain, {
+        userDataPath,
+        fs: rootFs,
+        getSystemLocale: () => app.getLocale(),
+    });
 
     app.on("web-contents-created", (_event, contents) => {
         attachSecureNavigationPolicy(contents);

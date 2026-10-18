@@ -6,6 +6,7 @@ export const DEV_LIBRARY_DIRNAME = ".janus-library";
 
 export type JanusSettings = {
     libraryRoot?: string;
+    uiLocale?: string;
 };
 
 export type LibraryRootSource =

@@ -18,6 +18,9 @@ const bridge: JanusBridge = {
         invoke("janus:manuscript:writeManuscript", id, text),
     getLibraryRoot: () => invoke("janus:settings:getLibraryRoot"),
     chooseLibraryRoot: () => invoke("janus:settings:chooseLibraryRoot"),
+    getUiLanguage: () => invoke("janus:language:getUiLanguage"),
+    setUiLanguage: (code: string) =>
+        invoke("janus:language:setUiLanguage", code),
 };
 
 contextBridge.exposeInMainWorld("janus", bridge);
