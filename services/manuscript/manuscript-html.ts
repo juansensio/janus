@@ -14,7 +14,7 @@ export type ManuscriptDocument = {
     html: string;
 };
 
-type ManuscriptBlock =
+export type ManuscriptBlock =
     | { kind: "p"; text: string }
     | { kind: "comment"; id: string; text: string }
     | {
@@ -211,6 +211,14 @@ export function migrateLegacyMarkdownToHtml(markdown: string): string {
         kind: "p",
         text: paragraph,
     }));
+    return serializeBlocks(blocks);
+}
+
+export function parseManuscriptBlocks(html: string): ManuscriptBlock[] {
+    return parseRoot(html);
+}
+
+export function serializeManuscriptBlocks(blocks: ManuscriptBlock[]): string {
     return serializeBlocks(blocks);
 }
 

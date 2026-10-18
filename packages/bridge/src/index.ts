@@ -1,9 +1,4 @@
-import { assertSupported } from "@janus/languages";
-import {
-    buildUiLanguage,
-    buildUiLanguageForCode,
-    type UiLanguageResult,
-} from "./ui-language";
+import type { UiLanguageResult } from "./ui-language";
 
 export {
     bridgeErrorCode,
@@ -50,6 +45,8 @@ export type JanusBridgeErrorCode =
     | "MANUSCRIPT_READ_FAILED"
     | "MANUSCRIPT_WRITE_FAILED"
     | "MANUSCRIPT_INVALID"
+    | "MANUSCRIPT_DRAFT_NOT_FOUND"
+    | "MANUSCRIPT_COMMENT_NOT_FOUND"
     | "INVALID_LIBRARY_ROOT"
     | "LIBRARY_ROOT_CANCELLED"
     | "LIBRARY_ROOT_NOT_EMPTY"
@@ -73,6 +70,14 @@ export interface JanusBridge {
     deleteBook(id: string): Promise<void>;
     readManuscript(id: string): Promise<string>;
     writeManuscript(id: string, text: string): Promise<void>;
+    acceptAiDraft(id: string, draftId: string): Promise<string>;
+    rejectAiDraft(id: string, draftId: string): Promise<string>;
+    insertOrReplaceDraft(
+        id: string,
+        commentId: string,
+        draftHtml: string,
+        draftId: string,
+    ): Promise<string>;
     getLibraryRoot(): Promise<LibraryRootInfo>;
     chooseLibraryRoot(): Promise<ChooseLibraryRootResult>;
     getUiLanguage(): Promise<UiLanguageResult>;
@@ -83,55 +88,4 @@ export function createShellLabel(): string {
     return "Janus";
 }
 
-const EMPTY_BOOKS: BookSummary[] = [];
-
-const defaultBook: BookSummary = {
-    id: "00000000-0000-4000-8000-000000000001",
-    title: "Untitled",
-    createdAt: "2026-01-01T00:00:00.000Z",
-};
-
-function createMockManuscriptStore(): Map<string, string> {
-    return new Map();
-}
-
-/** Minimal async stubs for Vitest and local UI work. */
-export function createMockJanusBridge(
-    overrides: Partial<JanusBridge> = {},
-): JanusBridge {
-    const manuscripts = createMockManuscriptStore();
-    let mockSavedLocale: string | null = null;
-    return {
-        platform: () => "desktop",
-        listBooks: async () => EMPTY_BOOKS,
-        suggestNewBookTitle: async () => "Untitled",
-        createBook: async () => defaultBook,
-        renameBook: async (_id, title) => ({
-            ...defaultBook,
-            title,
-        }),
-        deleteBook: async (id) => {
-            manuscripts.delete(id);
-        },
-        readManuscript: async (id) => manuscripts.get(id) ?? "",
-        writeManuscript: async (id, text) => {
-            manuscripts.set(id, text);
-        },
-        getLibraryRoot: async () => ({
-            path: "/tmp/janus-mock-library",
-            source: "user-data",
-        }),
-        chooseLibraryRoot: async () => ({
-            path: "/tmp/janus-mock-library",
-            needsReload: true,
-        }),
-        getUiLanguage: async () =>
-            buildUiLanguage(mockSavedLocale, "en"),
-        setUiLanguage: async (code: string) => {
-            assertSupported(code);
-            mockSavedLocale = code;
-            return buildUiLanguageForCode(code);
-        },
-        ...overrides,
-    };
-}
+export { createMockJanusBridge } from "./mock-janus-bridge";

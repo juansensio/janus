@@ -1,0 +1,90 @@
+import {
+    acceptAiDraft as acceptAiDraftHtml,
+    createEmptyManuscriptHtml,
+    insertOrReplaceDraft as insertOrReplaceDraftHtml,
+    rejectAiDraft as rejectAiDraftHtml,
+} from "@janus/manuscript";
+import type { JanusBridge } from "./index";
+import { assertSupported } from "@janus/languages";
+import {
+    buildUiLanguage,
+    buildUiLanguageForCode,
+} from "./ui-language";
+
+const EMPTY_BOOKS: import("./index").BookSummary[] = [];
+
+const defaultBook: import("./index").BookSummary = {
+    id: "00000000-0000-4000-8000-000000000001",
+    title: "Untitled",
+    createdAt: "2026-01-01T00:00:00.000Z",
+};
+
+function createMockManuscriptStore(): Map<string, string> {
+    return new Map();
+}
+
+/** Minimal async stubs for Vitest and local UI work. */
+export function createMockJanusBridge(
+    overrides: Partial<JanusBridge> = {},
+): JanusBridge {
+    const manuscripts = createMockManuscriptStore();
+    let mockSavedLocale: string | null = null;
+    const emptyHtml = createEmptyManuscriptHtml();
+
+    return {
+        platform: () => "desktop",
+        listBooks: async () => EMPTY_BOOKS,
+        suggestNewBookTitle: async () => "Untitled",
+        createBook: async () => defaultBook,
+        renameBook: async (_id, title) => ({
+            ...defaultBook,
+            title,
+        }),
+        deleteBook: async (id) => {
+            manuscripts.delete(id);
+        },
+        readManuscript: async (id) => manuscripts.get(id) ?? emptyHtml,
+        writeManuscript: async (id, text) => {
+            manuscripts.set(id, text);
+        },
+        acceptAiDraft: async (id, draftId) => {
+            const html = manuscripts.get(id) ?? emptyHtml;
+            const next = acceptAiDraftHtml(html, draftId);
+            manuscripts.set(id, next);
+            return next;
+        },
+        rejectAiDraft: async (id, draftId) => {
+            const html = manuscripts.get(id) ?? emptyHtml;
+            const next = rejectAiDraftHtml(html, draftId);
+            manuscripts.set(id, next);
+            return next;
+        },
+        insertOrReplaceDraft: async (id, commentId, draftHtml, draftId) => {
+            const html = manuscripts.get(id) ?? emptyHtml;
+            const next = insertOrReplaceDraftHtml(
+                html,
+                commentId,
+                draftHtml,
+                draftId,
+            );
+            manuscripts.set(id, next);
+            return next;
+        },
+        getLibraryRoot: async () => ({
+            path: "/tmp/janus-mock-library",
+            source: "user-data",
+        }),
+        chooseLibraryRoot: async () => ({
+            path: "/tmp/janus-mock-library",
+            needsReload: true,
+        }),
+        getUiLanguage: async () =>
+            buildUiLanguage(mockSavedLocale, "en"),
+        setUiLanguage: async (code: string) => {
+            assertSupported(code);
+            mockSavedLocale = code;
+            return buildUiLanguageForCode(code);
+        },
+        ...overrides,
+    };
+}

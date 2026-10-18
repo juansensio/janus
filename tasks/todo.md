@@ -84,14 +84,14 @@
 
 **Acceptance criteria:**
 
-- [ ] Golden HTML fixtures for accept (unwrap + remove comment), reject (drop draft only), insert/replace draft after comment
-- [ ] Accept missing draft → stable error; reject missing draft → no-op safe
-- [ ] `createMockJanusBridge` implements new methods
+- [x] Golden HTML fixtures for accept (unwrap + remove comment), reject (drop draft only), insert/replace draft after comment
+- [x] Accept missing draft → stable error; reject missing draft → no-op safe
+- [x] `createMockJanusBridge` implements new methods
 
 **Verification:**
 
-- [ ] `bun run test services/manuscript`
-- [ ] Desktop IPC tests for transform methods
+- [x] `bun run test services/manuscript`
+- [x] Desktop IPC tests for transform methods
 
 **Dependencies:** Task 3
 
@@ -103,8 +103,8 @@
 
 ## Checkpoint: Domain + bridge (after Tasks 2–4)
 
-- [ ] Migration + transform tests green
-- [ ] `bun run test` && `bun run lint`
+- [x] Migration + transform tests green
+- [x] `bun run test` && `bun run lint`
 
 ---
 

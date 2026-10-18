@@ -9,7 +9,15 @@ export {
 export {
     createEmptyManuscriptHtml,
     migrateLegacyMarkdownToHtml,
+    parseManuscriptBlocks,
     parseManuscriptHtml,
+    serializeManuscriptBlocks,
     serializeManuscriptDocument,
+    type ManuscriptBlock,
     type ManuscriptDocument,
 } from "./manuscript-html";
+export {
+    acceptAiDraft,
+    insertOrReplaceDraft,
+    rejectAiDraft,
+} from "./manuscript-transforms";

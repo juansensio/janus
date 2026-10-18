@@ -18,7 +18,9 @@ export type ManuscriptFs = {
 export type ManuscriptErrorCode =
     | "MANUSCRIPT_READ_FAILED"
     | "MANUSCRIPT_WRITE_FAILED"
-    | "MANUSCRIPT_INVALID";
+    | "MANUSCRIPT_INVALID"
+    | "MANUSCRIPT_DRAFT_NOT_FOUND"
+    | "MANUSCRIPT_COMMENT_NOT_FOUND";
 
 export class ManuscriptServiceError extends Error {
     readonly code: ManuscriptErrorCode;

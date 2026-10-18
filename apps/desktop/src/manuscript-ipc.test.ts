@@ -91,6 +91,26 @@ describe("createManuscriptBridgeService", () => {
         await fs.rm(root, { recursive: true });
     });
 
+    it("acceptAiDraft persists transformed html", async () => {
+        const root = await fs.mkdtemp(path.join(os.tmpdir(), "janus-ms-"));
+        const library = createLibraryService(
+            root,
+            nodeFs(),
+            () => "550e8400-e29b-41d4-a716-446655440000",
+        );
+        const created = await library.createBook("Draft");
+        const manuscript = createManuscriptBridgeService(root, nodeFs());
+        const html =
+            '<janus-manuscript version="1"><janus-ai-comment id="c1">Go</janus-ai-comment><janus-ai-draft id="d1" comment-id="c1"><janus-p>Done</janus-p></janus-ai-draft></janus-manuscript>';
+        await manuscript.writeManuscript(created.id, html);
+        const next = await manuscript.acceptAiDraft(created.id, "d1");
+        expect(next).toBe(
+            '<janus-manuscript version="1"><janus-p>Done</janus-p></janus-manuscript>',
+        );
+        await expect(manuscript.readManuscript(created.id)).resolves.toBe(next);
+        await fs.rm(root, { recursive: true });
+    });
+
     it("rejects invalid and missing book ids", async () => {
         const root = await fs.mkdtemp(path.join(os.tmpdir(), "janus-ms-"));
         const manuscript = createManuscriptBridgeService(root, nodeFs());

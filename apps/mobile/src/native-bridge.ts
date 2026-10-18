@@ -34,6 +34,17 @@ export function installMobileBridge(): void {
         readManuscript: (id) => manuscriptService.readManuscript(id),
         writeManuscript: (id, text) =>
             manuscriptService.writeManuscript(id, text),
+        acceptAiDraft: (id, draftId) =>
+            manuscriptService.acceptAiDraft(id, draftId),
+        rejectAiDraft: (id, draftId) =>
+            manuscriptService.rejectAiDraft(id, draftId),
+        insertOrReplaceDraft: (id, commentId, draftHtml, draftId) =>
+            manuscriptService.insertOrReplaceDraft(
+                id,
+                commentId,
+                draftHtml,
+                draftId,
+            ),
         getLibraryRoot: async () => ({
             path: MOBILE_LIBRARY_ROOT,
             source: "user-data",

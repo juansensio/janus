@@ -14,6 +14,9 @@ import {
 export const MANUSCRIPT_IPC_CHANNELS = {
     readManuscript: "janus:manuscript:readManuscript",
     writeManuscript: "janus:manuscript:writeManuscript",
+    acceptAiDraft: "janus:manuscript:acceptAiDraft",
+    rejectAiDraft: "janus:manuscript:rejectAiDraft",
+    insertOrReplaceDraft: "janus:manuscript:insertOrReplaceDraft",
 } as const;
 
 function rejectForBridge(error: unknown): LibraryIpcReject {
@@ -71,6 +74,74 @@ export function registerManuscriptIpc(
                     getLibraryRoot(),
                     fs,
                 ).writeManuscript(id, text);
+            } catch (error) {
+                throw rejectForBridge(error);
+            }
+        },
+    );
+
+    ipcMain.handle(
+        MANUSCRIPT_IPC_CHANNELS.acceptAiDraft,
+        async (_event, id: unknown, draftId: unknown) => {
+            if (typeof id !== "string" || typeof draftId !== "string") {
+                throw rejectForBridge(
+                    new LibraryBridgeError("INVALID_BOOK_ID", "Invalid book id"),
+                );
+            }
+            try {
+                return await createManuscriptBridgeService(
+                    getLibraryRoot(),
+                    fs,
+                ).acceptAiDraft(id, draftId);
+            } catch (error) {
+                throw rejectForBridge(error);
+            }
+        },
+    );
+
+    ipcMain.handle(
+        MANUSCRIPT_IPC_CHANNELS.rejectAiDraft,
+        async (_event, id: unknown, draftId: unknown) => {
+            if (typeof id !== "string" || typeof draftId !== "string") {
+                throw rejectForBridge(
+                    new LibraryBridgeError("INVALID_BOOK_ID", "Invalid book id"),
+                );
+            }
+            try {
+                return await createManuscriptBridgeService(
+                    getLibraryRoot(),
+                    fs,
+                ).rejectAiDraft(id, draftId);
+            } catch (error) {
+                throw rejectForBridge(error);
+            }
+        },
+    );
+
+    ipcMain.handle(
+        MANUSCRIPT_IPC_CHANNELS.insertOrReplaceDraft,
+        async (
+            _event,
+            id: unknown,
+            commentId: unknown,
+            draftHtml: unknown,
+            draftId: unknown,
+        ) => {
+            if (
+                typeof id !== "string" ||
+                typeof commentId !== "string" ||
+                typeof draftHtml !== "string" ||
+                typeof draftId !== "string"
+            ) {
+                throw rejectForBridge(
+                    new LibraryBridgeError("INVALID_BOOK_ID", "Invalid book id"),
+                );
+            }
+            try {
+                return await createManuscriptBridgeService(
+                    getLibraryRoot(),
+                    fs,
+                ).insertOrReplaceDraft(id, commentId, draftHtml, draftId);
             } catch (error) {
                 throw rejectForBridge(error);
             }
