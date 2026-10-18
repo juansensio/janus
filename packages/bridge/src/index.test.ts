@@ -34,4 +34,14 @@ describe("createMockJanusBridge", () => {
         });
         await expect(bridge.listBooks()).resolves.toBe(books);
     });
+
+    it("stores manuscript text per book id in the mock", async () => {
+        const id = "550e8400-e29b-41d4-a716-446655440000";
+        const bridge = createMockJanusBridge();
+        await expect(bridge.readManuscript(id)).resolves.toBe("");
+        await bridge.writeManuscript(id, "Hello\n");
+        await expect(bridge.readManuscript(id)).resolves.toBe("Hello\n");
+        await bridge.writeManuscript(id, "Updated");
+        await expect(bridge.readManuscript(id)).resolves.toBe("Updated");
+    });
 });

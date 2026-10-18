@@ -22,7 +22,9 @@ export type JanusBridgeErrorCode =
     | "BOOK_NOT_FOUND"
     | "INVALID_BOOK_ID"
     | "INVALID_BOOK_TITLE"
-    | "DUPLICATE_BOOK_TITLE";
+    | "DUPLICATE_BOOK_TITLE"
+    | "MANUSCRIPT_READ_FAILED"
+    | "MANUSCRIPT_WRITE_FAILED";
 
 export interface JanusBridge {
     platform(): Platform;
@@ -31,6 +33,8 @@ export interface JanusBridge {
     createBook(title: string): Promise<BookSummary>;
     renameBook(id: string, title: string): Promise<BookSummary>;
     deleteBook(id: string): Promise<void>;
+    readManuscript(id: string): Promise<string>;
+    writeManuscript(id: string, text: string): Promise<void>;
 }
 
 export function createShellLabel(): string {
@@ -45,10 +49,15 @@ const defaultBook: BookSummary = {
     createdAt: "2026-01-01T00:00:00.000Z",
 };
 
+function createMockManuscriptStore(): Map<string, string> {
+    return new Map();
+}
+
 /** Minimal async stubs for Vitest and local UI work. */
 export function createMockJanusBridge(
     overrides: Partial<JanusBridge> = {},
 ): JanusBridge {
+    const manuscripts = createMockManuscriptStore();
     return {
         platform: () => "desktop",
         listBooks: async () => EMPTY_BOOKS,
@@ -58,7 +67,13 @@ export function createMockJanusBridge(
             ...defaultBook,
             title,
         }),
-        deleteBook: async () => {},
+        deleteBook: async (id) => {
+            manuscripts.delete(id);
+        },
+        readManuscript: async (id) => manuscripts.get(id) ?? "",
+        writeManuscript: async (id, text) => {
+            manuscripts.set(id, text);
+        },
         ...overrides,
     };
 }

@@ -39,13 +39,13 @@ Sizing: **S** = 1–2 files, **M** = 3–5 files.
 
 **Acceptance criteria:**
 
-- [ ] `JanusBridge` includes both manuscript methods with documented reject codes
-- [ ] Mock stores text per book id; missing id reads as `""`
+- [x] `JanusBridge` includes both manuscript methods with documented reject codes
+- [x] Mock stores text per book id; missing id reads as `""`
 
 **Verification:**
 
-- [ ] `bun run test` (`packages/bridge`)
-- [ ] `bun run lint`
+- [x] `bun run test` (`packages/bridge`)
+- [x] `bun run lint`
 
 **Dependencies:** Task 1
 
