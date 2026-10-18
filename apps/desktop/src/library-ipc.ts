@@ -2,6 +2,11 @@ import type { IpcMain } from "electron";
 import { createLibraryService, type LibraryFs } from "./library-service";
 import { ShelfServiceError } from "@janus/library";
 import { toBridgeRejectValue } from "./library-errors";
+import {
+    isLibraryIpcReject,
+    toLibraryIpcReject,
+    type LibraryIpcReject,
+} from "./library-ipc-error";
 
 export const LIBRARY_IPC_CHANNELS = {
     listBooks: "janus:library:listBooks",
@@ -11,12 +16,15 @@ export const LIBRARY_IPC_CHANNELS = {
     deleteBook: "janus:library:deleteBook",
 } as const;
 
-function rejectForBridge(error: unknown): Error {
+function rejectForBridge(error: unknown): LibraryIpcReject {
+    if (isLibraryIpcReject(error)) {
+        return error;
+    }
     const mapped =
         error instanceof ShelfServiceError
             ? { message: error.message, code: error.code }
             : toBridgeRejectValue(error);
-    return Object.assign(new Error(mapped.message), { code: mapped.code });
+    return toLibraryIpcReject(mapped.message, mapped.code);
 }
 
 export function registerLibraryIpc(
