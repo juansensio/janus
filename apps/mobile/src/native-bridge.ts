@@ -1,5 +1,8 @@
 import type { JanusBridge } from "@janus/bridge";
+import { buildUiLanguage, buildUiLanguageForCode } from "@janus/bridge";
+import { assertSupported } from "@janus/languages";
 import { createShelfService } from "@janus/library";
+import { loadJanusSettings, saveJanusSettings } from "./janus-settings";
 import { createCapacitorShelfFs } from "./library-fs";
 import { createCapacitorManuscriptFs } from "./manuscript-fs";
 import { createManuscriptBridgeService } from "./manuscript-service";
@@ -40,6 +43,19 @@ export function installMobileBridge(): void {
                 new Error("Choosing a library folder is not supported on mobile"),
                 { code: "LIBRARY_ROOT_NOT_SUPPORTED" },
             );
+        },
+        getUiLanguage: async () => {
+            const settings = await loadJanusSettings();
+            return buildUiLanguage(
+                settings.uiLocale,
+                typeof navigator !== "undefined" ? navigator.language : "en",
+            );
+        },
+        setUiLanguage: async (code: string) => {
+            assertSupported(code);
+            const settings = await loadJanusSettings();
+            await saveJanusSettings({ ...settings, uiLocale: code });
+            return buildUiLanguageForCode(code);
         },
     };
     window.janus = bridge;

@@ -13,6 +13,7 @@
         "@capacitor/filesystem": "6.0.4",
         "@capacitor/ios": "6.2.0",
         "@janus/bridge": "workspace:*",
+        "@janus/languages": "workspace:*",
         "@janus/library": "workspace:*",
         "@janus/manuscript": "workspace:*",
         "@janus/ui": "workspace:*"

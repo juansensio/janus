@@ -50,6 +50,15 @@ describe("installMobileBridge", () => {
         expect(typeof window.janus?.writeManuscript).toBe("function");
     });
 
+    it("exposes UI language get and set", async () => {
+        installMobileBridge();
+        const en = await window.janus?.getUiLanguage();
+        expect(en?.locale).toBe("en");
+        const es = await window.janus?.setUiLanguage("es");
+        expect(es?.locale).toBe("es");
+        expect(es?.messages["library.shelfLabel"]).toBe("Libros");
+    });
+
     it("rejects chooseLibraryRoot on mobile", async () => {
         installMobileBridge();
         await expect(window.janus?.chooseLibraryRoot()).rejects.toMatchObject({
