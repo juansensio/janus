@@ -19,3 +19,4 @@ When `/plan` starts a new `docs/specs/SPEC-<module-id>.md`, move the previous pa
 | `library-root-slice-2-1e/` | `SPEC-library-root` slice 2 + `SPEC-library` slice 1e | Relocate on folder pick; title-based book dirs (2026-10-18). Wrap leftover → languages Task 8 |
 | `languages-slice-1/` | `docs/specs/SPEC-languages.md` | Interface locale `en`/`es`, catalogs, Settings picker (2026-10-18) |
 | `perf-command-phase-1/` | `docs/specs/SPEC-perf-command.md` | Janus `/perf` agent workflow (2026-10-18) |
+| `idle-post-perf/` | — | Idle root plan before ship-gate fixes (2026-10-18) |
