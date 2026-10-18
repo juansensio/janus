@@ -1,5 +1,6 @@
-import type { EditorZoomResult, JanusBridge } from "@janus/bridge";
+import type { JanusBridge } from "@janus/bridge";
 import {
+    editorZoomCssFactor,
     resetEditorZoom,
     stepEditorZoom,
 } from "@janus/zoom";
@@ -13,56 +14,90 @@ export function applyEditorPageZoom(
     if (!shell) {
         return;
     }
-    shell.style.setProperty(EDITOR_PAGE_ZOOM_VAR, String(percent / 100));
+    shell.style.setProperty(
+        EDITOR_PAGE_ZOOM_VAR,
+        String(editorZoomCssFactor(percent)),
+    );
 }
 
 export function findEditorShell(host: HTMLElement): HTMLElement | null {
     return host.closest(".janus-editor-shell");
 }
 
-export async function loadAndApplyEditorZoom(
+export type EditorZoomController = {
+    getPercent: () => number;
+    applyDirection: (direction: "in" | "out" | "reset") => void;
+};
+
+export type CreateEditorZoomControllerOptions = {
+    onPersistError?: () => void;
+};
+
+export function createEditorZoomController(
     host: HTMLElement,
     bridge: JanusBridge,
-): Promise<EditorZoomResult> {
-    const zoom = await bridge.getEditorZoom();
-    applyEditorPageZoom(findEditorShell(host), zoom.percent);
-    return zoom;
+    initialPercent: number,
+    options: CreateEditorZoomControllerOptions = {},
+): EditorZoomController {
+    let percent = initialPercent;
+    let persistChain: Promise<void> = Promise.resolve();
+
+    const applyLocal = (next: number): void => {
+        percent = next;
+        applyEditorPageZoom(findEditorShell(host), percent);
+    };
+
+    applyLocal(initialPercent);
+
+    const queuePersist = (next: number): void => {
+        if (next === percent) {
+            return;
+        }
+        applyLocal(next);
+        persistChain = persistChain
+            .then(async () => {
+                const result = await bridge.setEditorZoom(next);
+                applyLocal(result.percent);
+            })
+            .catch(() => {
+                options.onPersistError?.();
+            });
+        void persistChain;
+    };
+
+    return {
+        getPercent: () => percent,
+        applyDirection: (direction) => {
+            const next =
+                direction === "reset"
+                    ? resetEditorZoom()
+                    : stepEditorZoom(percent, direction);
+            queuePersist(next);
+        },
+    };
 }
 
-export async function persistEditorZoom(
+export async function loadInitialEditorZoom(
     host: HTMLElement,
     bridge: JanusBridge,
-    percent: number,
-): Promise<EditorZoomResult> {
-    const zoom = await bridge.setEditorZoom(percent);
-    applyEditorPageZoom(findEditorShell(host), zoom.percent);
-    return zoom;
-}
-
-export async function stepPersistedEditorZoom(
-    host: HTMLElement,
-    bridge: JanusBridge,
-    currentPercent: number,
-    direction: "in" | "out" | "reset",
-): Promise<EditorZoomResult> {
-    let next = currentPercent;
-    if (direction === "reset") {
-        next = resetEditorZoom();
-    } else {
-        next = stepEditorZoom(currentPercent, direction);
+): Promise<number> {
+    try {
+        const zoom = await bridge.getEditorZoom();
+        applyEditorPageZoom(findEditorShell(host), zoom.percent);
+        return zoom.percent;
+    } catch {
+        const fallback = resetEditorZoom();
+        applyEditorPageZoom(findEditorShell(host), fallback);
+        return fallback;
     }
-    return persistEditorZoom(host, bridge, next);
 }
 
 export type EditorZoomShortcutOptions = {
-    getCurrentPercent: () => number;
-    setCurrentPercent: (percent: number) => void;
+    controller: EditorZoomController;
     isActive: () => boolean;
 };
 
 export function attachEditorZoomShortcuts(
-    bridge: JanusBridge,
-    host: HTMLElement,
     options: EditorZoomShortcutOptions,
 ): () => void {
     const handler = (event: KeyboardEvent) => {
@@ -77,28 +112,19 @@ export function attachEditorZoomShortcuts(
             return;
         }
         const key = event.key;
-        const zoomIn =
-            key === "=" || key === "+" || (key === "=" && event.shiftKey);
+        const zoomIn = key === "=" || key === "+";
         const zoomOut = key === "-" || key === "_";
         const reset = key === "0";
         if (!zoomIn && !zoomOut && !reset) {
             return;
         }
         event.preventDefault();
-        void (async () => {
-            const direction = zoomIn
-                ? "in"
-                : zoomOut
-                  ? "out"
-                  : "reset";
-            const result = await stepPersistedEditorZoom(
-                host,
-                bridge,
-                options.getCurrentPercent(),
-                direction,
-            );
-            options.setCurrentPercent(result.percent);
-        })();
+        const direction = zoomIn
+            ? "in"
+            : zoomOut
+              ? "out"
+              : "reset";
+        options.controller.applyDirection(direction);
     };
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);

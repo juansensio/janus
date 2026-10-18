@@ -5,8 +5,8 @@ import { aiWriteErrorMessage } from "./ai-write-error";
 import type { AiWriteFlight } from "./manuscript-editor";
 import {
     attachEditorZoomShortcuts,
-    loadAndApplyEditorZoom,
-    stepPersistedEditorZoom,
+    createEditorZoomController,
+    loadInitialEditorZoom,
 } from "./editor-zoom";
 import { createManuscriptEditor } from "./manuscript-editor";
 
@@ -109,35 +109,34 @@ export async function renderEditor(
     page.append(title, field);
     host.append(page);
 
-    const initialZoom = await loadAndApplyEditorZoom(host, bridge);
-    let editorZoomPercent = initialZoom.percent;
-    const detachEditorZoomShortcuts = attachEditorZoomShortcuts(
-        bridge,
+    const initialZoomPercent = await loadInitialEditorZoom(host, bridge);
+    const zoomController = createEditorZoomController(
         host,
+        bridge,
+        initialZoomPercent,
         {
-            getCurrentPercent: () => editorZoomPercent,
-            setCurrentPercent: (percent) => {
-                editorZoomPercent = percent;
+            onPersistError: () => {
+                saveError.textContent = t("manuscript.zoomSaveFailed");
             },
-            isActive: () => host.isConnected,
         },
     );
+    const detachEditorZoomShortcuts = attachEditorZoomShortcuts({
+        controller: zoomController,
+        isActive: () => host.isConnected,
+    });
     const detachEditorZoomMenu = bridge.subscribeEditorZoomMenuAction(
         (action) => {
             if (!host.isConnected) {
                 return;
             }
-            void (async () => {
-                const result = await stepPersistedEditorZoom(
-                    host,
-                    bridge,
-                    editorZoomPercent,
-                    action,
-                );
-                editorZoomPercent = result.percent;
-            })();
+            zoomController.applyDirection(action);
         },
     );
+
+    const disposeEditorZoom = (): void => {
+        detachEditorZoomShortcuts();
+        detachEditorZoomMenu();
+    };
 
     const autosaveRef: {
         current: ReturnType<typeof createAutosaveController> | null;
@@ -262,8 +261,7 @@ export async function renderEditor(
     backButton.addEventListener("click", () => {
         void (async () => {
             if (!autosave.isDirty()) {
-                detachEditorZoomShortcuts();
-                detachEditorZoomMenu();
+                disposeEditorZoom();
                 editor.destroy();
                 autosave.dispose();
                 options.onBack();
@@ -271,8 +269,7 @@ export async function renderEditor(
             }
             try {
                 await autosave.flush();
-                detachEditorZoomShortcuts();
-                detachEditorZoomMenu();
+                disposeEditorZoom();
                 editor.destroy();
                 autosave.dispose();
                 options.onBack();

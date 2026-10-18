@@ -132,10 +132,12 @@ export async function renderSettings(
     zoomSelect.value = String(editorZoom.percent);
     zoomSelect.addEventListener("change", () => {
         void (async () => {
+            const previous = String(editorZoom.percent);
             try {
                 await bridge.setEditorZoom(Number(zoomSelect.value));
             } catch {
-                error.textContent = t("settings.chooseFailed");
+                zoomSelect.value = previous;
+                error.textContent = t("settings.editorZoomSaveFailed");
             }
         })();
     });

@@ -40,20 +40,21 @@ export function buildZoomMenuItems(): MenuItemConstructorOptions[] {
     ];
 }
 
-export function installDesktopZoomMenu(): void {
-    const template: MenuItemConstructorOptions[] = [
+export function buildApplicationMenuTemplate(): MenuItemConstructorOptions[] {
+    return [
         ...(process.platform === "darwin"
-            ? [
-                  {
-                      label: "Janus",
-                      submenu: [{ role: "quit" }],
-                  } as MenuItemConstructorOptions,
-              ]
+            ? [{ role: "appMenu" as const }]
             : []),
+        { role: "editMenu" as const },
         {
             label: "View",
             submenu: buildZoomMenuItems(),
         },
     ];
-    Menu.setApplicationMenu(Menu.buildFromTemplate(template));
+}
+
+export function installDesktopZoomMenu(): void {
+    Menu.setApplicationMenu(
+        Menu.buildFromTemplate(buildApplicationMenuTemplate()),
+    );
 }

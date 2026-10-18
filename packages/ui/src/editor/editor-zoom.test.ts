@@ -3,8 +3,9 @@ import { createMockJanusBridge } from "@janus/bridge";
 import {
     applyEditorPageZoom,
     attachEditorZoomShortcuts,
+    createEditorZoomController,
     EDITOR_PAGE_ZOOM_VAR,
-    loadAndApplyEditorZoom,
+    loadInitialEditorZoom,
 } from "./editor-zoom";
 
 describe("editor-zoom", () => {
@@ -27,7 +28,7 @@ describe("editor-zoom", () => {
         const host = document.createElement("div");
         shell.append(host);
         document.body.append(shell);
-        await loadAndApplyEditorZoom(host, bridge);
+        await expect(loadInitialEditorZoom(host, bridge)).resolves.toBe(150);
         expect(shell.style.getPropertyValue(EDITOR_PAGE_ZOOM_VAR)).toBe("1.5");
         shell.remove();
     });
@@ -46,12 +47,9 @@ describe("editor-zoom", () => {
         const host = document.createElement("div");
         shell.append(host);
         document.body.append(shell);
-        let current = 100;
-        const detach = attachEditorZoomShortcuts(bridge, host, {
-            getCurrentPercent: () => current,
-            setCurrentPercent: (p) => {
-                current = p;
-            },
+        const controller = createEditorZoomController(host, bridge, 100);
+        const detach = attachEditorZoomShortcuts({
+            controller,
             isActive: () => true,
         });
         document.dispatchEvent(
@@ -62,6 +60,33 @@ describe("editor-zoom", () => {
             }),
         );
         await vi.waitFor(() => expect(setEditorZoom).toHaveBeenCalledWith(110));
+        detach();
+        shell.remove();
+    });
+
+    it("does not zoom when focus is in a select", () => {
+        const setEditorZoom = vi.fn();
+        const bridge = createMockJanusBridge({ setEditorZoom });
+        const shell = document.createElement("div");
+        shell.className = "janus-editor-shell";
+        const host = document.createElement("div");
+        const select = document.createElement("select");
+        shell.append(host, select);
+        document.body.append(shell);
+        const controller = createEditorZoomController(host, bridge, 100);
+        const detach = attachEditorZoomShortcuts({
+            controller,
+            isActive: () => true,
+        });
+        select.focus();
+        document.dispatchEvent(
+            new KeyboardEvent("keydown", {
+                key: "=",
+                ctrlKey: true,
+                bubbles: true,
+            }),
+        );
+        expect(setEditorZoom).not.toHaveBeenCalled();
         detach();
         shell.remove();
     });

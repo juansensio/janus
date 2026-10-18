@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { ipcMain } from "electron";
 import { registerZoomIpc, ZOOM_IPC_CHANNELS } from "./zoom-ipc";
 

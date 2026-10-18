@@ -28,7 +28,7 @@ function rejectForBridge(error: unknown): LibraryIpcReject {
         "code" in error &&
         typeof (error as { code: unknown }).code === "string"
             ? (error as { code: string }).code
-            : "INVALID_EDITOR_ZOOM";
+            : "MANUSCRIPT_WRITE_FAILED";
     const message =
         error instanceof Error ? error.message : "Editor zoom error";
     return toLibraryIpcReject(message, code);
