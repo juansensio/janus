@@ -19,4 +19,14 @@ describe("mountJanusShell", () => {
         mountJanusShell(root, mockBridge("mobile"));
         expect(root.dataset.platform).toBe("mobile");
     });
+
+    it("replaces prior children on second mount", () => {
+        const root = document.createElement("main");
+        mountJanusShell(root, mockBridge("desktop"));
+        const firstHeading = root.querySelector("h1");
+        mountJanusShell(root, mockBridge("mobile"));
+        expect(root.querySelectorAll("h1")).toHaveLength(1);
+        expect(root.querySelector("h1")).not.toBe(firstHeading);
+        expect(root.dataset.platform).toBe("mobile");
+    });
 });

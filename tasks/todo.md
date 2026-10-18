@@ -395,9 +395,9 @@ Plan: `tasks/plan.md` § Shell ship-fixes. Do **not** start `languages` until Ch
 **Description:** Add Vitest coverage: `apps/mobile/src/native-bridge.test.ts` (`installMobileBridge` → `platform()` mobile); `packages/ui/src/main.test.ts` (happy path with mock `window.janus`, missing `#app`); optional mount re-mount test (second `mountJanusShell` clears prior children). Extract minimal test hooks if needed without pulling Electron into unit tests.
 
 **Acceptance criteria:**
-- [ ] At least one test fails if `native-bridge` returns wrong platform
-- [ ] At least one test covers `main.ts` missing `#app` error path
-- [ ] No Electron in unit test suite (happy-dom only)
+- [x] At least one test fails if `native-bridge` returns wrong platform
+- [x] At least one test covers `main.ts` missing `#app` error path
+- [x] No Electron in unit test suite (happy-dom only)
 
 **Verification:**
 - [ ] `bun run test`
