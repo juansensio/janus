@@ -1,5 +1,5 @@
 import type { JanusBridge } from "@janus/bridge";
-import { SETTINGS_STRINGS } from "./strings";
+import { initI18n, t } from "../i18n";
 
 export type RenderSettingsOptions = {
     onBack: () => void;
@@ -8,13 +8,13 @@ export type RenderSettingsOptions = {
 function formatSourceLabel(source: string): string {
     switch (source) {
         case "env":
-            return "Environment override";
+            return t("settings.source.env");
         case "dev-default":
-            return "Development folder";
+            return t("settings.source.devDefault");
         case "settings":
-            return "Custom folder";
+            return t("settings.source.settings");
         default:
-            return "Default location";
+            return t("settings.source.userData");
     }
 }
 
@@ -26,17 +26,20 @@ export async function renderSettings(
     host.replaceChildren();
     host.className = "janus-settings";
 
+    const uiLanguage = await bridge.getUiLanguage();
+    initI18n(uiLanguage);
+
     const header = document.createElement("header");
     header.className = "settings-header";
 
     const backButton = document.createElement("button");
     backButton.type = "button";
     backButton.className = "settings-back";
-    backButton.textContent = SETTINGS_STRINGS.backToShelf;
+    backButton.textContent = t("settings.backToShelf");
 
     const title = document.createElement("h1");
     title.className = "settings-title";
-    title.textContent = SETTINGS_STRINGS.title;
+    title.textContent = t("settings.title");
 
     header.append(backButton, title);
     host.append(header);
@@ -45,18 +48,45 @@ export async function renderSettings(
     error.className = "settings-error";
     host.append(error);
 
+    const languageLabel = document.createElement("p");
+    languageLabel.className = "settings-label";
+    languageLabel.textContent = t("settings.language");
+
+    const languageSelect = document.createElement("select");
+    languageSelect.className = "settings-language";
+    languageSelect.setAttribute("aria-label", t("settings.language"));
+    for (const language of uiLanguage.languages) {
+        const option = document.createElement("option");
+        option.value = language.code;
+        option.textContent = language.nativeName;
+        languageSelect.append(option);
+    }
+    languageSelect.value = uiLanguage.locale;
+    languageSelect.addEventListener("change", () => {
+        void (async () => {
+            try {
+                const result = await bridge.setUiLanguage(languageSelect.value);
+                initI18n(result);
+                await renderSettings(host, bridge, options);
+            } catch {
+                error.textContent = t("settings.chooseFailed");
+            }
+        })();
+    });
+    host.append(languageLabel, languageSelect);
+
     let rootInfo: Awaited<ReturnType<JanusBridge["getLibraryRoot"]>>;
     try {
         rootInfo = await bridge.getLibraryRoot();
     } catch {
-        error.textContent = SETTINGS_STRINGS.chooseFailed;
+        error.textContent = t("settings.chooseFailed");
         backButton.addEventListener("click", () => options.onBack());
         return;
     }
 
     const locationLabel = document.createElement("p");
     locationLabel.className = "settings-label";
-    locationLabel.textContent = SETTINGS_STRINGS.libraryLocation;
+    locationLabel.textContent = t("settings.libraryLocation");
 
     const pathEl = document.createElement("p");
     pathEl.className = "settings-path";
@@ -75,7 +105,7 @@ export async function renderSettings(
     if (rootInfo.source === "dev-default") {
         const note = document.createElement("p");
         note.className = "settings-note";
-        note.textContent = SETTINGS_STRINGS.devDefaultNote;
+        note.textContent = t("settings.devDefaultNote");
         host.append(note);
     }
 
@@ -83,7 +113,7 @@ export async function renderSettings(
         const chooseButton = document.createElement("button");
         chooseButton.type = "button";
         chooseButton.className = "settings-choose";
-        chooseButton.textContent = SETTINGS_STRINGS.chooseFolder;
+        chooseButton.textContent = t("settings.chooseFolder");
         chooseButton.addEventListener("click", () => {
             void (async () => {
                 error.textContent = "";
@@ -103,10 +133,10 @@ export async function renderSettings(
                         return;
                     }
                     if (code === "LIBRARY_ROOT_NOT_EMPTY") {
-                        error.textContent = SETTINGS_STRINGS.libraryRootNotEmpty;
+                        error.textContent = t("settings.libraryRootNotEmpty");
                         return;
                     }
-                    error.textContent = SETTINGS_STRINGS.chooseFailed;
+                    error.textContent = t("settings.chooseFailed");
                 }
             })();
         });

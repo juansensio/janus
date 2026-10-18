@@ -9,7 +9,7 @@ function mockBridge(platform: "desktop" | "mobile") {
 describe("mountJanusShell", () => {
     it("renders Janus wordmark inside shelf chrome", async () => {
         const root = document.createElement("main");
-        mountJanusShell(root, mockBridge("desktop"));
+        await mountJanusShell(root, mockBridge("desktop"));
         expect(root.querySelector(":scope > h1")).toBeNull();
         await vi.waitFor(() =>
             expect(root.querySelector(".shelf-wordmark")?.textContent).toBe(
@@ -21,7 +21,7 @@ describe("mountJanusShell", () => {
 
     it("sets mobile platform", async () => {
         const root = document.createElement("main");
-        mountJanusShell(root, mockBridge("mobile"));
+        await mountJanusShell(root, mockBridge("mobile"));
         await vi.waitFor(() =>
             expect(root.querySelector(".shelf-wordmark")).not.toBeNull(),
         );
@@ -30,12 +30,12 @@ describe("mountJanusShell", () => {
 
     it("replaces prior children on second mount", async () => {
         const root = document.createElement("main");
-        mountJanusShell(root, mockBridge("desktop"));
+        await mountJanusShell(root, mockBridge("desktop"));
         await vi.waitFor(() =>
             expect(root.querySelector(".shelf-wordmark")).not.toBeNull(),
         );
         const firstWordmark = root.querySelector(".shelf-wordmark");
-        mountJanusShell(root, mockBridge("mobile"));
+        await mountJanusShell(root, mockBridge("mobile"));
         await vi.waitFor(() =>
             expect(root.querySelector(".shelf-wordmark")).not.toBe(
                 firstWordmark,
@@ -45,9 +45,25 @@ describe("mountJanusShell", () => {
         expect(root.dataset.platform).toBe("mobile");
     });
 
-    it("applies dark shelf shell class on root", () => {
+    it("applies dark shelf shell class on root", async () => {
         const root = document.createElement("main");
-        mountJanusShell(root, mockBridge("desktop"));
+        await mountJanusShell(root, mockBridge("desktop"));
         expect(root.classList.contains("janus-shelf-shell")).toBe(true);
+    });
+
+    it("calls getUiLanguage and sets document lang before shelf", async () => {
+        const getUiLanguage = vi.fn(async () => {
+            const bridge = mockBridge("desktop");
+            return bridge.getUiLanguage();
+        });
+        const root = document.createElement("main");
+        const bridge = createMockJanusBridge({
+            platform: () => "desktop",
+            getUiLanguage,
+        });
+        await mountJanusShell(root, bridge);
+        expect(getUiLanguage).toHaveBeenCalledOnce();
+        expect(document.documentElement.lang).toBe("en");
+        expect(root.querySelector(".shelf-wordmark")).not.toBeNull();
     });
 });

@@ -1,9 +1,16 @@
 import type { BookSummary, JanusBridge } from "@janus/bridge";
 import { renderEditor } from "./editor";
+import { initI18n, t } from "./i18n";
 import { renderSettings } from "./settings";
 import { renderShelf } from "./shelf";
 
-export function mountJanusShell(root: HTMLElement, bridge: JanusBridge): void {
+export async function mountJanusShell(
+    root: HTMLElement,
+    bridge: JanusBridge,
+): Promise<void> {
+    const uiLanguage = await bridge.getUiLanguage();
+    initI18n(uiLanguage);
+
     function showShelf(): void {
         root.replaceChildren();
         root.classList.remove("janus-editor-shell", "janus-settings-shell");
@@ -12,15 +19,14 @@ export function mountJanusShell(root: HTMLElement, bridge: JanusBridge): void {
 
         const shelfHost = document.createElement("section");
         shelfHost.className = "janus-shelf";
-        shelfHost.setAttribute("aria-label", "Bookshelf");
+        shelfHost.setAttribute("aria-label", t("library.bookshelfAria"));
         root.append(shelfHost);
 
         void renderShelf(shelfHost, bridge, {
             onOpenBook: (book) => {
                 showEditor(book);
             },
-            onOpenSettings:
-                bridge.platform() === "desktop" ? () => showSettings() : undefined,
+            onOpenSettings: () => showSettings(),
         });
     }
 

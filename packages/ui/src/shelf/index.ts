@@ -1,2 +1,2 @@
-export { renderShelf } from "./render-shelf";
-export { SHELF_STRINGS } from "./strings";
+export { renderShelf, type RenderShelfOptions } from "./render-shelf";
+export { openBookNameDialog, type OpenBookNameDialogOptions } from "./book-name-dialog";

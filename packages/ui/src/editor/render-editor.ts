@@ -1,6 +1,6 @@
 import type { BookSummary, JanusBridge } from "@janus/bridge";
+import { getUiLocale, t } from "../i18n";
 import { createAutosaveController, type EditorSaveStatus } from "./autosave";
-import { EDITOR_STRINGS } from "./strings";
 
 const AUTOSAVE_INTERVAL_MS = 1000;
 
@@ -15,11 +15,11 @@ function setStatus(
 ): void {
     saveErrorEl.textContent = "";
     if (status === "saving") {
-        statusEl.textContent = EDITOR_STRINGS.saving;
+        statusEl.textContent = t("manuscript.saving");
         return;
     }
     if (status === "saved") {
-        statusEl.textContent = EDITOR_STRINGS.saved;
+        statusEl.textContent = t("manuscript.saved");
         return;
     }
     statusEl.textContent = "";
@@ -43,7 +43,7 @@ export async function renderEditor(
     const backButton = document.createElement("button");
     backButton.type = "button";
     backButton.className = "editor-back";
-    backButton.textContent = EDITOR_STRINGS.backToShelf;
+    backButton.textContent = t("manuscript.backToShelf");
 
     header.append(backButton);
     chrome.append(header);
@@ -65,7 +65,7 @@ export async function renderEditor(
     try {
         loadedText = await bridge.readManuscript(book.id);
     } catch {
-        loadError.textContent = EDITOR_STRINGS.loadFailed;
+        loadError.textContent = t("manuscript.loadFailed");
         backButton.addEventListener("click", () => {
             options.onBack();
         });
@@ -82,7 +82,8 @@ export async function renderEditor(
     const field = document.createElement("textarea");
     field.className = "editor-field";
     field.setAttribute("aria-label", book.title);
-    field.spellcheck = false;
+    field.lang = getUiLocale();
+    field.spellcheck = true;
     field.value = loadedText;
 
     page.append(title, field);
@@ -117,7 +118,7 @@ export async function renderEditor(
                 autosave.dispose();
                 options.onBack();
             } catch {
-                saveError.textContent = EDITOR_STRINGS.saveFailed;
+                saveError.textContent = t("manuscript.saveFailed");
             }
         })();
     });

@@ -1,2 +1,1 @@
-export { renderSettings } from "./render-settings";
-export { SETTINGS_STRINGS } from "./strings";
+export { renderSettings, type RenderSettingsOptions } from "./render-settings";

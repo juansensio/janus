@@ -1,7 +1,12 @@
 import { createMockJanusBridge, type BookSummary } from "@janus/bridge";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { t } from "./i18n";
 import { renderShelf } from "./shelf";
-import { SHELF_STRINGS } from "./shelf/strings";
+import { initTestI18n } from "./test-i18n";
+
+beforeEach(() => {
+    initTestI18n("en");
+});
 
 afterEach(() => {
     document.body.innerHTML = "";
@@ -52,7 +57,7 @@ describe("renderShelf", () => {
 
         expect(host.querySelector(".shelf-add")).not.toBeNull();
         expect(host.querySelector(".shelf-empty")?.textContent).toBe(
-            SHELF_STRINGS.empty,
+            t("library.empty"),
         );
         expect(host.querySelector(".shelf-empty")?.classList).toContain(
             "shelf-sr-only",
@@ -198,7 +203,7 @@ describe("renderShelf", () => {
         await vi.waitFor(() =>
             expect(
                 document.querySelector(".shelf-dialog-validation")?.textContent,
-            ).toBe(SHELF_STRINGS.dialogDuplicateTitle),
+            ).toBe(t("library.dialog.duplicateTitle")),
         );
         expect(document.querySelector(".shelf-dialog")).not.toBeNull();
     });
@@ -386,7 +391,7 @@ describe("renderShelf", () => {
         await vi.waitFor(() => expect(deleteBook).toHaveBeenCalledWith(book.id));
 
         expect(confirm).toHaveBeenCalledWith(
-            SHELF_STRINGS.deleteConfirm("Draft"),
+            t("library.deleteConfirm", { title: "Draft" }),
         );
     });
 
@@ -425,7 +430,7 @@ describe("renderShelf", () => {
         await renderShelf(host, bridge);
 
         expect(host.querySelector(".shelf-error")?.textContent).toBe(
-            SHELF_STRINGS.loadFailed,
+            t("library.loadFailed"),
         );
         expect(host.querySelectorAll(".shelf-card")).toHaveLength(0);
     });
@@ -450,7 +455,7 @@ describe("renderShelf", () => {
         await vi.waitFor(() =>
             expect(
                 document.querySelector(".shelf-dialog-validation")?.textContent,
-            ).toBe(SHELF_STRINGS.createFailed),
+            ).toBe(t("library.createFailed")),
         );
         expect(document.querySelector(".shelf-dialog")).not.toBeNull();
         expect(host.querySelector(".shelf-error")).toBeNull();

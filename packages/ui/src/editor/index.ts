@@ -1,2 +1,1 @@
-export { renderEditor } from "./render-editor";
-export { EDITOR_STRINGS } from "./strings";
+export { renderEditor, type RenderEditorOptions } from "./render-editor";

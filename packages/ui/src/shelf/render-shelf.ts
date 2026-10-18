@@ -1,11 +1,10 @@
 import { createShellLabel, type BookSummary, type JanusBridge } from "@janus/bridge";
+import { t } from "../i18n";
 import {
     openBookNameDialog,
     type OpenBookNameDialogOptions,
 } from "./book-name-dialog";
 import { coverClassForBookId } from "./cover-palette";
-import { EDITOR_STRINGS } from "../editor/strings";
-import { SHELF_STRINGS } from "./strings";
 
 function appendShelfError(host: HTMLElement, message: string): void {
     host.querySelector(".shelf-error")?.remove();
@@ -61,7 +60,7 @@ function appendShelfChrome(
         const settingsButton = document.createElement("button");
         settingsButton.type = "button";
         settingsButton.className = "shelf-settings";
-        settingsButton.textContent = "Settings";
+        settingsButton.textContent = t("library.settings");
         settingsButton.addEventListener("click", () => {
             options.onOpenSettings?.();
         });
@@ -100,7 +99,7 @@ function appendAddTile(
     addButton.type = "button";
     addButton.className = "shelf-add";
     addButton.textContent = "+";
-    addButton.setAttribute("aria-label", SHELF_STRINGS.addBook);
+    addButton.setAttribute("aria-label", t("library.addBook"));
     addButton.addEventListener("click", () => {
         void (async () => {
             const initialValue = await bridge.suggestNewBookTitle();
@@ -153,7 +152,7 @@ export async function renderShelf(
     } catch {
         const error = document.createElement("p");
         error.className = "shelf-error";
-        error.textContent = SHELF_STRINGS.loadFailed;
+        error.textContent = t("library.loadFailed");
         host.append(error);
         return;
     }
@@ -163,13 +162,13 @@ export async function renderShelf(
 
     const rowLabel = document.createElement("p");
     rowLabel.className = "shelf-row-label";
-    rowLabel.textContent = SHELF_STRINGS.shelfLabel;
+    rowLabel.textContent = t("library.shelfLabel");
     row.append(rowLabel);
 
     if (books.length === 0) {
         const empty = document.createElement("p");
         empty.className = "shelf-empty shelf-sr-only";
-        empty.textContent = SHELF_STRINGS.empty;
+        empty.textContent = t("library.empty");
         row.append(empty);
     }
 
@@ -191,7 +190,7 @@ export async function renderShelf(
         openButton.className = "shelf-card-open";
         openButton.setAttribute(
             "aria-label",
-            EDITOR_STRINGS.openBook(book.title),
+            t("manuscript.openBook", { title: book.title }),
         );
         const title = document.createElement("span");
         title.className = "shelf-card-title";
@@ -207,7 +206,7 @@ export async function renderShelf(
         editButton.className = "shelf-card-edit";
         editButton.setAttribute(
             "aria-label",
-            `${SHELF_STRINGS.rename} ${book.title}`,
+            `${t("library.rename")} ${book.title}`,
         );
         editButton.append(createEditIcon());
         editButton.addEventListener("click", (event) => {
@@ -228,13 +227,13 @@ export async function renderShelf(
         deleteButton.className = "shelf-card-delete";
         deleteButton.setAttribute(
             "aria-label",
-            `${SHELF_STRINGS.delete} ${book.title}`,
+            `${t("library.delete")} ${book.title}`,
         );
         deleteButton.append(createDeleteIcon());
         deleteButton.addEventListener("click", (event) => {
             event.stopPropagation();
             const confirmed = window.confirm(
-                SHELF_STRINGS.deleteConfirm(book.title),
+                t("library.deleteConfirm", { title: book.title }),
             );
             if (!confirmed) {
                 return;
@@ -244,7 +243,7 @@ export async function renderShelf(
                 bridge,
                 options,
                 () => bridge.deleteBook(book.id),
-                SHELF_STRINGS.deleteFailed,
+                t("library.deleteFailed"),
             );
         });
         card.append(deleteButton);

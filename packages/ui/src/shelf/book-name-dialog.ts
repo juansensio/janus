@@ -1,5 +1,5 @@
+import { t } from "../i18n";
 import { messageForDialogSubmitError } from "./dialog-submit-error";
-import { SHELF_STRINGS } from "./strings";
 
 export type BookNameDialogMode = "create" | "rename";
 
@@ -30,14 +30,14 @@ export function openBookNameDialog(options: OpenBookNameDialogOptions): void {
     heading.id = "shelf-book-name-dialog-title";
     heading.textContent =
         mode === "create"
-            ? SHELF_STRINGS.dialogCreateTitle
-            : SHELF_STRINGS.dialogRenameTitle;
+            ? t("library.dialog.createTitle")
+            : t("library.dialog.renameTitle");
     dialog.setAttribute("aria-labelledby", heading.id);
 
     const label = document.createElement("label");
     label.className = "shelf-dialog-label";
     label.htmlFor = "shelf-book-name-input";
-    label.textContent = SHELF_STRINGS.dialogNameLabel;
+    label.textContent = t("library.dialog.nameLabel");
 
     const input = document.createElement("input");
     input.type = "text";
@@ -51,7 +51,7 @@ export function openBookNameDialog(options: OpenBookNameDialogOptions): void {
     validation.id = "shelf-book-name-dialog-error";
     validation.hidden = true;
     validation.setAttribute("role", "alert");
-    validation.textContent = SHELF_STRINGS.dialogInvalidTitle;
+    validation.textContent = t("library.dialog.invalidTitle");
     input.setAttribute("aria-describedby", validation.id);
 
     const form = document.createElement("form");
@@ -64,7 +64,7 @@ export function openBookNameDialog(options: OpenBookNameDialogOptions): void {
     const cancelButton = document.createElement("button");
     cancelButton.type = "button";
     cancelButton.className = "shelf-dialog-button shelf-dialog-button--ghost";
-    cancelButton.textContent = SHELF_STRINGS.dialogCancel;
+    cancelButton.textContent = t("library.dialog.cancel");
 
     const confirmButton = document.createElement("button");
     confirmButton.type = "submit";
@@ -72,8 +72,8 @@ export function openBookNameDialog(options: OpenBookNameDialogOptions): void {
         "shelf-dialog-button shelf-dialog-button--primary";
     confirmButton.textContent =
         mode === "create"
-            ? SHELF_STRINGS.dialogCreate
-            : SHELF_STRINGS.dialogSave;
+            ? t("library.dialog.create")
+            : t("library.dialog.save");
 
     actions.append(cancelButton, confirmButton);
     form.append(label, input, validation, actions);
@@ -81,12 +81,9 @@ export function openBookNameDialog(options: OpenBookNameDialogOptions): void {
     overlay.append(dialog);
     document.body.append(overlay);
 
-    const focusable = [input, cancelButton, confirmButton];
-
-    function clearFieldError(): void {
-        validation.hidden = true;
-        validation.textContent = SHELF_STRINGS.dialogInvalidTitle;
-        input.removeAttribute("aria-invalid");
+    function closeDialog(): void {
+        overlay.remove();
+        returnFocusTo.focus();
     }
 
     function showFieldError(message: string): void {
@@ -96,74 +93,51 @@ export function openBookNameDialog(options: OpenBookNameDialogOptions): void {
         input.focus();
     }
 
-    function updateConfirmState(): void {
-        const invalid = isWhitespaceOnly(input.value);
-        confirmButton.disabled = invalid;
-        if (!invalid) {
-            clearFieldError();
-        } else {
-            showFieldError(SHELF_STRINGS.dialogInvalidTitle);
-        }
+    function hideFieldError(): void {
+        validation.hidden = true;
+        validation.textContent = t("library.dialog.invalidTitle");
+        input.removeAttribute("aria-invalid");
     }
 
-    function close(): void {
-        overlay.remove();
-        document.removeEventListener("keydown", onKeyDown);
-        returnFocusTo.focus();
-    }
-
-    function onKeyDown(event: KeyboardEvent): void {
-        if (event.key === "Escape") {
-            event.preventDefault();
-            close();
-            return;
-        }
-        if (event.key === "Tab") {
-            const index = focusable.indexOf(
-                document.activeElement as HTMLElement,
-            );
-            if (index === -1) {
-                return;
-            }
-            event.preventDefault();
-            const next =
-                event.shiftKey
-                    ? focusable[(index - 1 + focusable.length) % focusable.length]
-                    : focusable[(index + 1) % focusable.length];
-            next.focus();
-        }
-    }
+    cancelButton.addEventListener("click", () => {
+        closeDialog();
+    });
 
     overlay.addEventListener("click", (event) => {
         if (event.target === overlay) {
-            close();
+            closeDialog();
         }
     });
 
-    cancelButton.addEventListener("click", () => close());
-
     form.addEventListener("submit", (event) => {
         event.preventDefault();
-        if (confirmButton.disabled) {
+        hideFieldError();
+        const value = input.value;
+        if (isWhitespaceOnly(value)) {
+            showFieldError(t("library.dialog.invalidTitle"));
             return;
         }
         void (async () => {
             try {
-                await onConfirm(input.value);
+                await onConfirm(value.trim());
+                closeDialog();
             } catch (error) {
                 showFieldError(messageForDialogSubmitError(error, mode));
-                return;
-            }
-            if (overlay.isConnected) {
-                close();
             }
         })();
     });
 
-    input.addEventListener("input", updateConfirmState);
+    document.addEventListener(
+        "keydown",
+        (event) => {
+            if (event.key === "Escape") {
+                event.preventDefault();
+                closeDialog();
+            }
+        },
+        { once: true },
+    );
 
-    document.addEventListener("keydown", onKeyDown);
-    updateConfirmState();
     input.focus();
     input.select();
 }

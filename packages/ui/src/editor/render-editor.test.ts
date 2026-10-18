@@ -1,8 +1,9 @@
 import { createMockJanusBridge, type BookSummary } from "@janus/bridge";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { mountJanusShell } from "../mount";
+import { t } from "../i18n";
+import { initTestI18n } from "../test-i18n";
 import { renderEditor } from "./render-editor";
-import { EDITOR_STRINGS } from "./strings";
 
 const sampleBook: BookSummary = {
     id: "550e8400-e29b-41d4-a716-446655440000",
@@ -14,6 +15,10 @@ afterEach(() => {
     document.body.innerHTML = "";
     vi.restoreAllMocks();
     vi.useRealTimers();
+});
+
+beforeEach(() => {
+    initTestI18n("en");
 });
 
 describe("renderEditor", () => {
@@ -35,7 +40,7 @@ describe("renderEditor", () => {
                 backed = true;
             },
         });
-        expect(host.textContent).toContain(EDITOR_STRINGS.loadFailed);
+        expect(host.textContent).toContain(t("manuscript.loadFailed"));
         host.querySelector<HTMLButtonElement>(".editor-back")?.click();
         expect(backed).toBe(true);
         expect(write).not.toHaveBeenCalled();
@@ -61,7 +66,7 @@ describe("mountJanusShell editor flow", () => {
             listBooks: async () => [sampleBook],
             readManuscript: async () => "Stored",
         });
-        mountJanusShell(root, bridge);
+        await mountJanusShell(root, bridge);
         await vi.waitFor(() =>
             expect(root.querySelector(".shelf-card-open")).not.toBeNull(),
         );
@@ -78,7 +83,7 @@ describe("mountJanusShell editor flow", () => {
             listBooks: async () => [sampleBook],
             readManuscript: async () => "Stored",
         });
-        mountJanusShell(root, bridge);
+        await mountJanusShell(root, bridge);
         await vi.waitFor(() =>
             expect(root.querySelector(".shelf-card-edit")).not.toBeNull(),
         );

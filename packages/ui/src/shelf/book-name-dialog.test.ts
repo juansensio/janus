@@ -1,6 +1,11 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { t } from "../i18n";
+import { initTestI18n } from "../test-i18n";
 import { openBookNameDialog } from "./book-name-dialog";
-import { SHELF_STRINGS } from "./strings";
+
+beforeEach(() => {
+    initTestI18n("en");
+});
 
 afterEach(() => {
     document.body.innerHTML = "";
@@ -59,7 +64,9 @@ describe("openBookNameDialog (modal contract)", () => {
         await vi.waitFor(() => expect(onConfirm).toHaveBeenCalledOnce());
         expect(document.querySelector(".shelf-dialog-overlay")).not.toBeNull();
         const validation = document.querySelector(".shelf-dialog-validation");
-        expect(validation?.textContent).toBe(SHELF_STRINGS.dialogDuplicateTitle);
+        expect(validation?.textContent).toBe(
+            t("library.dialog.duplicateTitle"),
+        );
         expect(validation?.hidden).toBe(false);
 
         const input = document.querySelector(
@@ -85,7 +92,7 @@ describe("openBookNameDialog (modal contract)", () => {
         await vi.waitFor(() =>
             expect(
                 document.querySelector(".shelf-dialog-validation")?.textContent,
-            ).not.toBe(SHELF_STRINGS.createFailed),
+            ).not.toBe(t("library.createFailed")),
         );
     });
 });

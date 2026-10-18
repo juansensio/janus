@@ -48,5 +48,5 @@ export async function startShell(
     if (!root) {
         throw new Error("Missing #app");
     }
-    mountJanusShell(root, bridge);
+    await mountJanusShell(root, bridge);
 }

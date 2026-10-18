@@ -25,7 +25,7 @@ describe("editor autosave flow", () => {
             readManuscript: async () => "",
             writeManuscript: write,
         });
-        mountJanusShell(root, bridge);
+        await mountJanusShell(root, bridge);
         await vi.waitFor(() =>
             expect(root.querySelector(".shelf-card-open")).not.toBeNull(),
         );
@@ -49,7 +49,7 @@ describe("editor autosave flow", () => {
             readManuscript: async () => "start",
             writeManuscript: write,
         });
-        mountJanusShell(root, bridge);
+        await mountJanusShell(root, bridge);
         await vi.waitFor(() =>
             expect(root.querySelector(".shelf-card-open")).not.toBeNull(),
         );
@@ -80,7 +80,7 @@ describe("editor autosave flow", () => {
             readManuscript: async () => "",
             writeManuscript: write,
         });
-        mountJanusShell(root, bridge);
+        await mountJanusShell(root, bridge);
         await vi.waitFor(() =>
             expect(root.querySelector(".shelf-card-open")).not.toBeNull(),
         );

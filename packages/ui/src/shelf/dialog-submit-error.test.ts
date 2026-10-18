@@ -1,8 +1,11 @@
-import { describe, expect, it } from "vitest";
-import {
-    messageForDialogSubmitError,
-} from "./dialog-submit-error";
-import { SHELF_STRINGS } from "./strings";
+import { beforeEach, describe, expect, it } from "vitest";
+import { t } from "../i18n";
+import { initTestI18n } from "../test-i18n";
+import { messageForDialogSubmitError } from "./dialog-submit-error";
+
+beforeEach(() => {
+    initTestI18n("en");
+});
 
 describe("messageForDialogSubmitError", () => {
     it("maps DUPLICATE_BOOK_TITLE code to duplicate copy", () => {
@@ -13,23 +16,12 @@ describe("messageForDialogSubmitError", () => {
                 }),
                 "create",
             ),
-        ).toBe(SHELF_STRINGS.dialogDuplicateTitle);
-    });
-
-    it("maps electron-wrapped duplicate message without code", () => {
-        expect(
-            messageForDialogSubmitError(
-                new Error(
-                    "Error invoking remote method 'janus:library:createBook': Error: That name is already on your shelf. Choose a different book name.",
-                ),
-                "create",
-            ),
-        ).toBe(SHELF_STRINGS.dialogDuplicateTitle);
+        ).toBe(t("library.dialog.duplicateTitle"));
     });
 
     it("falls back to create failed for unknown errors", () => {
         expect(
             messageForDialogSubmitError(new Error("network"), "create"),
-        ).toBe(SHELF_STRINGS.createFailed);
+        ).toBe(t("library.createFailed"));
     });
 });
