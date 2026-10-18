@@ -1,8 +1,6 @@
 import { bridgeErrorCode, extractErrorMessage } from "@janus/bridge";
 
-/** Maps IPC write failures to `ai.*` locale keys. */
-export function aiWriteErrorKey(error: unknown): string {
-    const code = bridgeErrorCode(error);
+function aiWriteErrorKeyForCode(code: string | undefined): string {
     switch (code) {
         case "AI_NOT_CONNECTED":
             return "ai.writeNotConnected";
@@ -21,6 +19,11 @@ export function aiWriteErrorKey(error: unknown): string {
     }
 }
 
+/** Maps IPC write failures to `ai.*` locale keys. */
+export function aiWriteErrorKey(error: unknown): string {
+    return aiWriteErrorKeyForCode(bridgeErrorCode(error));
+}
+
 /** User-facing write error text; prefers provider message for instruction refusals. */
 export function aiWriteErrorMessage(
     error: unknown,
@@ -34,5 +37,5 @@ export function aiWriteErrorMessage(
         }
         return t("ai.commentNotInstruction");
     }
-    return t(aiWriteErrorKey(error));
+    return t(aiWriteErrorKeyForCode(code));
 }

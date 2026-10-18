@@ -11,9 +11,16 @@ const DUPLICATE_BOOK_TITLE_MARKERS = [
     "that name is already on your shelf. choose a different book name.",
 ] as const;
 
-function isDuplicateBookTitleMessage(message: string): boolean {
+function messageIncludesAny(
+    message: string,
+    phrases: readonly string[],
+): boolean {
     const lower = message.toLowerCase();
-    return DUPLICATE_BOOK_TITLE_MARKERS.some((phrase) => lower.includes(phrase));
+    return phrases.some((phrase) => lower.includes(phrase));
+}
+
+function isDuplicateBookTitleMessage(message: string): boolean {
+    return messageIncludesAny(message, DUPLICATE_BOOK_TITLE_MARKERS);
 }
 
 const AI_COMMENT_NOT_INSTRUCTION_MARKERS = [
@@ -22,10 +29,7 @@ const AI_COMMENT_NOT_INSTRUCTION_MARKERS = [
 ] as const;
 
 function isAiCommentNotInstructionMessage(message: string): boolean {
-    const lower = message.toLowerCase();
-    return AI_COMMENT_NOT_INSTRUCTION_MARKERS.some((phrase) =>
-        lower.includes(phrase),
-    );
+    return messageIncludesAny(message, AI_COMMENT_NOT_INSTRUCTION_MARKERS);
 }
 
 export function bridgeErrorCode(error: unknown): string | undefined {

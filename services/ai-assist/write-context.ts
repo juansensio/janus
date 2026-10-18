@@ -19,11 +19,9 @@ export function buildWriteContext(
         if (block.kind === "draft") {
             continue;
         }
-        if (block.kind === "comment") {
-            if (block.id === commentId) {
-                paragraphs.push(WRITE_CONTEXT_MARK);
-                found = true;
-            }
+        if (block.kind === "comment" && block.id === commentId) {
+            paragraphs.push(WRITE_CONTEXT_MARK);
+            found = true;
         }
     }
 

@@ -36,7 +36,6 @@ export type ManuscriptEditor = {
     destroy(): void;
     insertAiComment(): string;
     refreshAiCommentChrome(): void;
-    showWriteErrorForComment(commentId: string, error: unknown): void;
     applyStreamingDraft(
         commentId: string,
         draftId: string,
@@ -169,11 +168,15 @@ export function createManuscriptEditor(
                     } else {
                         write.textContent = t("manuscript.writeAi");
                         dom.removeAttribute("aria-busy");
-                        const pending =
-                            options.getWriteFlight().statusMessage;
+                        const pending = flight.statusMessage;
                         if (pending?.commentId === commentId) {
                             status.textContent = pending.text;
                             status.classList.add(
+                                "editor-ai-comment-status-error",
+                            );
+                        } else {
+                            status.textContent = "";
+                            status.classList.remove(
                                 "editor-ai-comment-status-error",
                             );
                         }
@@ -228,15 +231,21 @@ export function createManuscriptEditor(
                             try {
                                 await options.onWriteComment(commentId);
                             } catch (error) {
-                                if (status) {
-                                    status.textContent = aiWriteErrorMessage(
+                                const pending =
+                                    options.getWriteFlight().statusMessage;
+                                if (
+                                    pending?.commentId === commentId ||
+                                    !status
+                                ) {
+                                    return;
+                                }
+                                status.textContent = aiWriteErrorMessage(
                                     error,
                                     t,
                                 );
-                                    status.classList.add(
-                                        "editor-ai-comment-status-error",
-                                    );
-                                }
+                                status.classList.add(
+                                    "editor-ai-comment-status-error",
+                                );
                             }
                         })();
                     });
@@ -350,19 +359,6 @@ export function createManuscriptEditor(
             return id;
         },
         refreshAiCommentChrome,
-        showWriteErrorForComment(commentId: string, error: unknown): void {
-            const comment = view.dom.querySelector(
-                `[data-comment-id="${commentId}"]`,
-            );
-            const statusEl = comment?.querySelector(
-                ".editor-ai-comment-status",
-            );
-            if (!statusEl) {
-                return;
-            }
-            statusEl.textContent = aiWriteErrorMessage(error, t);
-            statusEl.classList.add("editor-ai-comment-status-error");
-        },
         applyStreamingDraft(
             commentId: string,
             draftId: string,

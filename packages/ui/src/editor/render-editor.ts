@@ -175,7 +175,6 @@ export async function renderEditor(
                 editor.refreshAiCommentChrome();
             }
             if (writeError) {
-                editor.showWriteErrorForComment(commentId, writeError);
                 throw writeError;
             }
         },
