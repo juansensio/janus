@@ -212,3 +212,9 @@ None beyond the assumptions above. Approval means those seven assumptions stand.
 On approval, add a footnote to `CAPABILITY-MAP.md`: manuscript slice 1 builds after library slice 1c and does not wait on `languages`. Chapters and section breaks stay out of this slice.
 
 **Next step after approval:** `/plan` for this spec only. Archive the current library plan pair first if it is still the active plan (`janus-planning.mdc`).
+
+---
+
+## Shipped (slice 1, 2026-10-18)
+
+Implementation complete; manual verification passed. Plan and tasks archived to `tasks/archive/manuscript-slice-1/`. Next capability: **`docs/specs/SPEC-library-root.md`** (configurable library directory).
