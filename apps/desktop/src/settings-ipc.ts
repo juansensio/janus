@@ -1,5 +1,7 @@
+import path from "node:path";
 import type { Dialog, IpcMain } from "electron";
 import { LibraryBridgeError, toBridgeRejectValue } from "./library-errors";
+import { moveLibraryContents } from "./move-library-root";
 import {
     isLibraryIpcReject,
     toLibraryIpcReject,
@@ -55,7 +57,12 @@ export function registerSettingsIpc(
                     "Folder selection cancelled",
                 );
             }
+            const currentRoot = getContext().resolved.path;
+            if (path.resolve(chosen) === path.resolve(currentRoot)) {
+                return { path: chosen, needsReload: false };
+            }
             await validateLibraryRootWritable(chosen, options.fs);
+            await moveLibraryContents(currentRoot, chosen, options.fs);
             const settings = await loadJanusSettings(
                 options.userDataPath,
                 options.fs,

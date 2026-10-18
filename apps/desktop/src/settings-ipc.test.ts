@@ -110,4 +110,81 @@ describe("registerSettingsIpc", () => {
         });
         expect(writeFile).toHaveBeenCalled();
     });
+
+    it("moves library from current root before saving settings", async () => {
+        const handlers = new Map<string, (...args: unknown[]) => unknown>();
+        const rename = vi.fn(async () => {});
+        const ipcMain = {
+            handle(channel: string, fn: (...args: unknown[]) => unknown) {
+                handlers.set(channel, fn);
+            },
+        };
+        registerSettingsIpc(
+            ipcMain as import("electron").IpcMain,
+            () => ({
+                resolved: { path: "/data/library", source: "user-data" },
+                settings: {},
+            }),
+            {
+                userDataPath: "/user",
+                fs: {
+                    readFile: async () => "{}",
+                    writeFile: async () => {},
+                    mkdir: async () => {},
+                    rename,
+                    readdir: async (dir: string) =>
+                        dir === "/data/library/books" ? ["book-id"] : [],
+                    stat: async () => ({ isDirectory: () => true }),
+                },
+                showDirectoryPicker: async () => "/Volumes/Books/Janus",
+            },
+        );
+        const chooseHandler = handlers.get(
+            SETTINGS_IPC_CHANNELS.chooseLibraryRoot,
+        );
+        await expect(chooseHandler!(null)).resolves.toEqual({
+            path: "/Volumes/Books/Janus",
+            needsReload: true,
+        });
+        expect(rename).toHaveBeenCalled();
+    });
+
+    it("does not move when chosen path matches current root", async () => {
+        const handlers = new Map<string, (...args: unknown[]) => unknown>();
+        const rename = vi.fn(async () => {});
+        const writeFile = vi.fn(async () => {});
+        const ipcMain = {
+            handle(channel: string, fn: (...args: unknown[]) => unknown) {
+                handlers.set(channel, fn);
+            },
+        };
+        registerSettingsIpc(
+            ipcMain as import("electron").IpcMain,
+            () => ({
+                resolved: { path: "/data/library", source: "user-data" },
+                settings: {},
+            }),
+            {
+                userDataPath: "/user",
+                fs: {
+                    readFile: async () => "{}",
+                    writeFile,
+                    mkdir: async () => {},
+                    rename,
+                    readdir: async () => [],
+                    stat: async () => ({ isDirectory: () => true }),
+                },
+                showDirectoryPicker: async () => "/data/library",
+            },
+        );
+        const chooseHandler = handlers.get(
+            SETTINGS_IPC_CHANNELS.chooseLibraryRoot,
+        );
+        await expect(chooseHandler!(null)).resolves.toEqual({
+            path: "/data/library",
+            needsReload: false,
+        });
+        expect(rename).not.toHaveBeenCalled();
+        expect(writeFile).not.toHaveBeenCalled();
+    });
 });

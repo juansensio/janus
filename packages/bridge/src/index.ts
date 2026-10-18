@@ -31,7 +31,7 @@ export type LibraryRootInfo = {
 
 export type ChooseLibraryRootResult = {
     path: string;
-    needsReload: true;
+    needsReload: boolean;
 };
 
 export type JanusBridgeErrorCode =
@@ -43,6 +43,7 @@ export type JanusBridgeErrorCode =
     | "MANUSCRIPT_WRITE_FAILED"
     | "INVALID_LIBRARY_ROOT"
     | "LIBRARY_ROOT_CANCELLED"
+    | "LIBRARY_ROOT_NOT_EMPTY"
     | "LIBRARY_ROOT_NOT_SUPPORTED";
 
 export interface JanusBridge {
