@@ -640,7 +640,7 @@ Under `<libraryRoot>/books/`, each book lives in a **directory named from its ti
 
 ### Acceptance
 
-- New books create `books/<Title>/`.
+- New books create `books/<Title>/` (or `books/<Title> 2/`, … when the sanitized name is already taken).
 - Shelf rename updates folder name when the sanitized title changes.
 - Listing migrates uuid folders to title folders without data loss.
 - Manuscript read/write uses `resolveBookDirById` (desktop + mobile).
