@@ -50,6 +50,7 @@
     "ai.writeContextTooLarge": "This book is too large for AI context. Shorten the manuscript or split the book.",
     "ai.writeAuthFailed": "OpenAI sign-in expired. Connect again in Settings.",
     "ai.writeProviderFailed": "OpenAI could not generate a draft. Try again in a moment.",
+    "ai.commentNotInstruction": "This comment is not an instruction to add or change prose.",
     "ai.modelLabel": "Model",
     "ai.modelUseDefault": "Default (from Settings)",
     "ai.modelAuto": "Auto",

@@ -4,7 +4,7 @@ import { history, redo, undo } from "prosemirror-history";
 import { keymap } from "prosemirror-keymap";
 import { EditorState, Plugin } from "prosemirror-state";
 import { EditorView } from "prosemirror-view";
-import { aiWriteErrorKey } from "./ai-write-error";
+import { aiWriteErrorMessage } from "./ai-write-error";
 import { t } from "../i18n";
 import { manuscriptSchema } from "./manuscript-schema";
 import { openAiModelOptionLabel } from "../settings/open-ai-model-label";
@@ -219,7 +219,10 @@ export function createManuscriptEditor(
                                 await options.onWriteComment(commentId);
                             } catch (error) {
                                 if (status) {
-                                    status.textContent = t(aiWriteErrorKey(error));
+                                    status.textContent = aiWriteErrorMessage(
+                                    error,
+                                    t,
+                                );
                                     status.classList.add(
                                         "editor-ai-comment-status-error",
                                     );
@@ -347,7 +350,7 @@ export function createManuscriptEditor(
             if (!statusEl) {
                 return;
             }
-            statusEl.textContent = t(aiWriteErrorKey(error));
+            statusEl.textContent = aiWriteErrorMessage(error, t);
             statusEl.classList.add("editor-ai-comment-status-error");
         },
         applyStreamingDraft(

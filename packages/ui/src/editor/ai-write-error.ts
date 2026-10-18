@@ -8,6 +8,8 @@ export function aiWriteErrorKey(error: unknown): string {
             return "ai.writeNotConnected";
         case "AI_COMMENT_NOT_FOUND":
             return "ai.writeCommentNotFound";
+        case "AI_COMMENT_NOT_INSTRUCTION":
+            return "ai.commentNotInstruction";
         case "AI_CONTEXT_TOO_LARGE":
             return "ai.writeContextTooLarge";
         case "AI_AUTH_FAILED":
@@ -17,4 +19,21 @@ export function aiWriteErrorKey(error: unknown): string {
         default:
             return "ai.writeFailed";
     }
+}
+
+/** User-facing write error text; prefers provider message for instruction refusals. */
+export function aiWriteErrorMessage(
+    error: unknown,
+    t: (key: string) => string,
+): string {
+    const code = bridgeErrorCode(error);
+    if (code === "AI_COMMENT_NOT_INSTRUCTION") {
+        const message =
+            error instanceof Error ? error.message.trim() : "";
+        if (message.length > 0) {
+            return message;
+        }
+        return t("ai.commentNotInstruction");
+    }
+    return t(aiWriteErrorKey(error));
 }

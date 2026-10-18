@@ -124,6 +124,7 @@ Match `AGENTS.md`. Stable error codes on `Error`:
 | `AI_NOT_SUPPORTED` | Mobile or platform without AI |
 | `AI_NOT_CONNECTED` | Write without session |
 | `AI_COMMENT_NOT_FOUND` | Bad comment id |
+| `AI_COMMENT_NOT_INSTRUCTION` | Comment is not an instruction to add or change prose (model refusal message) |
 | `AI_CONTEXT_TOO_LARGE` | Manuscript over limit |
 | `AI_PROVIDER_ERROR` | HTTP / provider failure |
 | `AI_AUTH_FAILED` | OAuth or token refresh failed |

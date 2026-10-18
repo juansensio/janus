@@ -107,6 +107,49 @@ describe("editor autosave flow", () => {
         expect(root.querySelector(".editor-field")).not.toBeNull();
     });
 
+    it("shows refusal message on the comment without changing the manuscript", async () => {
+        const root = document.createElement("main");
+        document.body.append(root);
+        const commentHtml =
+            '<janus-manuscript version="1"><janus-ai-comment id="c1">hola</janus-ai-comment></janus-manuscript>';
+        const write = vi.fn(async () => commentHtml);
+        const writeForComment = vi.fn(async () => {
+            throw Object.assign(new Error("Not an instruction."), {
+                code: "AI_COMMENT_NOT_INSTRUCTION",
+            });
+        });
+        const bridge = createMockJanusBridge({
+            listBooks: async () => [sampleBook],
+            readManuscript: async () => commentHtml,
+            writeManuscript: write,
+            writeForComment,
+        });
+        await mountJanusShell(root, bridge);
+        await vi.waitFor(() =>
+            expect(root.querySelector(".shelf-card-open")).not.toBeNull(),
+        );
+        root.querySelector<HTMLButtonElement>(".shelf-card-open")?.click();
+        await vi.waitFor(() =>
+            expect(root.querySelector(".editor-ai-comment-write")).not.toBeNull(),
+        );
+        root
+            .querySelector<HTMLButtonElement>(".editor-ai-comment-write")
+            ?.click();
+        await vi.waitFor(() => expect(writeForComment).toHaveBeenCalled());
+        await vi.waitFor(() => {
+            const status = root.querySelector(".editor-ai-comment-status");
+            expect(status?.textContent ?? "").toContain("Not an instruction.");
+            expect(
+                status?.classList.contains("editor-ai-comment-status-error"),
+            ).toBe(true);
+        });
+        expect(write).not.toHaveBeenCalled();
+        const writeBtn = root.querySelector<HTMLButtonElement>(
+            ".editor-ai-comment-write",
+        );
+        await vi.waitFor(() => expect(writeBtn?.disabled).toBe(false));
+    });
+
     it("shows inline not-connected error when Write fails", async () => {
         const root = document.createElement("main");
         document.body.append(root);

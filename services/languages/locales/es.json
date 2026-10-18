@@ -50,6 +50,7 @@
     "ai.writeContextTooLarge": "Este libro es demasiado grande para el contexto de la IA. Acorta el manuscrito o divide el libro.",
     "ai.writeAuthFailed": "La sesión de OpenAI caducó. Vuelve a conectar en Ajustes.",
     "ai.writeProviderFailed": "OpenAI no pudo generar el borrador. Inténtalo de nuevo en un momento.",
+    "ai.commentNotInstruction": "Este comentario no es una instrucción para añadir o cambiar prosa.",
     "ai.modelLabel": "Modelo",
     "ai.modelUseDefault": "Predeterminado (de Ajustes)",
     "ai.modelAuto": "Automático",
