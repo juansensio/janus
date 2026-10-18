@@ -2,8 +2,8 @@ import { existsSync, readdirSync } from "node:fs";
 import path from "node:path";
 import { $ } from "bun";
 import {
-    assertBuiltIndexHtml,
     assertBuiltJsContainsShellLabel,
+    assertBuiltShellHtml,
 } from "./validate-built-ui";
 
 const root = path.resolve(import.meta.dir, "..");
@@ -18,7 +18,7 @@ async function main(): Promise<void> {
     await $`bun run test`.cwd(root);
     await $`bun run build:ui`.cwd(root);
 
-    const required = ["index.html", "assets"];
+    const required = ["index.html", "mobile.html", "assets"];
     for (const name of required) {
         const full = path.join(uiDir, name);
         if (!existsSync(full)) {
@@ -26,11 +26,13 @@ async function main(): Promise<void> {
         }
     }
 
-    const html = await Bun.file(path.join(uiDir, "index.html")).text();
-    try {
-        assertBuiltIndexHtml(html);
-    } catch (err) {
-        fail(err instanceof Error ? err.message : String(err));
+    for (const htmlName of ["index.html", "mobile.html"] as const) {
+        const html = await Bun.file(path.join(uiDir, htmlName)).text();
+        try {
+            assertBuiltShellHtml(html, htmlName);
+        } catch (err) {
+            fail(err instanceof Error ? err.message : String(err));
+        }
     }
 
     const assetsDir = path.join(uiDir, "assets");

@@ -435,5 +435,330 @@ Plan: `tasks/plan.md` § Shell ship-fixes. Do **not** start `languages` until Ch
 - [x] Tasks 13–14 checkpoint passed (`/ship` minimum GO) except manual desktop/Simulator gates
 - [x] Tasks 15–18 acceptance criteria met (or 16/17 explicitly deferred with user approval)
 - [x] `bun run validate:install` and `bun run test` green
-- [ ] Re-run `/ship` — no Critical blockers
+- [ ] Re-run `/ship` — superseded by **Tasks 20–26** (second `/ship` NO-GO); see `tasks/plan.md` § Ship NO-GO follow-ups
 - [ ] Then: manual Simulator gate + `languages` spec approval before next module `/build`
+
+---
+
+# Ship NO-GO follow-ups (`/ship` 2026-10-18)
+
+Plan: `tasks/plan.md` § Ship NO-GO follow-ups. Complete **before** calling shell done or starting `languages`.
+
+---
+
+## Task 20: Dual HTML asset guards in `validate:install`
+
+**Description:** Extend `scripts/validate-built-ui.ts` to reject root-absolute asset URLs in **`src` and `href`** (e.g. `src="/assets/`, `href="/assets/`). After `build:ui`, `validate-install.ts` must run the same checks on **`dist/ui/index.html` and `dist/ui/mobile.html`**, and fail if `mobile.html` is missing.
+
+**Acceptance criteria:**
+- [x] Unit tests cover `href="/assets/` failure and relative `modulepreload` success
+- [x] `validate:install` fails if `mobile.html` absent or either HTML uses `/assets/`
+- [x] Error messages name which file failed
+
+**Verification:**
+- [ ] `bun run test`
+- [ ] `bun run validate:install`
+
+**Dependencies:** Shell Tasks 13–14 (complete)
+
+**Files likely touched:** `scripts/validate-built-ui.ts`, `scripts/validate-built-ui.test.ts`, `scripts/validate-install.ts`
+
+**Estimated scope:** S
+
+---
+
+## Task 21: Stricter built-JS shell label guard
+
+**Description:** Tighten `assertBuiltJsContainsShellLabel` (or split desktop/mobile checks) so passing does not rely on `"[Janus shell]"` in `console.error` alone. Prefer asserting on the **bootstrap** chunk and/or mount markers (`createShellLabel`, `data-platform`).
+
+**Acceptance criteria:**
+- [ ] Unit test: JS containing only `"[Janus shell]"` without mount path **fails**
+- [ ] `validate:install` still passes on a clean tree after `build:ui`
+
+**Verification:**
+- [ ] `bun run test`
+- [ ] `bun run validate:install`
+
+**Dependencies:** Task 20
+
+**Files likely touched:** `scripts/validate-built-ui.ts`, `scripts/validate-built-ui.test.ts`, `scripts/validate-install.ts`
+
+**Estimated scope:** S
+
+---
+
+## Task 22: Electron navigation policy (complete)
+
+**Description:** Extract URL allow/deny logic to `apps/desktop/src/navigation-policy.ts` with Vitest coverage. Register policy on **`app.on('web-contents-created')`** so child windows inherit blocks. Restrict top-level `file:` navigation to the UI bundle directory **and** default `setWindowOpenHandler` to **`deny`** (unless opening bundle-scoped `file:` is explicitly required later).
+
+**Acceptance criteria:**
+- [ ] `https://` / `http://` navigation and `window.open` denied (unit-tested policy functions)
+- [ ] Handlers attached for every `webContents`, not only the first `BrowserWindow`
+- [ ] `bun run dev:desktop` still shows Janus after `build:ui`
+
+**Verification:**
+- [ ] `bun run test` (include new desktop policy tests in vitest include if needed)
+- [ ] Manual: `bun run dev:desktop`
+
+**Dependencies:** Task 17 (complete); independent of Tasks 20–21
+
+**Files likely touched:** `apps/desktop/src/main.ts`, `apps/desktop/src/navigation-policy.ts`, `apps/desktop/src/navigation-policy.test.ts`, `vitest.config.ts`
+
+**Estimated scope:** S–M
+
+---
+
+## Task 23: `prepare-cap-web` testable helper
+
+**Description:** Extract copy logic from `apps/mobile/scripts/prepare-cap-web.ts` into a small function (e.g. `syncCapIndexFromMobile(uiDir)`). Unit test: copies `mobile.html` → `index.html`; missing `mobile.html` throws or returns error with clear message.
+
+**Acceptance criteria:**
+- [ ] Tests use a temp/fixture directory (no reliance on committed `dist/`)
+- [ ] `cap:sync:ios` script still calls the same behavior via thin CLI wrapper
+
+**Verification:**
+- [ ] `bun run test`
+
+**Dependencies:** Task 20 (mobile.html must exist after build)
+
+**Files likely touched:** `apps/mobile/scripts/prepare-cap-web.ts`, `apps/mobile/src/cap-web.ts` (or `scripts/`), `apps/mobile/src/cap-web.test.ts`
+
+**Estimated scope:** S
+
+---
+
+## Task 24: Bootstrap and mobile entry test gaps
+
+**Description:** Add tests for remaining `resolveJanusBridge` errors (no `installMobileBridge`; install leaves `window.janus` unset). Add `apps/mobile/src/entry.test.ts` (or integration-style test) that runs install + `startShell` and asserts `data-platform="mobile"`. Consolidate duplicate `Missing #app` test if trivial.
+
+**Acceptance criteria:**
+- [ ] At least two new error-path tests in `bootstrap.test.ts`
+- [ ] Mobile entry test mounts **Janus** without mocking away `installMobileBridge`
+
+**Verification:**
+- [ ] `bun run test`
+- [ ] `bun run lint`
+
+**Dependencies:** Tasks 15–16 (complete)
+
+**Files likely touched:** `packages/ui/src/bootstrap.test.ts`, `apps/mobile/src/entry.test.ts`, optionally `packages/ui/src/main.test.ts`
+
+**Estimated scope:** S
+
+---
+
+## Task 25: Install doc — dual HTML and cap sync
+
+**Description:** Update `docs/install-macos.md`: `build:ui` emits `index.html` (desktop) and `mobile.html` (Capacitor entry); `cap:sync:ios` runs `prepare-cap-web` to copy mobile → `index.html` before sync. One line on `@janus/mobile-entry` as build-only Vite alias.
+
+**Acceptance criteria:**
+- [ ] Contributor can understand desktop vs mobile artifact without reading `tasks/plan.md`
+- [ ] README link unchanged or updated if needed
+
+**Verification:**
+- [ ] Manual read-through
+
+**Dependencies:** Task 23
+
+**Files likely touched:** `docs/install-macos.md`
+
+**Estimated scope:** S
+
+---
+
+## Task 26: Manual gates and re-`/ship` (human)
+
+**Description:** Execute manual desktop and Simulator gates per install doc. Re-run **`/ship`**. Update checkpoints in this file and `tasks/plan.md` when GO.
+
+**Acceptance criteria:**
+- [ ] Desktop and Simulator checkpoints checked off
+- [ ] `/ship` returns **GO** or documented accepted risks
+
+**Verification:**
+- [ ] Manual desktop + Simulator
+- [ ] `/ship`
+
+**Dependencies:** Tasks 20–25
+
+**Files likely touched:** `tasks/todo.md`, `tasks/plan.md` (checkpoint checkboxes only)
+
+**Estimated scope:** S (human time)
+
+---
+
+## Checkpoint: Shell ship GO (after Tasks 20–26)
+
+- [ ] `bun run validate:install` covers desktop + mobile HTML
+- [ ] Electron navigation Medium finding addressed (Task 22)
+- [ ] Manual desktop + Simulator passed
+- [ ] `/ship` **GO**
+- [ ] Ready for `languages` after `SPEC-languages.md` approval
+
+---
+
+# Live reload dev loop (`/plan` 2026-10-18)
+
+Plan: `tasks/plan.md` § Live reload dev loop. **Does not replace** Tasks 20–26; can run in parallel where noted in plan.
+
+---
+
+## Task 27: Vite dev server for shared UI
+
+**Description:** Add `packages/ui` `dev` script running Vite in dev mode (not production build). Configure `server.port` (default **5173**), `server.host: true` (Capacitor/Simulator reachability), and `server.strictPort` or documented env override. Root script `dev:ui` runs it. Confirm HMR works for `packages/bridge` via `mount.ts` import graph (manual check).
+
+**Acceptance criteria:**
+- [ ] `bun run dev:ui` serves `index.html` and `mobile.html` at stable URLs
+- [ ] `base: './'` preserved for production `build` (existing `ui-build-config.test.ts` still passes)
+- [ ] No new runtime dependency on Electron/Capacitor in `packages/ui`
+
+**Verification:**
+- [ ] `bun run test`
+- [ ] Manual: browser open `http://127.0.0.1:5173/` shows Janus after mobile bridge mock or desktop path; edit `createShellLabel()` → HMR updates heading
+
+**Dependencies:** Shell Task 5 (complete)
+
+**Files likely touched:** `packages/ui/package.json`, `packages/ui/vite.config.ts`, root `package.json`, `packages/ui/ui-build-config.test.ts` (extend if asserting dev `server` block)
+
+**Estimated scope:** S
+
+---
+
+## Task 28: Electron dev mode (`dev:desktop` → Vite + loadURL)
+
+**Description:** Replace root `dev:desktop` one-shot `build:ui && start` with an orchestrated dev loop: start Task 27 Vite, wait until dev server responds, launch Electron with dev flag. In dev, `main.ts` loads `http://127.0.0.1:5173/` (desktop entry) instead of `loadFile(dist/ui/index.html)`. Extend or introduce `navigation-policy.ts` so **dev** allows localhost HTTP(S)/WS for HMR; **prod** keeps file-only policy (align with Task 22 — implement together or immediately after Task 22). Add `desktop:prod` (or equivalent) script: `build:ui && bun run --filter @janus/desktop start` for production-like runs used by install validation mindset.
+
+**Acceptance criteria:**
+- [ ] `bun run dev:desktop` opens window with **Janus** without running `build:ui` first
+- [ ] Editing `packages/bridge/src/index.ts` updates visible label without manual rebuild
+- [ ] `bun run --filter @janus/desktop start` after `build:ui` still works (`desktop:prod` path)
+- [ ] External `https://` navigation still blocked in dev (policy unit-tested)
+
+**Verification:**
+- [ ] `bun run test`
+- [ ] `bun run lint`
+- [ ] Manual: dev:desktop + bridge edit
+- [ ] Manual: `bun run build:ui && bun run desktop:prod` (or documented equivalent)
+
+**Dependencies:** Task 27; **Task 22** (recommended before merge — shared `navigation-policy.ts`)
+
+**Files likely touched:** `package.json`, `apps/desktop/src/main.ts`, `apps/desktop/src/navigation-policy.ts`, `apps/desktop/src/navigation-policy.test.ts`, `scripts/dev-desktop.ts` (or similar), `apps/desktop/package.json`
+
+**Estimated scope:** M
+
+---
+
+## Task 29: Capacitor iOS Simulator live reload
+
+**Description:** Add root dev script (e.g. `dev:ios`) that runs Vite (Task 27) and opens iOS Simulator with Capacitor loading **`/mobile.html`** from the dev server. Use Capacitor 6 livereload / `server.url` pattern that is **dev-only** (env, CLI flags, or local config — not active in default `capacitor.config.ts` used for `cap:sync:ios`). Add iOS **ATS** dev exception for local HTTP if required. Document Simulator vs device (LAN IP) limitation in task verification notes.
+
+**Acceptance criteria:**
+- [ ] Simulator shows **Janus** with `data-platform="mobile"` against dev server
+- [ ] Edit `createShellLabel()` → Simulator UI updates without `cap:sync:ios`
+- [ ] `bun run cap:sync:ios` after `build:ui` unchanged for production-like workflow
+
+**Verification:**
+- [ ] Manual: `bun run dev:ios` (or final script name) + bridge edit
+- [ ] Manual: `bun run cap:sync:ios` + Xcode Run still works
+
+**Dependencies:** Task 27
+
+**Files likely touched:** `package.json`, `apps/mobile/capacitor.config.ts` (or `capacitor.config.dev.ts` + doc), `apps/mobile/package.json`, `apps/mobile/ios/App/App/Info.plist`, `docs/install-macos.md` (stub ok until Task 30)
+
+**Estimated scope:** M
+
+---
+
+## Task 30: Install doc — dev vs production loops
+
+**Description:** Update `docs/install-macos.md` (and README if needed): when to use `dev:ui`, `dev:desktop`, `dev:ios`; when to use `build:ui`, `desktop:prod`, `cap:sync:ios`. Clarify that `validate:install` exercises the **production** UI build, not the dev server.
+
+**Acceptance criteria:**
+- [ ] New contributor can enable live reload without reading `tasks/plan.md`
+- [ ] Dual HTML (`index.html` vs `mobile.html`) still explained (may merge with Task 25 if both land)
+
+**Verification:**
+- [ ] Manual read-through
+
+**Dependencies:** Tasks 28–29
+
+**Files likely touched:** `docs/install-macos.md`, `README.md` (optional)
+
+**Estimated scope:** S
+
+---
+
+## Task 31: Automated guards for dev/prod split
+
+**Description:** Unit tests: dev UI URL helper (if extracted); `navigation-policy` allows localhost only when dev flag set; assert default Capacitor config has **no** `server.url` (or export `capacitor.config.ts` policy function tested in isolation). Ensure `validate:install` does not require dev server.
+
+**Acceptance criteria:**
+- [ ] Tests fail if prod navigation policy allows arbitrary `http://` origins
+- [ ] Tests fail if committed Cap config enables permanent remote `server.url`
+
+**Verification:**
+- [ ] `bun run test`
+- [ ] `bun run validate:install`
+
+**Dependencies:** Tasks 28–29
+
+**Files likely touched:** `apps/desktop/src/navigation-policy.test.ts`, `apps/mobile/capacitor.config.test.ts` (new), `vitest.config.ts` (if include paths change)
+
+**Estimated scope:** S
+
+---
+
+## Task 32 (optional): Watch main/preload and restart Electron
+
+**Description:** When developing `apps/desktop/src/main.ts` or `preload.ts`, `bun build --watch` rebuilds `dist/` and restarts Electron (small helper or `electron-reload`). Renderer continues to use Vite HMR without full app restart for UI-only edits.
+
+**Acceptance criteria:**
+- [ ] Change in `preload.ts` (e.g. comment or log) triggers Electron restart when using `dev:desktop`
+- [ ] Documented as optional in install doc if skipped
+
+**Verification:**
+- [ ] Manual: edit preload, confirm restart
+
+**Dependencies:** Task 28
+
+**Files likely touched:** `scripts/dev-desktop.ts`, `apps/desktop/package.json`
+
+**Estimated scope:** S
+
+---
+
+## Task 33: Manual sign-off (live reload)
+
+**Description:** Human verification of both checkpoints in `tasks/plan.md` § Live reload; confirm Tasks 20–26 still applicable; no change to `validate:install` contract.
+
+**Acceptance criteria:**
+- [ ] Desktop and Simulator live-reload checkpoints checked off in `tasks/plan.md`
+- [ ] `bun run test` and `bun run validate:install` green
+
+**Verification:**
+- [ ] Manual desktop + Simulator dev loops
+- [ ] `bun run test` && `bun run validate:install`
+
+**Dependencies:** Tasks 27–31 (32 optional)
+
+**Files likely touched:** `tasks/plan.md`, `tasks/todo.md` (checkboxes only)
+
+**Estimated scope:** S (human time)
+
+---
+
+## Checkpoint: Live reload (after Tasks 27–28)
+
+- [ ] `dev:desktop` without `build:ui` shows Janus
+- [ ] Bridge label edit hot-reloads in Electron
+- [ ] `validate:install` still passes
+
+## Checkpoint: Live reload (after Tasks 27 + 29)
+
+- [ ] Simulator dev reload works for bridge edit
+- [ ] `cap:sync:ios` production path still works
+
+## Checkpoint: Live reload complete (after Tasks 30–33)
+
+- [ ] Install doc updated
+- [ ] Task 31 tests green
+- [ ] Human sign-off (Task 33)
