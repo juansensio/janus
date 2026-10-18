@@ -160,8 +160,8 @@ Sizing: **S** = 1–2 files, **M** = 3–5 files. No task should exceed ~5 files
 **Description:** `apps/mobile` with Capacitor 6+, `capacitor.config.ts`, `webDir` pointing at Task 5 output. Run `cap add ios` (or equivalent) so `apps/mobile/ios` exists. No custom bridge wiring yet.
 
 **Acceptance criteria:**
-- [ ] iOS Xcode project opens from mobile app directory
-- [ ] `webDir` matches built UI location
+- [x] iOS Xcode project opens from mobile app directory
+- [x] `webDir` matches built UI location
 
 **Verification:**
 - [ ] `bun run build:ui`

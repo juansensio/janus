@@ -48,7 +48,7 @@ Full acceptance criteria: **`tasks/todo.md`** (12 tasks, all **S** or **M**).
 
 ### Phase 3: Desktop shell
 - [x] Task 6: Electron main + window
-- [ ] Task 7: Preload + `window.janus` + visible Janus
+- [x] Task 7: Preload + `window.janus` + visible Janus
 
 ### Phase 4: Mobile shell
 - [ ] Task 8: Capacitor package + iOS project
