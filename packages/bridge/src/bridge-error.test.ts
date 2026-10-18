@@ -49,6 +49,16 @@ describe("bridgeErrorCode", () => {
             ),
         ).toBe("AI_COMMENT_NOT_INSTRUCTION");
     });
+
+    it("infers AI_COMMENT_NOT_INSTRUCTION from Spanish refusal text without code", () => {
+        expect(
+            bridgeErrorCode(
+                new Error(
+                    "Error invoking remote method 'janus:ai:writeForComment': Este comentario no es una instrucción para añadir o cambiar prosa.",
+                ),
+            ),
+        ).toBe("AI_COMMENT_NOT_INSTRUCTION");
+    });
 });
 
 describe("extractErrorMessage", () => {

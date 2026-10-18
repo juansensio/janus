@@ -23,6 +23,7 @@ function isDuplicateBookTitleMessage(message: string): boolean {
     return messageIncludesAny(message, DUPLICATE_BOOK_TITLE_MARKERS);
 }
 
+/** Substrings of refusal text when IPC omits `code`; keep in sync with `ai.commentNotInstruction` locales. */
 const AI_COMMENT_NOT_INSTRUCTION_MARKERS = [
     "instruction to add or change",
     "instrucción para añadir o cambiar",

@@ -58,6 +58,8 @@ export type AiBridgeServiceDeps = {
     fetchImpl?: FetchFn;
     openExternal?: (url: string) => Promise<void>;
     connectSiwc?: typeof connectSiwcOpenAi;
+    /** When false, `JANUS_OPENAI_ACCESS_TOKEN` is ignored (packaged desktop builds). */
+    allowDevOpenAiTokenOverride?: boolean;
     userDataPath?: string;
     settingsFs?: Pick<LibraryRootFs, "readFile" | "writeFile" | "mkdir">;
 };
@@ -93,6 +95,8 @@ export function createAiBridgeService(
     const openExternal =
         deps.openExternal ?? ((url: string) => shell.openExternal(url));
     const connectSiwc = deps.connectSiwc ?? connectSiwcOpenAi;
+    const allowDevOpenAiTokenOverride =
+        deps.allowDevOpenAiTokenOverride ?? true;
     const userDataPath = deps.userDataPath;
     const settingsFs = deps.settingsFs;
 
@@ -159,7 +163,9 @@ export function createAiBridgeService(
         },
 
         async connectOpenAiCodex(): Promise<void> {
-            const override = process.env.JANUS_OPENAI_ACCESS_TOKEN?.trim();
+            const override = allowDevOpenAiTokenOverride
+                ? process.env.JANUS_OPENAI_ACCESS_TOKEN?.trim()
+                : undefined;
             if (override) {
                 await saveAiSession({
                     provider: "openai-codex",

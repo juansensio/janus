@@ -131,10 +131,12 @@ Preload exposes IPC only; Settings sees **connected / not connected** and error 
 
 ## Maintainer dev override (not for end users)
 
-If `JANUS_OPENAI_ACCESS_TOKEN` is set in the **main process environment** when Electron starts, **Connect** skips SIWC and stores a small `dev-override` session (access token only, no refresh). Use this only for local HTTP testing. Normal writers use **Connect OpenAI** in Settings with no env var.
+If `JANUS_OPENAI_ACCESS_TOKEN` is set in the **main process environment** when Electron starts, **Connect** skips SIWC and stores a small `dev-override` session (access token only, no refresh). Use this only for local HTTP testing in an **unpackaged** dev build (`app.isPackaged === false`). Packaged release builds ignore this variable. Normal writers use **Connect OpenAI** in Settings with no env var.
 
 ## Security and policy notes
 
+- On **Write**, main sends a **prose projection of the whole book** (paragraph text in reading order, with a marker where the comment sits), the comment body as the instruction, and the UI locale — not raw HTML tags. Other AI comments and drafts are omitted from the context. See [`docs/specs/SPEC-ai-assist.md`](specs/SPEC-ai-assist.md).
+- Requests use OpenAI **Responses** with `store: false` (Janus does not ask OpenAI to retain that request for training/storage on the provider side).
 - Manuscript text is sent to OpenAI only when you press **Write** and only over HTTPS from main, using your connected session.
 - Janus does **not** read ChatGPT conversation history; scope is plan usage for inference (`chatgpt.tokens.use.direct`).
 - ChatGPT plan usage for third-party local tools is subject to OpenAI SIWC policy (OSS/local vs commercial distribution). See the ADR before marketing AI broadly.

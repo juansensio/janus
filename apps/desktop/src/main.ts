@@ -152,6 +152,7 @@ app.whenReady().then(async () => {
     registerAiIpc(ipcMain, () => libraryContext.resolved.path, manuscriptFs, {
         userDataPath,
         settingsFs: rootFs,
+        allowDevOpenAiTokenOverride: !app.isPackaged,
     });
     registerSettingsIpc(
         ipcMain,

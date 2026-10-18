@@ -39,6 +39,33 @@ describe("createAiBridgeService connect", () => {
         );
     });
 
+    it("ignores dev override when allowDevOpenAiTokenOverride is false", async () => {
+        vi.stubEnv("JANUS_OPENAI_ACCESS_TOKEN", "dev-token");
+        const save = vi
+            .spyOn(aiSessionStore, "saveAiSession")
+            .mockResolvedValue();
+        const connectSiwc = vi.fn().mockResolvedValue(undefined);
+        const fs = {
+            join: (...parts: string[]) => parts.join("/"),
+            readFile: async () => {
+                throw Object.assign(new Error("ENOENT"), { code: "ENOENT" });
+            },
+            writeFile: async () => {},
+            rename: async () => {},
+            realpath: async (p: string) => p,
+            mkdir: async () => {},
+            readdir: async () => [],
+            stat: async () => ({ isDirectory: () => true }),
+        };
+        const ai = createAiBridgeService("/lib", fs, {
+            connectSiwc,
+            allowDevOpenAiTokenOverride: false,
+        });
+        await ai.connectOpenAiCodex();
+        expect(save).not.toHaveBeenCalled();
+        expect(connectSiwc).toHaveBeenCalledOnce();
+    });
+
     it("runs SIWC connect when env override is absent", async () => {
         const connectSiwc = vi.fn().mockResolvedValue(undefined);
         const fs = {

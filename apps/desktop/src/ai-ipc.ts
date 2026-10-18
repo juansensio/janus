@@ -36,12 +36,14 @@ export function registerAiIpc(
             import("./library-root").LibraryRootFs,
             "readFile" | "writeFile" | "mkdir"
         >;
+        allowDevOpenAiTokenOverride?: boolean;
     },
 ): void {
     const service = () =>
         createAiBridgeService(getLibraryRoot(), fs, {
             userDataPath: options.userDataPath,
             settingsFs: options.settingsFs,
+            allowDevOpenAiTokenOverride: options.allowDevOpenAiTokenOverride,
         });
 
     ipcMain.handle(AI_IPC_CHANNELS.getAiProviderStatus, async () => {
