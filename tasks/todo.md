@@ -91,8 +91,8 @@ Sizing: **S** = 1–2 files, **M** = 3–5 files. No task should exceed ~5 files
 **Description:** Vite config builds UI entry + HTML to a single documented directory (e.g. `dist/ui` or `apps/mobile/www` + desktop copy—choose one). Root `bun run build:ui` succeeds. Document output path in a one-line comment in `tasks/plan.md` architecture or `packages/ui/README` snippet (install doc comes in Task 12).
 
 **Acceptance criteria:**
-- [ ] `bun run build:ui` produces JS + HTML with `#app`
-- [ ] Build output is gitignored per spec
+- [x] `bun run build:ui` produces JS + HTML with `#app`
+- [x] Build output is gitignored per spec
 
 **Verification:**
 - [ ] `bun run build:ui`
@@ -108,9 +108,9 @@ Sizing: **S** = 1–2 files, **M** = 3–5 files. No task should exceed ~5 files
 
 ## Checkpoint: After Tasks 1–5
 
-- [ ] `bun run test` green
-- [ ] `bun run build:ui` produces artifacts
-- [ ] No `services/` directory
+- [x] `bun run test` green
+- [x] `bun run build:ui` produces artifacts
+- [x] No `services/` directory
 
 ---
 

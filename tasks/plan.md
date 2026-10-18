@@ -41,10 +41,10 @@ Full acceptance criteria: **`tasks/todo.md`** (12 tasks, all **S** or **M**).
 
 ### Phase 2: Shared presentation
 - [x] Task 4: `mountJanusShell` + mount tests
-- [ ] Task 5: Vite `build:ui` + output path
+- [x] Task 5: Vite `build:ui` + output path
 
 ### Checkpoint: UI artifact
-- [ ] `bun run build:ui` produces consumable output
+- [x] `bun run build:ui` produces consumable output
 
 ### Phase 3: Desktop shell
 - [ ] Task 6: Electron main + window
