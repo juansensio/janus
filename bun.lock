@@ -69,6 +69,9 @@
     "services/ai-assist": {
       "name": "@janus/ai-assist",
       "version": "0.0.0",
+      "dependencies": {
+        "@janus/manuscript": "workspace:*",
+      },
     },
     "services/languages": {
       "name": "@janus/languages",

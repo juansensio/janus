@@ -3,6 +3,7 @@ export {
     MAX_MANUSCRIPT_HTML_BYTES,
 } from "./context";
 export { buildGenerateDraftMessages } from "./prompt";
+export { WRITE_CONTEXT_MARK, buildWriteContext } from "./write-context";
 export {
     AiAssistError,
     type AiAssistErrorCode,

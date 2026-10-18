@@ -12,15 +12,15 @@
 
 **Acceptance criteria:**
 
-- [ ] `buildWriteContext` places `<<<WRITE>>>` at the target comment and includes surrounding paragraph text only
-- [ ] Other comments, draft blocks, and tags are absent from the result
-- [ ] Missing comment id throws `AI_COMMENT_NOT_FOUND`
-- [ ] `SPEC-ai-assist.md` assumption 4 and `docs/intent/ai-assist-mvp.md` describe this contract
+- [x] `buildWriteContext` places `<<<WRITE>>>` at the target comment and includes surrounding paragraph text only
+- [x] Other comments, draft blocks, and tags are absent from the result
+- [x] Missing comment id throws `AI_COMMENT_NOT_FOUND`
+- [x] `SPEC-ai-assist.md` assumption 4 and `docs/intent/ai-assist-mvp.md` describe this contract
 
 **Verification:**
 
-- [ ] `bun run test services/ai-assist/write-context.test.ts`
-- [ ] `bun run lint`
+- [x] `bun run test services/ai-assist/write-context.test.ts`
+- [x] `bun run lint`
 
 **Dependencies:** None
 
