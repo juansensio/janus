@@ -48,16 +48,17 @@ bun run desktop:prod
 
 Close the Electron window when you have confirmed **Janus** inside `<main id="app">` with `data-platform="desktop"`.
 
-### Library (slice 1)
+### Library (slice 1b — Neo-inspired shelf)
 
-After `bun run dev:desktop` or `bun run desktop:prod`, verify the bookshelf (not only the **Janus** heading):
+After `bun run dev:desktop` or `bun run desktop:prod`, verify the dark bookshelf (gold **Janus** wordmark, **BOOKS** row):
 
-1. **Empty shelf** — **No books yet** and a **New book** button.
-2. **New book** — click **New book**; a card appears titled **Untitled** (second book **Untitled 2**, and so on).
-3. **Delete** — click **Delete** on a card; confirm with **Delete "{title}"? This cannot be undone.**; the card disappears.
-4. **Persistence** — quit the app completely and reopen (`dev:desktop` or `desktop:prod`); the same books remain in the same order.
+1. **Empty shelf** — dashed **+** tile at the end of the row (screen readers hear **No books yet**).
+2. **New book** — click the **+** tile; a cover-style card appears titled **Untitled** (second book **Untitled 2**, and so on).
+3. **Delete** — hover or focus a card, click the minus icon; confirm with **Delete "{title}"? This cannot be undone.**; the card disappears.
+4. **Scroll** — with several books, the row scrolls horizontally.
+5. **Persistence** — quit the app completely and reopen (`dev:desktop` or `desktop:prod`); the same books remain in the same order.
 
-On **iOS Simulator** (`bun run dev:ios` for live reload, or `cap:sync:ios` + Xcode Run for production-like), repeat steps 1–4 with `data-platform="mobile"`.
+On **iOS Simulator** (`bun run dev:ios` for live reload, or `cap:sync:ios` + Xcode Run for production-like), repeat steps 1–5 with `data-platform="mobile"`.
 
 `bun run validate:install` remains a **shell** toolchain check (tests + `build:ui` artifacts); it does not launch Electron or the Simulator. Use the steps above for library sign-off.
 
