@@ -35,9 +35,9 @@
 
 ## Task 6: Settings control + catalogs
 
-- [ ] Zoom `<select>` in `render-settings.ts`
-- [ ] `settings.editorZoom` keys in `en` + `es`
-- [ ] Vitest
+- [x] Zoom `<select>` in `render-settings.ts`
+- [x] `settings.editorZoom` keys in `en` + `es`
+- [x] Vitest
 
 ## Task 7: Editor keyboard shortcuts
 

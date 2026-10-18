@@ -66,6 +66,8 @@
     "settings.chooseFolder": "Choose folder…",
     "settings.devDefaultNote": "Saved folder overrides the development default after reload.",
     "settings.language": "Language",
+    "settings.editorZoom": "Editor page size",
+    "settings.editorZoomPercent": "{percent}%",
     "settings.libraryLocation": "Library location",
     "settings.libraryRootNotEmpty": "That folder already has books. Choose an empty folder or one without a books folder.",
     "settings.source.devDefault": "Development folder",

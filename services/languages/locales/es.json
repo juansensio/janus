@@ -66,6 +66,8 @@
     "settings.chooseFolder": "Elegir carpeta…",
     "settings.devDefaultNote": "La carpeta guardada sustituye la carpeta de desarrollo después de recargar.",
     "settings.language": "Idioma",
+    "settings.editorZoom": "Tamaño de la página del editor",
+    "settings.editorZoomPercent": "{percent} %",
     "settings.libraryLocation": "Ubicación de la biblioteca",
     "settings.libraryRootNotEmpty": "Esa carpeta ya tiene libros. Elige una carpeta vacía o una que no tenga una carpeta books.",
     "settings.source.devDefault": "Carpeta de desarrollo",
