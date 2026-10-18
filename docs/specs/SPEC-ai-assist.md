@@ -111,7 +111,7 @@ export interface AiProvider {
 
 Shell implements session load/save; domain receives token only as an argument to `generateDraft`.
 
-**Dev connect (until SIWC loop ships):** Desktop `connectOpenAiCodex` stores `process.env.JANUS_OPENAI_ACCESS_TOKEN` via `safeStorage` (manual gate only; not used in CI).
+**Dev override:** Optional `JANUS_OPENAI_ACCESS_TOKEN` in the Electron main environment skips SIWC and stores a short-lived dev session (maintainer manual gate only; not used in CI). Normal Connect uses Sign in with ChatGPT (SIWC) in the main process.
 
 ## Code Style
 

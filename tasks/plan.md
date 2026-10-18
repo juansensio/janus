@@ -1,112 +1,121 @@
-# Implementation Plan: desktop-release (macOS GitHub CI)
+# Implementation Plan: AI assist — SIWC Connect completion
 
-**Status:** Implemented 2026-10-18 (local package + CI config). First `v*` tag push pending maintainer. Tasks: `tasks/todo.md`.
+**Status:** Planned 2026-10-18 (completion phase). Tasks: `tasks/todo.md`.
 
 **Source specs:**
 
-- `docs/specs/SPEC-desktop-release.md` (module — CI, packaging, Release assets)
-- `docs/specs/SPEC-desktop-release-command.md` (`/release` verify workflow)
+- `docs/specs/SPEC-ai-assist.md` (approved 2026-10-18)
+- `docs/adrs/ADR-ai-openai-auth.md` (SIWC **go**)
+- Manuscript editor/transforms: `docs/specs/SPEC-manuscript-slice-2.md` (approved)
 
-**Archived:** `tasks/archive/ship-gate-fixes/` (previous root plan).
+**Archived build phase:** `tasks/archive/html-manuscript-ai-assist/` (Tasks 1–13; code landed, Connect stub + manual gates open).
 
 ## Overview
 
-Ship **tag-triggered macOS Electron builds** on GitHub: maintainer pushes `v*`, Actions runs tests + UI/desktop build, **electron-builder** produces installable artifacts, **GitHub Release** hosts the download. Local **`bun run desktop:package`** mirrors CI. **`/release`** command + skill run the same verification gates before tagging.
+The HTML manuscript + AI assist **build** is largely done: ProseMirror editor, comment/draft nodes, Accept/Reject, `@janus/ai-assist` provider (`/v1/responses`), desktop IPC, Settings Connect/Write UI, mobile `AI_NOT_SUPPORTED`.
 
-No Windows, iOS, signing/notarization, or auto-update in this initiative.
+**What is missing vs `SPEC-ai-assist.md`:**
 
-## Plan decisions (open spec questions resolved for build)
+| Spec expectation | Current state |
+|------------------|---------------|
+| Connect opens system browser + OAuth; user signs in with ChatGPT/Codex subscription | `connectOpenAiCodex` copies `JANUS_OPENAI_ACCESS_TOKEN` from env (dev stub only) |
+| Refresh token in main; access token refreshed before inference | Session stores a single `accessToken` string; no refresh |
+| Disconnect revokes refresh token at OpenAI | Clears local file only |
+| Connected across restart until disconnect/expiry | Works **if** dev env was used at Connect time |
+| Manual gate: real Connect + Write on maintainer Mac | Blocked on SIWC |
 
-| Topic | Decision |
-|--------|----------|
-| Artifacts | **`.zip`** required (drag `Janus.app`); **`.dmg`** if electron-builder produces it with no extra cost — not a blocker |
-| Architecture | **arm64** only (`macos-latest`); document “Apple Silicon Mac” in install docs |
-| Version | **Tag is source of truth** (`v0.1.0` → `0.1.0`); CI **fails** if `apps/desktop/package.json` `version` does not match |
-| Release notes | **Auto-generated** body via `softprops/action-gh-release` (or `gh release create --generate-notes`) |
-| Signing | **Out of scope** — unsigned + Gatekeeper copy in docs; phase 2 = spec amendment |
-
-Bump `apps/desktop` `version` from `0.0.0` to first real tag (e.g. `0.1.0`) in Task 2.
-
-## Current baseline
-
-- No `.github/workflows/` yet.
-- Desktop: `bun build` main/preload with `electron` external; workspace deps `@janus/*` resolve to **`.ts` exports** — packaged app must **bundle** main (or ship compiled workspace output); plan assumes **bun build inlines workspace imports** into `apps/desktop/dist/main.js` and builder packs `dist/` + `extraResources` for `dist/ui`.
-- UI path today: `main.ts` → `../../../dist/ui` (monorepo dev/prod-from-source only).
+This plan finishes **consumer Sign in with ChatGPT (SIWC)** in the Electron main process per the ADR, then closes manual MVP smoke and archives the milestone.
 
 ## Architecture decisions
 
-1. **Packaged UI path** — Extract pure `resolveUiBundleDir({ isPackaged, resourcesPath, devDistDir })` (testable without launching Electron); packaged → `path.join(resourcesPath, "ui")`; dev → existing repo `dist/ui` relative to built main.
-2. **electron-builder** — Pinned devDependency on `@janus/desktop` (or root); `productName` **Janus**; `appId` e.g. `com.janus.writer` (stable); `mac.target`: `zip` (+ `dmg` default if enabled); `extraResources`: copy repo `dist/ui` → `resources/ui`.
-3. **Production entry** — Packaged app must not set `JANUS_DEV`; `electron-builder` `files` include `dist/main.js`, `dist/preload.js`, `package.json`, and runtime deps as needed (avoid shipping whole monorepo).
-4. **CI workflow** — Single job `release-macos` on `push.tags: v*`; permissions `contents: write`; steps: checkout → setup Bun → frozen install → test → build:ui → desktop build → package → upload to Release (no partial upload on failure).
-5. **Verify script** — `scripts/validate-desktop-release.ts` asserts `Janus.app/Contents/Resources/ui/index.html` after local package; optional arg: path to `.app`.
-6. **Agent workflow** — Mirror `perf` split: `.cursor/commands/release.md` + `.cursor/skills/janus-desktop-release/` per command spec (report shape already in spec).
+| Topic | Decision |
+|--------|----------|
+| OAuth implementation | **Hand-rolled PKCE + loopback** in `apps/desktop/src/ai-oauth*` (ADR option 1). No new npm dependency unless `/build` proves `@siwc/local` is clearly cheaper — decide in Task 1 spike-in-code, not in plan. |
+| Callback | `http://127.0.0.1:<port>/auth/callback` — bind ephemeral port, persist **scheme + host `127.0.0.1` + path** for re-sign-in per OpenAI docs |
+| Host identity | Persist `ext_agent_host_id` (`urn:uuid:…`) once per install before first sign-in |
+| Client ID | First sign-in: `dynamic_agent_client`; store issued `oaiapp_…` with credentials; re-sign-in uses issued `client_id` + optional `id_token_hint` |
+| Credential storage | Extend encrypted blob in main (`safeStorage`); fields: `clientId`, `refreshToken`, `accessToken`, `accessTokenExpiresAt`, `idToken` (for hint), `extAgentHostId`. Renderer never sees tokens. |
+| Dev override | Keep optional `JANUS_OPENAI_ACCESS_TOKEN` **only** for local maintainer testing behind explicit check; **not** the default Connect path. Document in `docs/install-macos.md`. |
+| Refresh | Main process refreshes access token before `writeForComment` (and on Connect status if expired); atomic rotate of refresh token |
+| Disconnect | OIDC revocation + delete local credentials |
+| Domain | `services/ai-assist/` unchanged for OAuth; shell owns auth |
 
 ## Dependency graph
 
 ```
-resolveUiBundleDir + tests
-    └── main.ts wired
-            └── electron-builder config + extraResources(ui)
-                    ├── bun run desktop:package (local vertical slice)
-                    │       └── validate-desktop-release.ts
-                    └── .github/workflows/desktop-release.yml
-                            └── docs/install-macos.md (Release section)
-                                    └── /release command + skill
+Task 1 Credential schema + host ID persistence
+    └── Task 2 PKCE + loopback callback (unit-tested)
+            └── Task 3 Connect vertical (browser → tokens → connected status)
+                    └── Task 4 Refresh on write + expiry handling
+                            └── Task 5 Disconnect + revoke
+                                    └── Task 6 Wire ai-service; demote env stub
+                                            └── Task 7 Settings error mapping + i18n (auth errors)
+                                                    └── Task 8 Manual MVP smoke + docs
+                                                            └── Task 9 Archive milestone
 ```
 
 ## Task list (summary)
 
 | # | Title | Delivers |
 |---|--------|----------|
-| 1 | Packaged UI path | Testable resolver + `main.ts`; dev/prod unchanged |
-| 2 | Local macOS package | electron-builder, version bump, `desktop:package`, openable `.app` |
-| 3 | Validate packaged bundle | `validate-desktop-release.ts` + root script hook |
-| 4 | GitHub Actions release | `desktop-release.yml` on `v*` only |
-| 5 | Install documentation | Release download + unsigned macOS steps |
-| 6 | `/release` command + skill | Verify/setup/cut/remote modes |
-| 7 | Spec approval + first tag checklist | Mark specs approved; manual CI sign-off task |
+| 1 | SIWC credential model | Host ID + encrypted session shape; migration from today’s `accessToken`-only blob |
+| 2 | Loopback + PKCE | Testable authorize URL builder + callback server |
+| 3 | Connect flow | Real user sign-in; status connected across restart |
+| 4 | Token refresh | Write works after ~1h without re-Connect |
+| 5 | Disconnect + revoke | Spec-compliant logout |
+| 6 | Replace dev Connect stub | `connectOpenAiCodex` runs SIWC; env override documented |
+| 7 | Auth error UX | Map `AI_AUTH_FAILED` / usage limits to settings copy (`en`/`es`) |
+| 8 | Manual gate + install doc | Maintainer smoke; no CI secrets |
+| 9 | Milestone archive | Move this pair to `tasks/archive/` when Task 8 signed off |
 
 Details: `tasks/todo.md`.
 
 ## Checkpoints
 
-### After Task 1
+### After Tasks 1–3
 
-- [ ] `bun run test` && `bun run desktop:prod` still works from repo root
-- [ ] New unit tests for packaged vs dev UI paths
+- [ ] Unit tests: PKCE, callback parsing, token response → stored session (mocked HTTP)
+- [ ] Manual: Connect opens browser, return to app, Settings shows **Connected**, restart keeps status
 
-### After Tasks 2–3 (local release path)
+### After Tasks 4–6
 
-- [ ] `bun run desktop:package` produces `Janus.app`
-- [ ] `bun run validate:desktop-release` (or documented name) passes
-- [ ] Manual: open packaged app — shelf visible, `data-platform="desktop"`
+- [ ] `bun run test` && `bun run lint` green (no live network in CI)
+- [ ] Manual: Write produces draft with subscription (no `JANUS_OPENAI_ACCESS_TOKEN` unless testing override)
 
-### After Task 4
+### After Tasks 7–8 (MVP done)
 
-- [ ] Workflow YAML reviewed: tags `v*` only, `macos-latest`, no secrets
-- [ ] Optional dry-run: `act` not required; first real tag is acceptance
-
-### After Tasks 5–7 (module done)
-
-- [ ] Install doc complete
-- [ ] `/release verify` documented path matches CI
-- [ ] First `v0.1.0` push: Release asset downloadable (manual maintainer)
+- [ ] Full smoke: legacy `.md` migration (if needed), comment, Connect, Write, Accept, Shelf, reopen
+- [ ] `CAPABILITY-MAP.md` ai-assist row matches shipped behavior (OAuth, not env var)
+- [ ] Human sign-off on manual notes
 
 ## Risks and mitigations
 
 | Risk | Impact | Mitigation |
 |------|--------|------------|
-| Bun build does not bundle `@janus/*` `.ts` for runtime in asar | High — app crashes on launch | Task 2: verify packaged main has no bare `workspace:` imports; add bundle step or compile services if needed |
-| `dist/ui` path wrong inside `.app` | High — blank window | Task 1 + validate script; CI bundle assert step |
-| electron-builder + Bun lockfile friction | Med | Pin builder version; CI uses same commands as local package |
-| Unsigned Gatekeeper blocks users | Med | Document right-click Open / `xattr` in Task 5 |
-| Tag/version drift | Low | CI version check in Task 4 |
+| Loopback port conflict / firewall | Med | Ephemeral port; clear error if bind fails |
+| OpenAI policy (OSS vs paid distribution) | High | ADR already flags waitlist; product decision before broad marketing |
+| `subscription_sharing_usage_limit_exceeded` | Med | Task 7 maps to `ai.*` strings per SIWC errors doc |
+| Token refresh race during Write | Med | Single-flight refresh in main; retry once on 401 |
+| `safeStorage` unavailable (rare Linux) | Low | Fail Connect with `AI_AUTH_FAILED`; document macOS primary gate |
 
 ## Parallelization
 
-Sequential **1 → 2 → 3 → 4** (CI depends on local package). **Tasks 5 and 6** can parallelize after Task 3. **Task 7** last.
+- **Sequential** Tasks 1→6 (shared session + connect contract).
+- Task 7 can overlap Task 6 if error codes are stable.
+- Task 8 is human-only after Task 6.
 
-## Out of scope (explicit)
+## Out of scope (this plan)
 
-- Windows/Linux CI, Capacitor, `electron-updater`, notarization, `workflow_dispatch`, PR builds.
+- API-key settings path (ADR pivot only)
+- Streaming tokens to UI
+- Cursor / second provider
+- CI live OAuth integration tests
+- Windows desktop SIWC (macOS manual gate first)
+
+## Completed baseline (build phase)
+
+See `tasks/archive/html-manuscript-ai-assist/todo.md` for Tasks 1–13. Key paths:
+
+- `services/ai-assist/`, `apps/desktop/src/ai-service.ts`, `ai-session-store.ts`, `ai-ipc.ts`
+- `packages/ui` editor + settings Connect/Write
+- Specs approved; **Connect acceptance criterion not met** until this plan ships.

@@ -27,7 +27,7 @@ Build order (full Neo loop): shell → languages → manuscript → library, ai-
 
 **Manuscript slice 2** (`docs/specs/SPEC-manuscript-slice-2.md`, proposed 2026-10-18): `manuscript.html`, Janus custom tags (`janus-ai-comment`, `janus-ai-draft`), structured editor, migrate legacy `manuscript.md`, accept/reject draft transforms. **Build before `ai-assist` slice 1.** Mobile edits HTML; no AI UI.
 
-**AI-assist slice 1** (`docs/specs/SPEC-ai-assist.md`, proposed 2026-10-18): desktop Connect OpenAI Codex (consumer subscription, in-app sign-in), Write → draft tag, integrates manuscript transforms. Intent: `docs/intent/ai-assist-mvp.md`. **Blocked on manuscript slice 2** and on OAuth spike (see spec Open Questions).
+**AI-assist slice 1** (`docs/specs/SPEC-ai-assist.md`, approved 2026-10-18): desktop Connect via **Sign in with ChatGPT** (SIWC loopback OAuth in main), Write → draft tag, Accept/Reject via manuscript transforms. Intent: `docs/intent/ai-assist-mvp.md`. Mobile: HTML editor without AI bridge methods.
 
 `library` (full) and `ai-assist` can be specified in parallel after `manuscript` slice 1; **implementation order** for the HTML+AI MVP is manuscript slice 2 → ai-assist slice 1.
 
