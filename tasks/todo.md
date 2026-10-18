@@ -532,8 +532,8 @@ Plan: `tasks/plan.md` § Ship NO-GO follow-ups. Complete **before** calling shel
 **Description:** Add tests for remaining `resolveJanusBridge` errors (no `installMobileBridge`; install leaves `window.janus` unset). Add `apps/mobile/src/entry.test.ts` (or integration-style test) that runs install + `startShell` and asserts `data-platform="mobile"`. Consolidate duplicate `Missing #app` test if trivial.
 
 **Acceptance criteria:**
-- [ ] At least two new error-path tests in `bootstrap.test.ts`
-- [ ] Mobile entry test mounts **Janus** without mocking away `installMobileBridge`
+- [x] At least two new error-path tests in `bootstrap.test.ts`
+- [x] Mobile entry test mounts **Janus** without mocking away `installMobileBridge`
 
 **Verification:**
 - [ ] `bun run test`

@@ -34,6 +34,19 @@ describe("resolveJanusBridge", () => {
         ).resolves.toBe(bridge);
         expect(install).toHaveBeenCalledOnce();
     });
+
+    it("throws when mobile install hook is missing on web", async () => {
+        await expect(resolveJanusBridge()).rejects.toThrow(
+            /Capacitor\/mobile entry/i,
+        );
+    });
+
+    it("throws when install hook leaves window.janus unset", async () => {
+        const install = vi.fn(async () => {});
+        await expect(
+            resolveJanusBridge({ installMobileBridge: install }),
+        ).rejects.toThrow(/after mobile bridge install/i);
+    });
 });
 
 describe("startShell", () => {
