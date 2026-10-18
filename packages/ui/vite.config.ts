@@ -6,6 +6,11 @@ export default defineConfig({
     root: path.resolve(__dirname),
     // Relative URLs so Electron loadFile(file://) and Capacitor both resolve assets.
     base: "./",
+    server: {
+        host: true,
+        port: Number(process.env.JANUS_UI_DEV_PORT ?? 5173),
+        strictPort: false,
+    },
     build: {
         outDir: path.resolve(__dirname, "../../dist/ui"),
         emptyOutDir: true,

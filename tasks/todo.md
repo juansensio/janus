@@ -588,8 +588,8 @@ Plan: `tasks/plan.md` § Ship NO-GO follow-ups. Complete **before** calling shel
 
 ## Checkpoint: Shell ship GO (after Tasks 20–26)
 
-- [ ] `bun run validate:install` covers desktop + mobile HTML
-- [ ] Electron navigation Medium finding addressed (Task 22)
+- [x] `bun run validate:install` covers desktop + mobile HTML
+- [x] Electron navigation Medium finding addressed (Task 22)
 - [ ] Manual desktop + Simulator passed
 - [ ] `/ship` **GO**
 - [ ] Ready for `languages` after `SPEC-languages.md` approval
@@ -607,9 +607,9 @@ Plan: `tasks/plan.md` § Live reload dev loop. **Does not replace** Tasks 20–2
 **Description:** Add `packages/ui` `dev` script running Vite in dev mode (not production build). Configure `server.port` (default **5173**), `server.host: true` (Capacitor/Simulator reachability), and `server.strictPort` or documented env override. Root script `dev:ui` runs it. Confirm HMR works for `packages/bridge` via `mount.ts` import graph (manual check).
 
 **Acceptance criteria:**
-- [ ] `bun run dev:ui` serves `index.html` and `mobile.html` at stable URLs
-- [ ] `base: './'` preserved for production `build` (existing `ui-build-config.test.ts` still passes)
-- [ ] No new runtime dependency on Electron/Capacitor in `packages/ui`
+- [x] `bun run dev:ui` serves `index.html` and `mobile.html` at stable URLs
+- [x] `base: './'` preserved for production `build` (existing `ui-build-config.test.ts` still passes)
+- [x] No new runtime dependency on Electron/Capacitor in `packages/ui`
 
 **Verification:**
 - [ ] `bun run test`
@@ -628,10 +628,10 @@ Plan: `tasks/plan.md` § Live reload dev loop. **Does not replace** Tasks 20–2
 **Description:** Replace root `dev:desktop` one-shot `build:ui && start` with an orchestrated dev loop: start Task 27 Vite, wait until dev server responds, launch Electron with dev flag. In dev, `main.ts` loads `http://127.0.0.1:5173/` (desktop entry) instead of `loadFile(dist/ui/index.html)`. Extend or introduce `navigation-policy.ts` so **dev** allows localhost HTTP(S)/WS for HMR; **prod** keeps file-only policy (align with Task 22 — implement together or immediately after Task 22). Add `desktop:prod` (or equivalent) script: `build:ui && bun run --filter @janus/desktop start` for production-like runs used by install validation mindset.
 
 **Acceptance criteria:**
-- [ ] `bun run dev:desktop` opens window with **Janus** without running `build:ui` first
-- [ ] Editing `packages/bridge/src/index.ts` updates visible label without manual rebuild
-- [ ] `bun run --filter @janus/desktop start` after `build:ui` still works (`desktop:prod` path)
-- [ ] External `https://` navigation still blocked in dev (policy unit-tested)
+- [x] `bun run dev:desktop` opens window with **Janus** without running `build:ui` first
+- [x] Editing `packages/bridge/src/index.ts` updates visible label without manual rebuild
+- [x] `bun run --filter @janus/desktop start` after `build:ui` still works (`desktop:prod` path)
+- [x] External `https://` navigation still blocked in dev (policy unit-tested)
 
 **Verification:**
 - [ ] `bun run test`
@@ -652,9 +652,9 @@ Plan: `tasks/plan.md` § Live reload dev loop. **Does not replace** Tasks 20–2
 **Description:** Add root dev script (e.g. `dev:ios`) that runs Vite (Task 27) and opens iOS Simulator with Capacitor loading **`/mobile.html`** from the dev server. Use Capacitor 6 livereload / `server.url` pattern that is **dev-only** (env, CLI flags, or local config — not active in default `capacitor.config.ts` used for `cap:sync:ios`). Add iOS **ATS** dev exception for local HTTP if required. Document Simulator vs device (LAN IP) limitation in task verification notes.
 
 **Acceptance criteria:**
-- [ ] Simulator shows **Janus** with `data-platform="mobile"` against dev server
-- [ ] Edit `createShellLabel()` → Simulator UI updates without `cap:sync:ios`
-- [ ] `bun run cap:sync:ios` after `build:ui` unchanged for production-like workflow
+- [x] Simulator shows **Janus** with `data-platform="mobile"` against dev server
+- [x] Edit `createShellLabel()` → Simulator UI updates without `cap:sync:ios`
+- [x] `bun run cap:sync:ios` after `build:ui` unchanged for production-like workflow
 
 **Verification:**
 - [ ] Manual: `bun run dev:ios` (or final script name) + bridge edit
@@ -673,8 +673,8 @@ Plan: `tasks/plan.md` § Live reload dev loop. **Does not replace** Tasks 20–2
 **Description:** Update `docs/install-macos.md` (and README if needed): when to use `dev:ui`, `dev:desktop`, `dev:ios`; when to use `build:ui`, `desktop:prod`, `cap:sync:ios`. Clarify that `validate:install` exercises the **production** UI build, not the dev server.
 
 **Acceptance criteria:**
-- [ ] New contributor can enable live reload without reading `tasks/plan.md`
-- [ ] Dual HTML (`index.html` vs `mobile.html`) still explained (may merge with Task 25 if both land)
+- [x] New contributor can enable live reload without reading `tasks/plan.md`
+- [x] Dual HTML (`index.html` vs `mobile.html`) still explained (may merge with Task 25 if both land)
 
 **Verification:**
 - [ ] Manual read-through
@@ -692,8 +692,8 @@ Plan: `tasks/plan.md` § Live reload dev loop. **Does not replace** Tasks 20–2
 **Description:** Unit tests: dev UI URL helper (if extracted); `navigation-policy` allows localhost only when dev flag set; assert default Capacitor config has **no** `server.url` (or export `capacitor.config.ts` policy function tested in isolation). Ensure `validate:install` does not require dev server.
 
 **Acceptance criteria:**
-- [ ] Tests fail if prod navigation policy allows arbitrary `http://` origins
-- [ ] Tests fail if committed Cap config enables permanent remote `server.url`
+- [x] Tests fail if prod navigation policy allows arbitrary `http://` origins
+- [x] Tests fail if committed Cap config enables permanent remote `server.url`
 
 **Verification:**
 - [ ] `bun run test`

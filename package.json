@@ -7,7 +7,10 @@
     ],
     "scripts": {
         "build:ui": "bun run --filter @janus/ui build",
-        "dev:desktop": "bun run build:ui && bun run --filter @janus/desktop start",
+        "dev:ui": "bun run --filter @janus/ui dev",
+        "dev:ios": "bun scripts/dev-ios.ts",
+        "dev:desktop": "bun scripts/dev-desktop.ts",
+        "desktop:prod": "bun run build:ui && bun run --filter @janus/desktop start",
         "test": "vitest run",
         "lint": "oxlint .",
         "cap:sync:ios": "bun run build:ui && bun apps/mobile/scripts/prepare-cap-web.ts && bun run --filter @janus/mobile cap:sync",

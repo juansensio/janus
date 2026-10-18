@@ -9,7 +9,8 @@
         "./bootstrap": "./src/bootstrap.ts"
     },
     "scripts": {
-        "build": "vite build"
+        "build": "vite build",
+        "dev": "vite"
     },
     "dependencies": {
         "@janus/bridge": "workspace:*"

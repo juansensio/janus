@@ -6,6 +6,11 @@ describe("vite UI build config", () => {
         expect(config.base).toBe("./");
     });
 
+    it("exposes a dev server on port 5173 by default", () => {
+        expect(config.server?.port).toBe(5173);
+        expect(config.server?.host).toBe(true);
+    });
+
     it("does not import mobile shell via @janus/mobile package alias", () => {
         const alias = config.resolve?.alias;
         const entries = Array.isArray(alias)
