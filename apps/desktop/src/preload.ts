@@ -33,6 +33,11 @@ const bridge: JanusBridge = {
             draftHtml,
             draftId,
         ),
+    getAiProviderStatus: () => invoke("janus:ai:getAiProviderStatus"),
+    connectOpenAiCodex: () => invoke("janus:ai:connectOpenAiCodex"),
+    disconnectOpenAiCodex: () => invoke("janus:ai:disconnectOpenAiCodex"),
+    writeForComment: (id: string, commentId: string, locale: string) =>
+        invoke("janus:ai:writeForComment", id, commentId, locale),
     getLibraryRoot: () => invoke("janus:settings:getLibraryRoot"),
     chooseLibraryRoot: () => invoke("janus:settings:chooseLibraryRoot"),
     getUiLanguage: () => invoke("janus:language:getUiLanguage"),
