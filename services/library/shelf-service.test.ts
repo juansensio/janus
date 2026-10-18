@@ -136,6 +136,64 @@ describe("createShelfService", () => {
         expect(manifest).toContain(`"id": "${id}"`);
     });
 
+    it("rejects createBook when title already exists", async () => {
+        const fs = createMemoryFs();
+        const service = createShelfService(
+            "/lib",
+            fs,
+            (() => {
+                let n = 0;
+                return () =>
+                    n++ === 0
+                        ? "550e8400-e29b-41d4-a716-446655440000"
+                        : "660e8400-e29b-41d4-a716-446655440001";
+            })(),
+        );
+        await service.createBook("Shared");
+
+        await expect(service.createBook("Shared")).rejects.toMatchObject({
+            code: "DUPLICATE_BOOK_TITLE",
+        });
+        expect(
+            fs.files.has(
+                "/lib/books/660e8400-e29b-41d4-a716-446655440001/book.json",
+            ),
+        ).toBe(false);
+    });
+
+    it("rejects renameBook when title is taken by another book", async () => {
+        const fs = createMemoryFs();
+        const firstId = "550e8400-e29b-41d4-a716-446655440000";
+        const secondId = "660e8400-e29b-41d4-a716-446655440001";
+        const service = createShelfService(
+            "/lib",
+            fs,
+            (() => {
+                let n = 0;
+                return () => (n++ === 0 ? firstId : secondId);
+            })(),
+        );
+        await service.createBook("First");
+        await service.createBook("Second");
+
+        await expect(service.renameBook(secondId, "First")).rejects.toMatchObject(
+            { code: "DUPLICATE_BOOK_TITLE" },
+        );
+        const secondManifest = fs.files.get(`/lib/books/${secondId}/book.json`);
+        expect(secondManifest).toContain('"title": "Second"');
+    });
+
+    it("allows renameBook when title is unchanged", async () => {
+        const fs = createMemoryFs();
+        const id = "550e8400-e29b-41d4-a716-446655440000";
+        const service = createShelfService("/lib", fs, () => id);
+        await service.createBook("Same");
+
+        await expect(service.renameBook(id, "Same")).resolves.toMatchObject({
+            title: "Same",
+        });
+    });
+
     it("renameBook throws BOOK_NOT_FOUND for missing book", async () => {
         const fs = createMemoryFs();
         const service = createShelfService("/lib", fs);

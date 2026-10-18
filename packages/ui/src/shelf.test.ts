@@ -131,6 +131,36 @@ describe("renderShelf", () => {
         );
     });
 
+    it("keeps create dialog open when createBook rejects duplicate title", async () => {
+        const createBook = vi.fn(async () => {
+            throw Object.assign(new Error("duplicate"), {
+                code: "DUPLICATE_BOOK_TITLE",
+            });
+        });
+        const host = document.createElement("div");
+        document.body.append(host);
+        const bridge = createMockJanusBridge({
+            listBooks: async () => [],
+            suggestNewBookTitle: async () => "Untitled",
+            createBook,
+        });
+
+        await renderShelf(host, bridge);
+        (host.querySelector(".shelf-add") as HTMLButtonElement).click();
+        await vi.waitFor(() =>
+            expect(document.querySelector(".shelf-dialog")).not.toBeNull(),
+        );
+        clickDialogPrimary();
+
+        await vi.waitFor(() => expect(createBook).toHaveBeenCalledOnce());
+        await vi.waitFor(() =>
+            expect(
+                document.querySelector(".shelf-dialog-validation")?.textContent,
+            ).toBe(SHELF_STRINGS.dialogDuplicateTitle),
+        );
+        expect(document.querySelector(".shelf-dialog")).not.toBeNull();
+    });
+
     it("submits create dialog on Enter in the title field", async () => {
         const createBook = vi.fn(async () => ({
             id: "550e8400-e29b-41d4-a716-446655440001",
@@ -376,9 +406,11 @@ describe("renderShelf", () => {
         );
         clickDialogPrimary();
         await vi.waitFor(() =>
-            expect(host.querySelector(".shelf-error")?.textContent).toBe(
-                SHELF_STRINGS.createFailed,
-            ),
+            expect(
+                document.querySelector(".shelf-dialog-validation")?.textContent,
+            ).toBe(SHELF_STRINGS.createFailed),
         );
+        expect(document.querySelector(".shelf-dialog")).not.toBeNull();
+        expect(host.querySelector(".shelf-error")).toBeNull();
     });
 });

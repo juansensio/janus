@@ -72,12 +72,8 @@ function appendAddTile(
                 initialValue,
                 returnFocusTo: addButton,
                 onConfirm: async (title) => {
-                    await refreshAfterAction(
-                        host,
-                        bridge,
-                        () => bridge.createBook(title),
-                        SHELF_STRINGS.createFailed,
-                    );
+                    await bridge.createBook(title);
+                    await renderShelf(host, bridge);
                 },
             });
         });
@@ -166,12 +162,8 @@ export async function renderShelf(
                 initialValue: book.title,
                 returnFocusTo: editButton,
                 onConfirm: async (newTitle) => {
-                    await refreshAfterAction(
-                        host,
-                        bridge,
-                        () => bridge.renameBook(book.id, newTitle),
-                        SHELF_STRINGS.renameFailed,
-                    );
+                    await bridge.renameBook(book.id, newTitle);
+                    await renderShelf(host, bridge);
                 },
             });
         });

@@ -1,4 +1,6 @@
 export {
+    assertTitleNotDuplicate,
+    DuplicateBookTitleError,
     InvalidBookTitleError,
     MAX_BOOK_TITLE_LENGTH,
     normalizeBookTitle,

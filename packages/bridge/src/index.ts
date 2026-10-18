@@ -15,7 +15,8 @@ export type BookSummary = {
 export type JanusBridgeErrorCode =
     | "BOOK_NOT_FOUND"
     | "INVALID_BOOK_ID"
-    | "INVALID_BOOK_TITLE";
+    | "INVALID_BOOK_TITLE"
+    | "DUPLICATE_BOOK_TITLE";
 
 export interface JanusBridge {
     platform(): Platform;

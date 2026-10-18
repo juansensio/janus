@@ -216,3 +216,35 @@ Sizing: **S** = 1–2 files, **M** = 3–5 files.
 ## Checkpoint: Dialog keyboard (after Task 8)
 
 - [x] Enter submits; Escape still cancels; tests green
+
+---
+
+## Task 9: Show create/rename errors inside modal
+
+**Description:** When `createBook` or `renameBook` fails while the book-name dialog is open, show the error **in the modal** (validation/error line under the field) and **do not** close the dialog or write `.shelf-error` on the shelf. Success still closes the dialog and re-renders the shelf. Duplicate title (`DUPLICATE_BOOK_TITLE`) behavior stays; extend the same path to generic and other bridge failures. Centralize code→message mapping in `book-name-dialog.ts` (or a tiny `dialog-bridge-errors.ts` colocated helper).
+
+**Acceptance criteria:**
+
+- [x] Failed create: modal stays open; inline message visible; no `.shelf-error` on shelf host
+- [x] Failed rename: same as create with rename copy where appropriate
+- [x] Successful create/rename: modal closes; shelf updates as today
+- [x] `listBooks` / delete failures unchanged (may still use `.shelf-error` or confirm)
+- [x] `DUPLICATE_BOOK_TITLE` still shows duplicate copy in modal
+
+**Verification:**
+
+- [x] `bun run test` — shelf test for generic `createBook` throw keeps dialog + inline error
+- [x] `bun run lint`
+- [ ] Manual: force a failure (e.g. temporarily break bridge) or use duplicate title — error only in modal
+
+**Dependencies:** Task 8
+
+**Files likely touched:** `packages/ui/src/shelf/book-name-dialog.ts`, `packages/ui/src/shelf/render-shelf.ts`, `packages/ui/src/shelf/strings.ts` (if new keys), `packages/ui/src/shelf.test.ts`
+
+**Estimated scope:** S
+
+---
+
+## Checkpoint: Modal errors (after Task 9)
+
+- [x] Create/rename errors inline; shelf banner not used for dialog submit failures

@@ -4,7 +4,12 @@ import {
     serializeManifest,
     type BookSummary,
 } from "./book-manifest";
-import { normalizeBookTitle, InvalidBookTitleError } from "./book-title";
+import {
+    assertTitleNotDuplicate,
+    DuplicateBookTitleError,
+    InvalidBookTitleError,
+    normalizeBookTitle,
+} from "./book-title";
 import { allocateUntitledTitle } from "./titles";
 import { validateBookId } from "./validate-book-id";
 import { isResolvedPathInsideRoot } from "./path-containment";
@@ -33,7 +38,8 @@ export type ShelfFs = {
 export type ShelfServiceErrorCode =
     | "BOOK_NOT_FOUND"
     | "INVALID_BOOK_ID"
-    | "INVALID_BOOK_TITLE";
+    | "INVALID_BOOK_TITLE"
+    | "DUPLICATE_BOOK_TITLE";
 
 export class ShelfServiceError extends Error {
     readonly code: ShelfServiceErrorCode;
@@ -48,6 +54,9 @@ export class ShelfServiceError extends Error {
 function toShelfServiceError(error: unknown): ShelfServiceError {
     if (error instanceof InvalidBookTitleError) {
         return new ShelfServiceError("INVALID_BOOK_TITLE", error.message);
+    }
+    if (error instanceof DuplicateBookTitleError) {
+        return new ShelfServiceError("DUPLICATE_BOOK_TITLE", error.message);
     }
     if (error instanceof ShelfServiceError) {
         return error;
@@ -145,6 +154,12 @@ export function createShelfService(
             } catch (error) {
                 throw toShelfServiceError(error);
             }
+            const existing = await this.listBooks();
+            try {
+                assertTitleNotDuplicate(title, existing);
+            } catch (error) {
+                throw toShelfServiceError(error);
+            }
             const id = createId().toLowerCase();
             if (!validateBookId(id)) {
                 throw new Error("Generated book id is invalid");
@@ -187,6 +202,12 @@ export function createShelfService(
                     );
                 }
                 throw error;
+            }
+            const existing = await this.listBooks();
+            try {
+                assertTitleNotDuplicate(title, existing, id);
+            } catch (error) {
+                throw toShelfServiceError(error);
             }
             const updated = {
                 ...manifest,

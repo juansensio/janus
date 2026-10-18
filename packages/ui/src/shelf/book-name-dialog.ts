@@ -1,3 +1,4 @@
+import { messageForDialogSubmitError } from "./dialog-submit-error";
 import { SHELF_STRINGS } from "./strings";
 
 export type BookNameDialogMode = "create" | "rename";
@@ -82,7 +83,13 @@ export function openBookNameDialog(options: OpenBookNameDialogOptions): void {
     function updateConfirmState(): void {
         const invalid = isWhitespaceOnly(input.value);
         confirmButton.disabled = invalid;
-        validation.hidden = !invalid;
+        if (!invalid) {
+            validation.hidden = true;
+            validation.textContent = SHELF_STRINGS.dialogInvalidTitle;
+        } else {
+            validation.hidden = false;
+            validation.textContent = SHELF_STRINGS.dialogInvalidTitle;
+        }
     }
 
     function close(): void {
@@ -127,7 +134,17 @@ export function openBookNameDialog(options: OpenBookNameDialogOptions): void {
             return;
         }
         void (async () => {
-            await onConfirm(input.value);
+            try {
+                await onConfirm(input.value);
+            } catch (error) {
+                validation.textContent = messageForDialogSubmitError(
+                    error,
+                    mode,
+                );
+                validation.hidden = false;
+                input.focus();
+                return;
+            }
             if (overlay.isConnected) {
                 close();
             }

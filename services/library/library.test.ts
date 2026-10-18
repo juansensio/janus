@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
     allocateUntitledTitle,
+    assertTitleNotDuplicate,
+    DuplicateBookTitleError,
     InvalidBookTitleError,
     isSkippableListError,
     libraryBooksDir,
@@ -27,6 +29,28 @@ describe("normalizeBookTitle", () => {
     it("rejects titles over max length", () => {
         const long = "a".repeat(MAX_BOOK_TITLE_LENGTH + 1);
         expect(() => normalizeBookTitle(long)).toThrow(InvalidBookTitleError);
+    });
+});
+
+describe("assertTitleNotDuplicate", () => {
+    const books: BookSummary[] = [
+        {
+            id: "a",
+            title: "Taken",
+            createdAt: "2026-01-01T00:00:00.000Z",
+        },
+    ];
+
+    it("throws when another book has the same title", () => {
+        expect(() => assertTitleNotDuplicate("Taken", books)).toThrow(
+            DuplicateBookTitleError,
+        );
+    });
+
+    it("allows the same title when excluding that book id", () => {
+        expect(() =>
+            assertTitleNotDuplicate("Taken", books, "a"),
+        ).not.toThrow();
     });
 });
 

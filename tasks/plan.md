@@ -37,11 +37,13 @@ Task 6
     → Task 7 install doc + human sign-off
 Task 8 (keyboard fix)
     book-name-dialog.ts — Enter submits when title valid
+Task 9 (modal errors)
+    All create/rename failures stay in dialog; no .shelf-error for those flows
 ```
 
 ## Task list
 
-Full acceptance criteria: **`tasks/todo.md`** Tasks **1–8**.
+Full acceptance criteria: **`tasks/todo.md`** Tasks **1–9**.
 
 ### Phase 1: Domain and contract
 - [x] Task 1: Library domain — title rules and shelf service API
@@ -70,6 +72,9 @@ Full acceptance criteria: **`tasks/todo.md`** Tasks **1–8**.
 ### Phase 5: Dialog keyboard (manual QA follow-up)
 - [x] Task 8: Enter submits create/rename dialog
 
+### Phase 6: Dialog error UX
+- [x] Task 9: Show create/rename errors inside modal
+
 ### Checkpoint: Complete
 - [x] `bun run test` && `bun run lint` && `bun run build:ui`
 - [ ] Manual create/rename/persistence on desktop (human)
@@ -89,18 +94,25 @@ Full acceptance criteria: **`tasks/todo.md`** Tasks **1–8**.
 | Spec open question | Plan decision |
 |--------------------|---------------|
 | Backdrop click | Cancels (no create/rename) |
-| API errors | Close dialog; `.shelf-error` banner on shelf |
+| API errors | **Superseded by Task 9:** inline in modal; shelf `.shelf-error` only for list/load/delete |
 | Rename affordance | Edit icon (per spec decisions) |
 | Create default | `suggestNewBookTitle()` prefill; Create without edit OK |
 
-## Slice 1c follow-up (Task 8)
+## Slice 1c follow-up (Task 9)
 
-**Problem:** Escape closes the book-name modal; **Enter** in the title field does nothing — user must click **Create** / **Save**.
+**Problem:** On create/rename failure, the modal closes and **Could not create/rename…** appears on the shelf (`.shelf-error`). **Duplicate title** already stays in the modal; other bridge errors do not.
 
-**Cause:** Confirm uses `type="button"` click handlers only; no `form` submit or Enter handler on the input (`book-name-dialog.ts`).
+**Cause:** `render-shelf.ts` `onConfirm` catches non-duplicate errors, calls `renderShelf` + `appendShelfError`, and completes without rethrowing — so `book-name-dialog.ts` closes the overlay.
 
-**Approach:** Wrap field + actions in a `<form>` and handle `submit` (or `keydown` Enter on input) by calling the same confirm path as the primary button; `preventDefault` on submit; no-op when title is whitespace-only (same as disabled primary). Escape behavior unchanged.
+**Approach:**
+
+1. **`book-name-dialog.ts`** — On any `onConfirm` rejection, show message in `.shelf-dialog-validation` (or dedicated `.shelf-dialog-error`), keep modal open, refocus input. Map `DUPLICATE_BOOK_TITLE`, `INVALID_BOOK_TITLE`, and a mode-specific fallback (`createFailed` / `renameFailed`) from `error.code`; unknown codes use fallback.
+2. **`render-shelf.ts`** — Create/rename `onConfirm`: success → `renderShelf` then return (dialog closes). Failure → **rethrow** the bridge error (or a thin wrapper); do **not** `appendShelfError` for these paths. Remove duplicate-only branch once dialog handles all codes.
+3. **Shelf errors** — `.shelf-error` remains for `listBooks` load failure and delete/create **outside** the dialog only.
+4. **Tests** — `shelf.test.ts`: failed `createBook` (generic throw) leaves dialog open, shows inline message, host has no `.shelf-error`. Rename parity test optional.
+
+**Out of scope:** Mapping every future bridge code to custom copy (fallback string is enough).
 
 ## Human approval
 
-**`/build`** for Task 8 only (Tasks 1–7 done). Approve or adjust, then implement.
+**`/build`** for Task 9. Tasks 1–8 done; duplicate-title domain work may land in the same PR if still uncommitted.

@@ -415,7 +415,7 @@ ASSUMPTIONS I'M MAKING:
 1. **Create:** Tapping the **+** add tile (and any header “New book” control, if present) opens a **modal dialog** first; the book is created only after the writer confirms with a non-empty title (see validation).
 2. **Default title in the create dialog** is the next auto name from domain (`Untitled`, then `Untitled 2`, …) via `suggestNewBookTitle()` — the UI does not run `allocateUntitledTitle` locally. Pressing **Create** without editing the field uses that default (same outcome as slice 1 auto-create when the library is empty or only lower `Untitled N` slots are free).
 3. **Rename:** A small **edit icon** on each card (same visibility pattern as delete: focus + hover-capable pointers) opens the rename dialog pre-filled with the current title; the cover **title stays plain text** (not a separate rename button).
-4. **Duplicate titles** among books are **allowed** (writers may reuse names); only the create-dialog default avoids colliding with `Untitled` / `Untitled N` when the writer accepts the default without editing.
+4. **Duplicate titles** are **not allowed** after normalization (exact string match on shelf titles). `createBook` and `renameBook` reject with `DUPLICATE_BOOK_TITLE`; the name dialog shows inline feedback. `suggestNewBookTitle()` still uses `allocateUntitledTitle` for unused `Untitled` / `Untitled N` slots.
 5. **Title rules** (trim, length, empty) live in `services/library/`; shells persist the validated title in `book.json` only.
 6. **Cancel** on the dialog (Escape, Cancel button, backdrop click) does not create or rename; create leaves the shelf unchanged.
 7. Dialog is a **custom accessible modal** in `packages/ui` (not `window.prompt`); styling matches slice 1b dark shelf (tokens in `shelf.css`).
@@ -458,7 +458,7 @@ Writers name books explicitly when adding them and can fix titles on the shelf w
 - `createBook(title: string)` validates title, writes manifest, returns `BookSummary` (replaces zero-arg `createBook()` on the bridge).
 - `renameBook(id: string, title: string)` validates id and title, rewrites `book.json` with same `id`, `createdAt`, `version`; returns updated `BookSummary`.
 - `suggestNewBookTitle(): Promise<string>` lists books (or reads titles only) and returns `allocateUntitledTitle(existingTitles)` — implemented in shell via domain, not in UI.
-- Stable error codes: `INVALID_BOOK_TITLE`, `BOOK_NOT_FOUND`, `INVALID_BOOK_ID` (existing).
+- Stable error codes: `INVALID_BOOK_TITLE`, `DUPLICATE_BOOK_TITLE`, `BOOK_NOT_FOUND`, `INVALID_BOOK_ID` (existing).
 
 **Accessibility**
 
@@ -605,7 +605,7 @@ export function openBookNameDialog(options: {
 | Question | Decision (see `tasks/plan.md`) |
 |----------|----------------------------------|
 | Backdrop click | Cancel — no create/rename |
-| API errors | Inline validation in dialog; bridge failures → `.shelf-error` on shelf |
+| API errors | Inline in book-name modal (duplicate, invalid title, create/rename failure); `.shelf-error` only for shelf load/delete outside dialog |
 
 ---
 
