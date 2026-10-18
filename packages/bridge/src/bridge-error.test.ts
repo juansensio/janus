@@ -29,6 +29,16 @@ describe("bridgeErrorCode", () => {
             ),
         ).toBe("DUPLICATE_BOOK_TITLE");
     });
+
+    it("infers DUPLICATE_BOOK_TITLE from ipc-wrapped message without code", () => {
+        expect(
+            bridgeErrorCode(
+                new Error(
+                    "Error invoking remote method 'janus:library:renameBook': That name already exists. Choose a different name.",
+                ),
+            ),
+        ).toBe("DUPLICATE_BOOK_TITLE");
+    });
 });
 
 describe("extractErrorMessage", () => {

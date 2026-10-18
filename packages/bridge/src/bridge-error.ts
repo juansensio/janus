@@ -6,6 +6,14 @@ export function unwrapIpcInvokeMessage(message: string): string {
     return match?.[1] ?? message;
 }
 
+function isDuplicateBookTitleMessage(message: string): boolean {
+    const lower = message.toLowerCase();
+    return (
+        lower.includes("already exists") ||
+        lower.includes("already on your shelf")
+    );
+}
+
 export function bridgeErrorCode(error: unknown): string | undefined {
     if (
         error !== null &&
@@ -14,6 +22,10 @@ export function bridgeErrorCode(error: unknown): string | undefined {
         typeof (error as { code: unknown }).code === "string"
     ) {
         return (error as { code: string }).code;
+    }
+    const message = extractErrorMessage(error);
+    if (message.length > 0 && isDuplicateBookTitleMessage(message)) {
+        return "DUPLICATE_BOOK_TITLE";
     }
     return undefined;
 }

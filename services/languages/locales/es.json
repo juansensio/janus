@@ -10,7 +10,7 @@
     "library.dialog.cancel": "Cancelar",
     "library.dialog.create": "Crear",
     "library.dialog.createTitle": "Libro nuevo",
-    "library.dialog.duplicateTitle": "Ese nombre ya está en tu estantería. Elige otro.",
+    "library.dialog.duplicateTitle": "Ese nombre ya existe. Elige otro.",
     "library.dialog.invalidTitle": "Escribe el nombre del libro.",
     "library.dialog.nameLabel": "Nombre del libro",
     "library.dialog.renameTitle": "Cambiar nombre",

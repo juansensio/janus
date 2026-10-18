@@ -3,6 +3,7 @@
 | Module id | Responsibility | Depends on |
 |---|---|---|
 | shell | Monorepo toolchain, Electron desktop, Capacitor mobile, shared UI mount, bridge contract, install journey | — |
+| desktop-release | Tag-triggered GitHub Actions macOS build; GitHub Release assets for Electron (no Windows/mobile) | shell |
 | languages | Interface strings, and the set of languages a book may be written in. English and Spanish. | shell |
 | manuscript | One book: page, chapters, section breaks, autosave to plain files | languages |
 | library | Bookshelf: create, open, and arrange books | manuscript |
@@ -21,6 +22,8 @@ Build order (full Neo loop): shell → languages → manuscript → library, ai-
 **Library slice 1e** (`docs/specs/SPEC-library.md`): title-based `books/<Title>/` folders; uuid migration on list; rename moves folder; manuscript resolves by manifest id.
 
 **Languages slice 1** (`docs/specs/SPEC-languages.md`, approved 2026-10-18): interface locale (`en`/`es`), catalogs, Settings language picker (desktop + mobile); persists `uiLocale` in `janus-settings.json`. Does **not** wait on `ai-assist`. Per-book writing language is a later slice.
+
+**Desktop release v1** (`docs/specs/SPEC-desktop-release.md`, draft 2026-10-18): push tag `v*` → macOS workflow → GitHub Release with downloadable Electron app; unsigned; no Windows, iOS, or auto-update. Agent workflow spec: `docs/specs/SPEC-desktop-release-command.md` (`/release` verify/setup — command files not added until implementation).
 
 `library` (full) and `ai-assist` can be specified in parallel after `manuscript` slice 1.
 

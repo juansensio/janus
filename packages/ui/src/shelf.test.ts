@@ -178,6 +178,41 @@ describe("renderShelf", () => {
         expect(onOpenSettings).toHaveBeenCalledOnce();
     });
 
+    it("keeps rename dialog open with explicit message when renameBook rejects duplicate title", async () => {
+        const book = {
+            id: "550e8400-e29b-41d4-a716-446655440000",
+            title: "Draft",
+            createdAt: "2026-01-01T00:00:00.000Z",
+        };
+        const renameBook = vi.fn(async () => {
+            throw new Error(
+                "Error invoking remote method 'janus:library:renameBook': That name already exists. Choose a different name.",
+            );
+        });
+        const host = document.createElement("div");
+        document.body.append(host);
+        const bridge = createMockJanusBridge({
+            listBooks: async () => [book],
+            renameBook,
+        });
+
+        await renderShelf(host, bridge);
+        (host.querySelector(".shelf-card-edit") as HTMLButtonElement).click();
+        await vi.waitFor(() =>
+            expect(document.querySelector(".shelf-dialog")).not.toBeNull(),
+        );
+        clickDialogPrimary();
+
+        await vi.waitFor(() => expect(renameBook).toHaveBeenCalledOnce());
+        await vi.waitFor(() =>
+            expect(
+                document.querySelector(".shelf-dialog-validation")?.textContent,
+            ).toBe("That name already exists. Choose a different name."),
+        );
+        expect(document.querySelector(".shelf-dialog")).not.toBeNull();
+        expect(host.querySelector(".shelf-error")).toBeNull();
+    });
+
     it("keeps create dialog open when createBook rejects duplicate title", async () => {
         const createBook = vi.fn(async () => {
             throw Object.assign(new Error("duplicate"), {

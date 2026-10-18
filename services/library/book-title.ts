@@ -4,6 +4,10 @@ export type BookTitleErrorCode = "INVALID_BOOK_TITLE";
 
 export type DuplicateBookTitleErrorCode = "DUPLICATE_BOOK_TITLE";
 
+/** Stable English text; UI shows the localized catalog string for the same case. */
+export const DUPLICATE_BOOK_TITLE_MESSAGE =
+    "That name already exists. Choose a different name.";
+
 export class InvalidBookTitleError extends Error {
     readonly code: BookTitleErrorCode = "INVALID_BOOK_TITLE";
 
@@ -31,9 +35,7 @@ export function assertTitleNotDuplicate(
         (book) => book.id !== excludeId && book.title === title,
     );
     if (clash) {
-        throw new DuplicateBookTitleError(
-            "That name is already on your shelf. Choose a different book name.",
-        );
+        throw new DuplicateBookTitleError(DUPLICATE_BOOK_TITLE_MESSAGE);
     }
 }
 

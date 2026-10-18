@@ -24,4 +24,39 @@ describe("messageForDialogSubmitError", () => {
             messageForDialogSubmitError(new Error("network"), "create"),
         ).toBe(t("library.createFailed"));
     });
+
+    it("maps duplicate title from ipc-wrapped message when code is missing", () => {
+        expect(
+            messageForDialogSubmitError(
+                new Error(
+                    "Error invoking remote method 'janus:library:createBook': That name already exists. Choose a different name.",
+                ),
+                "create",
+            ),
+        ).toBe(t("library.dialog.duplicateTitle"));
+    });
+
+    it("maps duplicate title on rename mode", () => {
+        expect(
+            messageForDialogSubmitError(
+                Object.assign(new Error("dup"), {
+                    code: "DUPLICATE_BOOK_TITLE",
+                }),
+                "rename",
+            ),
+        ).toBe(t("library.dialog.duplicateTitle"));
+    });
+
+    it("shows explicit duplicate copy not generic create failed", () => {
+        const message = messageForDialogSubmitError(
+            new Error(
+                "Error invoking remote method 'janus:library:createBook': That name already exists. Choose a different name.",
+            ),
+            "create",
+        );
+        expect(message).toBe(
+            "That name already exists. Choose a different name.",
+        );
+        expect(message).not.toBe(t("library.createFailed"));
+    });
 });
