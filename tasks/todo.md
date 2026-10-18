@@ -140,8 +140,8 @@ Sizing: **S** = 1–2 files, **M** = 3–5 files. No task should exceed ~5 files
 **Description:** `preload.ts` exposes `window.janus` implementing `JanusBridge` with `platform(): "desktop"`. Renderer entry calls `mountJanusShell` on `#app`. Visible `Janus` heading and `data-platform="desktop"`.
 
 **Acceptance criteria:**
-- [ ] Bridge only via preload; context isolation on
-- [ ] Window shows `Janus` inside `#app`
+- [x] Bridge only via preload; context isolation on
+- [x] Window shows `Janus` inside `#app`
 
 **Verification:**
 - [ ] `bun run test` (unchanged green)
