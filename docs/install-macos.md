@@ -71,7 +71,23 @@ After the shelf checks above:
 4. **Relaunch** — quit the app completely, reopen, open the book again; text persists.
 5. **Shelf actions** — rename and delete still work from the shelf; delete removes the book folder including `manuscript.md`.
 
-`bun run validate:install` remains a **shell** toolchain check (tests + `build:ui` artifacts); it does not launch Electron or the Simulator. Use the steps above for library and manuscript sign-off.
+### Library location (slice 1 — dev folder + desktop Settings)
+
+**Development (`bun run dev:desktop`):**
+
+1. Books are stored under **`.janus-library/books/`** at the repo root (gitignored).
+2. On first run after this change, if you previously used Electron’s default library under Application Support, Janus **moves** that folder into `.janus-library` so existing books stay with you.
+3. Optional override: `JANUS_LIBRARY_ROOT=/absolute/path bun run dev:desktop`.
+
+**Production desktop (`bun run desktop:prod`):**
+
+1. Open **Settings** from the shelf (desktop only).
+2. Confirm the displayed library path; use **Choose folder…** to pick a directory.
+3. After the window reloads, create or open a book and confirm files appear under `<chosen>/books/<id>/`.
+
+Mobile library location is unchanged (app sandbox).
+
+`bun run validate:install` remains a **shell** toolchain check (tests + `build:ui` artifacts); it does not launch Electron or the Simulator. Use the steps above for library, manuscript, and library-location sign-off.
 
 If Electron fails to start (missing `path.txt`, *“failed to install correctly”*, or `Electron Framework.framework` not loaded), the `node_modules/electron/dist` bundle is probably incomplete. Fix it with:
 

@@ -31,6 +31,16 @@ export function installMobileBridge(): void {
         readManuscript: (id) => manuscriptService.readManuscript(id),
         writeManuscript: (id, text) =>
             manuscriptService.writeManuscript(id, text),
+        getLibraryRoot: async () => ({
+            path: MOBILE_LIBRARY_ROOT,
+            source: "user-data",
+        }),
+        chooseLibraryRoot: async () => {
+            throw Object.assign(
+                new Error("Choosing a library folder is not supported on mobile"),
+                { code: "LIBRARY_ROOT_NOT_SUPPORTED" },
+            );
+        },
     };
     window.janus = bridge;
 }

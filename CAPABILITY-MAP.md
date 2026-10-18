@@ -12,7 +12,9 @@ Build order (full Neo loop): shell → languages → manuscript → library, ai-
 
 **Library slice 1** (`docs/specs/SPEC-library.md`, approved): shelf CRUD only — **build after shell**, before `languages` and `manuscript`.
 
-**Manuscript slice 1** (`docs/specs/SPEC-manuscript.md`, approved): open book, edit `manuscript.md`, autosave — **build after library slice 1c**; does **not** wait on `languages`. Delivers library “open book” (slice 2 in `SPEC-library.md`).
+**Manuscript slice 1** (`docs/specs/SPEC-manuscript.md`, approved, shipped 2026-10-18): open book, edit `manuscript.md`, autosave — **build after library slice 1c**; does **not** wait on `languages`. Delivers library “open book” (slice 2 in `SPEC-library.md`).
+
+**Library root slice 1** (`docs/specs/SPEC-library-root.md`, approved 2026-10-18): dev repo-local `.janus-library/` (+ `JANUS_LIBRARY_ROOT`, one-time move from `userData/library`); desktop Settings folder picker + `janus-settings.json`; mobile unchanged.
 
 `library` (full) and `ai-assist` can be specified in parallel after `manuscript` slice 1.
 

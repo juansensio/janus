@@ -1,7 +1,15 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { app, BrowserWindow, ipcMain } from "electron";
+import { app, BrowserWindow, dialog, ipcMain } from "electron";
+import {
+    initDesktopLibraryContext,
+    type DesktopLibraryContext,
+} from "./desktop-library-context";
+import {
+    createElectronDirectoryPicker,
+    registerSettingsIpc,
+} from "./settings-ipc";
 import { registerLibraryIpc } from "./library-ipc";
 import { registerManuscriptIpc } from "./manuscript-ipc";
 import {
@@ -81,11 +89,7 @@ function createWindow(): void {
     }
 }
 
-function libraryRootPath(): string {
-    return path.join(app.getPath("userData"), "library");
-}
-
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
     const libraryFs = {
         mkdir: (p, options) => fs.mkdir(p, options),
         readdir: (p, options) =>
@@ -95,13 +99,37 @@ app.whenReady().then(() => {
         rm: (p, options) => fs.rm(p, options),
         stat: (p) => fs.stat(p),
         realpath: (p) => fs.realpath(p),
+        rename: (from, to) => fs.rename(from, to),
     };
-    const root = libraryRootPath();
+    const userDataPath = app.getPath("userData");
+    const rootFs = {
+        ...libraryFs,
+        readdir: (p: string) =>
+            fs.readdir(p).then((entries) => entries as string[]),
+    };
+    let libraryContext: DesktopLibraryContext = await initDesktopLibraryContext(
+        {
+            env: process.env,
+            userDataPath,
+            isDev: isJanusDevMode(),
+            fs: rootFs,
+        },
+    );
+    const root = libraryContext.resolved.path;
     registerLibraryIpc(ipcMain, root, libraryFs);
     registerManuscriptIpc(ipcMain, root, {
         ...libraryFs,
         rename: (from, to) => fs.rename(from, to),
     });
+    registerSettingsIpc(
+        ipcMain,
+        () => libraryContext,
+        {
+            userDataPath,
+            fs: rootFs,
+            showDirectoryPicker: createElectronDirectoryPicker(dialog),
+        },
+    );
 
     app.on("web-contents-created", (_event, contents) => {
         attachSecureNavigationPolicy(contents);

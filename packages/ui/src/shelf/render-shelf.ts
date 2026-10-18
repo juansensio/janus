@@ -47,13 +47,26 @@ function createEditIcon(): SVGSVGElement {
     return svg;
 }
 
-function appendShelfChrome(host: HTMLElement): void {
+function appendShelfChrome(
+    host: HTMLElement,
+    options: RenderShelfOptions,
+): void {
     const header = document.createElement("header");
     header.className = "shelf-header";
     const wordmark = document.createElement("h1");
     wordmark.className = "shelf-wordmark";
     wordmark.textContent = createShellLabel();
     header.append(wordmark);
+    if (options.onOpenSettings) {
+        const settingsButton = document.createElement("button");
+        settingsButton.type = "button";
+        settingsButton.className = "shelf-settings";
+        settingsButton.textContent = "Settings";
+        settingsButton.addEventListener("click", () => {
+            options.onOpenSettings?.();
+        });
+        header.append(settingsButton);
+    }
     host.append(header);
 }
 
@@ -120,6 +133,7 @@ async function refreshAfterAction(
 
 export type RenderShelfOptions = {
     onOpenBook?: (book: BookSummary) => void;
+    onOpenSettings?: () => void;
 };
 
 export async function renderShelf(
@@ -128,7 +142,7 @@ export async function renderShelf(
     options: RenderShelfOptions = {},
 ): Promise<void> {
     host.replaceChildren();
-    appendShelfChrome(host);
+    appendShelfChrome(host, options);
 
     let books: BookSummary[] = [];
     try {

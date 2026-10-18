@@ -16,6 +16,8 @@ const bridge: JanusBridge = {
     readManuscript: (id: string) => invoke("janus:manuscript:readManuscript", id),
     writeManuscript: (id: string, text: string) =>
         invoke("janus:manuscript:writeManuscript", id, text),
+    getLibraryRoot: () => invoke("janus:settings:getLibraryRoot"),
+    chooseLibraryRoot: () => invoke("janus:settings:chooseLibraryRoot"),
 };
 
 contextBridge.exposeInMainWorld("janus", bridge);

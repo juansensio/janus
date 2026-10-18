@@ -18,13 +18,32 @@ export type BookSummary = {
  * (for example `BOOK_NOT_FOUND`). Callers and tests should read `code`, not
  * message text.
  */
+export type LibraryRootSource =
+    | "env"
+    | "dev-default"
+    | "settings"
+    | "user-data";
+
+export type LibraryRootInfo = {
+    path: string;
+    source: LibraryRootSource;
+};
+
+export type ChooseLibraryRootResult = {
+    path: string;
+    needsReload: true;
+};
+
 export type JanusBridgeErrorCode =
     | "BOOK_NOT_FOUND"
     | "INVALID_BOOK_ID"
     | "INVALID_BOOK_TITLE"
     | "DUPLICATE_BOOK_TITLE"
     | "MANUSCRIPT_READ_FAILED"
-    | "MANUSCRIPT_WRITE_FAILED";
+    | "MANUSCRIPT_WRITE_FAILED"
+    | "INVALID_LIBRARY_ROOT"
+    | "LIBRARY_ROOT_CANCELLED"
+    | "LIBRARY_ROOT_NOT_SUPPORTED";
 
 export interface JanusBridge {
     platform(): Platform;
@@ -35,6 +54,8 @@ export interface JanusBridge {
     deleteBook(id: string): Promise<void>;
     readManuscript(id: string): Promise<string>;
     writeManuscript(id: string, text: string): Promise<void>;
+    getLibraryRoot(): Promise<LibraryRootInfo>;
+    chooseLibraryRoot(): Promise<ChooseLibraryRootResult>;
 }
 
 export function createShellLabel(): string {
@@ -74,6 +95,14 @@ export function createMockJanusBridge(
         writeManuscript: async (id, text) => {
             manuscripts.set(id, text);
         },
+        getLibraryRoot: async () => ({
+            path: "/tmp/janus-mock-library",
+            source: "user-data",
+        }),
+        chooseLibraryRoot: async () => ({
+            path: "/tmp/janus-mock-library",
+            needsReload: true,
+        }),
         ...overrides,
     };
 }

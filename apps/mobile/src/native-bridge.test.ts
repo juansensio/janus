@@ -49,4 +49,11 @@ describe("installMobileBridge", () => {
         expect(typeof window.janus?.readManuscript).toBe("function");
         expect(typeof window.janus?.writeManuscript).toBe("function");
     });
+
+    it("rejects chooseLibraryRoot on mobile", async () => {
+        installMobileBridge();
+        await expect(window.janus?.chooseLibraryRoot()).rejects.toMatchObject({
+            code: "LIBRARY_ROOT_NOT_SUPPORTED",
+        });
+    });
 });
