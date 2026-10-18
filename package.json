@@ -12,11 +12,13 @@
         "dev:ios": "bun scripts/dev-ios.ts",
         "dev:desktop": "bun scripts/dev-desktop.ts",
         "desktop:prod": "bun run build:ui && bun run --filter @janus/desktop start",
+        "desktop:package": "bun run build:ui && bun run --filter @janus/desktop build && bun run --filter @janus/desktop package",
         "test": "vitest run",
         "lint": "oxlint .",
         "cap:sync:ios": "bun run build:ui && bun apps/mobile/scripts/prepare-cap-web.ts && bun run --filter @janus/mobile cap:sync",
         "cap:open:ios": "bun run --filter @janus/mobile cap:open",
         "validate:install": "bun scripts/validate-install.ts",
+        "validate:desktop-release": "bun scripts/validate-desktop-release.ts",
         "ensure:electron": "bun scripts/ensure-electron.ts",
         "ensure:esbuild": "bun scripts/ensure-esbuild.ts",
         "postinstall": "bun scripts/ensure-esbuild.ts"

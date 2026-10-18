@@ -1,6 +1,6 @@
 # Implementation Plan: desktop-release (macOS GitHub CI)
 
-**Status:** Active (2026-10-18). Tasks: `tasks/todo.md`.
+**Status:** Implemented 2026-10-18 (local package + CI config). First `v*` tag push pending maintainer. Tasks: `tasks/todo.md`.
 
 **Source specs:**
 

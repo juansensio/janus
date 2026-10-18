@@ -1,0 +1,57 @@
+# macOS desktop release — runs only on version tags (v*).
+# See docs/specs/SPEC-desktop-release.md
+name: Desktop release (macOS)
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release-macos:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Verify tag matches desktop package version
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          PKG="$(node -p "require('./apps/desktop/package.json').version")"
+          if [ "$TAG" != "$PKG" ]; then
+            echo "Tag version ($TAG) must match apps/desktop/package.json ($PKG)"
+            exit 1
+          fi
+
+      - name: Test
+        run: bun run test
+
+      - name: Build UI and desktop
+        run: |
+          bun run build:ui
+          bun run --filter @janus/desktop build
+
+      - name: Package macOS app
+        run: bun run --filter @janus/desktop package
+
+      - name: Validate packaged bundle
+        run: bun run validate:desktop-release
+
+      - name: Upload to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: |
+            apps/desktop/release/Janus-*-arm64-mac.zip
+            apps/desktop/release/Janus-*-arm64.dmg

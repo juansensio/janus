@@ -130,6 +130,21 @@ bun run cap:open:ios
 
 In Xcode, select an iPhone or iPad simulator and click **Run**. Confirm **Janus** appears with `data-platform="mobile"`.
 
+### Install from GitHub Release (macOS, Apple Silicon)
+
+Use this when you want Janus **without** cloning the repo or installing Bun.
+
+1. Open the repository **Releases** page on GitHub and pick a tag (for example `v0.1.0`).
+2. Download **`Janus-*-arm64-mac.zip`** or the **`.dmg`** (arm64 / Apple Silicon only in v1).
+3. **Zip:** unzip, then drag **Janus.app** into **Applications**.
+4. **First launch (unsigned build):** macOS may block the app. Either right-click **Janus** → **Open**, or remove quarantine:
+   ```bash
+   xattr -cr /Applications/Janus.app
+   ```
+5. Confirm the shelf appears (`data-platform="desktop"` on `<main id="app">`). Books live under **Application Support** (or a folder you choose in **Settings**), not in the repo.
+
+Maintainers: run `/release verify` (or `bun run validate:desktop-release` after `bun run desktop:package`) before pushing a `v*` tag.
+
 ### Automated install check
 
 ```bash

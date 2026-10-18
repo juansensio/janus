@@ -23,7 +23,7 @@ Build order (full Neo loop): shell → languages → manuscript → library, ai-
 
 **Languages slice 1** (`docs/specs/SPEC-languages.md`, approved 2026-10-18): interface locale (`en`/`es`), catalogs, Settings language picker (desktop + mobile); persists `uiLocale` in `janus-settings.json`. Does **not** wait on `ai-assist`. Per-book writing language is a later slice.
 
-**Desktop release v1** (`docs/specs/SPEC-desktop-release.md`, draft 2026-10-18): push tag `v*` → macOS workflow → GitHub Release with downloadable Electron app; unsigned; no Windows, iOS, or auto-update. Agent workflow spec: `docs/specs/SPEC-desktop-release-command.md` (`/release` verify/setup — command files not added until implementation).
+**Desktop release v1** (`docs/specs/SPEC-desktop-release.md`, approved 2026-10-18): push tag `v*` → macOS workflow → GitHub Release with downloadable Electron app; unsigned; no Windows, iOS, or auto-update. Agent workflow spec: `docs/specs/SPEC-desktop-release-command.md` (`/release` verify/setup — command files not added until implementation).
 
 `library` (full) and `ai-assist` can be specified in parallel after `manuscript` slice 1.
 

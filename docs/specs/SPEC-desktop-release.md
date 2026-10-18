@@ -1,6 +1,6 @@
 # Spec: desktop-release
 
-> Status: **draft** (2026-10-18). **GitHub Actions macOS desktop artifacts on git tag.** Depends on shipped **shell** and current desktop feature set. Does **not** include Windows, Linux, Capacitor/iOS, or in-app auto-update.  
+> Status: **approved** (2026-10-18). **GitHub Actions macOS desktop artifacts on git tag.** Depends on shipped **shell** and current desktop feature set. Does **not** include Windows, Linux, Capacitor/iOS, or in-app auto-update.  
 > **Agent workflow (spec only):** [`SPEC-desktop-release-command.md`](SPEC-desktop-release-command.md) defines future `/release` command + `janus-desktop-release` skill to implement, verify locally, and optionally confirm CI/Release after a tag — not created until post-approval implementation.
 
 Indexed from [`CAPABILITY-MAP.md`](../../CAPABILITY-MAP.md). This is **delivery infrastructure** for `apps/desktop`; it does not add product features.

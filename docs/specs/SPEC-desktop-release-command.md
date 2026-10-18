@@ -1,6 +1,6 @@
 # Spec: Janus desktop release command (`/release`)
 
-> Status: **draft** (2026-10-18) — spec phase only; **do not** add `.cursor/commands/release.md` or `.cursor/skills/janus-desktop-release/` until this spec is approved and implementation starts.  
+> Status: **approved** (2026-10-18).  
 > **Not a CAPABILITY-MAP module.** Agent/dev workflow (future command + skill). Product delivery rules live in [`SPEC-desktop-release.md`](SPEC-desktop-release.md).
 
 ## Assumptions
