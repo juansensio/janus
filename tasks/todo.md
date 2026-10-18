@@ -264,4 +264,176 @@ Sizing: **S** = 1–2 files, **M** = 3–5 files. No task should exceed ~5 files
 - [x] Tasks 1–11 acceptance criteria met
 - [x] `bun run validate:install` passes
 - [ ] Simulator manual gate executed once per install doc
-- [x] Ready for `/build` on next capability (`languages` after spec approval)
+- [ ] `/ship` GO on shell (blocked until Tasks 13–14; see `tasks/plan.md` ship-fixes)
+- [ ] Ready for `/build` on next capability (`languages` after spec approval + ship-fixes)
+
+---
+
+# Shell ship-fixes (`/ship` blockers)
+
+Plan: `tasks/plan.md` § Shell ship-fixes. Do **not** start `languages` until Checkpoint “Minimum ship GO” is done.
+
+---
+
+## Task 13: Vite relative `base` for Electron `file://`
+
+**Description:** Set Vite `base: './'` in `packages/ui/vite.config.ts` so production `index.html` references `./assets/…` instead of `/assets/…`. Rebuild `dist/ui`. This fixes empty `#app` when Electron uses `loadFile` on the built HTML.
+
+**Acceptance criteria:**
+- [x] Built `dist/ui/index.html` script `src` is relative (e.g. `./assets/index-*.js`), not root-absolute `/assets/…`
+- [x] `bun run build:ui` succeeds unchanged for Capacitor `webDir`
+- [x] No business logic added to UI beyond build config
+
+**Verification:**
+- [x] `bun run build:ui` then inspect `dist/ui/index.html`
+- [x] Manual check: `bun run dev:desktop` — **Janus** visible in `#app`, `data-platform="desktop"`
+
+**Dependencies:** Shell Tasks 1–11 (complete)
+
+**Files likely touched:** `packages/ui/vite.config.ts`
+
+**Estimated scope:** S
+
+---
+
+## Task 14: `validate:install` asset-path regression guard
+
+**Description:** Extend `scripts/validate-install.ts` to fail if built `index.html` contains absolute asset URLs (e.g. `src="/assets/`). Optionally assert at least one built JS file under `dist/ui/assets/` contains the shell label text `Janus` (proves bundle includes mount path).
+
+**Acceptance criteria:**
+- [ ] `validate:install` exits non-zero when `index.html` uses `/assets/` paths (regression test via fixture or documented manual negative check once)
+- [ ] `validate:install` passes on a clean tree after Task 13
+- [ ] Error messages name the failing check clearly
+
+**Verification:**
+- [ ] `bun run validate:install`
+- [ ] `bun run test` (unchanged green)
+
+**Dependencies:** Task 13
+
+**Files likely touched:** `scripts/validate-install.ts` (optional small helper + unit test colocated if extracted)
+
+**Estimated scope:** S
+
+---
+
+## Checkpoint: Minimum ship GO (after Tasks 13–14)
+
+- [ ] `bun run validate:install` passes with new guards
+- [ ] Manual desktop: Janus in `#app`
+- [ ] Manual Simulator: `cap:sync:ios` + Run — Janus still visible (`data-platform="mobile"`)
+
+---
+
+## Task 15: UI bootstrap fail-fast (no silent wrong bridge)
+
+**Description:** Harden `packages/ui/src/main.ts`: after any bridge setup, throw a clear error if `window.janus` is missing. Do **not** fall back to mobile `installMobileBridge` when running under Electron (preload is the only desktop source). Add `.catch()` on `start()` so renderer failures are visible.
+
+**Acceptance criteria:**
+- [ ] Missing `#app` still throws `Missing #app`
+- [ ] Missing `window.janus` on desktop path throws explicit error (not obscure `platform()` on undefined)
+- [ ] Capacitor/mobile path still mounts with `data-platform="mobile"` after Task 16 (or interim mobile install until 16 lands)
+
+**Verification:**
+- [ ] `bun run test`
+- [ ] Manual desktop + Simulator smoke after Task 13
+
+**Dependencies:** Task 13
+
+**Files likely touched:** `packages/ui/src/main.ts`
+
+**Estimated scope:** S
+
+---
+
+## Task 16: Decouple `packages/ui` from `apps/mobile`
+
+**Description:** Remove `@janus/mobile` Vite alias and dynamic import from `packages/ui`. Mobile shell sets `window.janus` before loading the shared bundle (e.g. `apps/mobile` entry that calls `installMobileBridge()` then imports shared `main`, or Vite multi-page `index` + `mobile.html`). Desktop build must not emit unused `native-bridge` chunk if avoidable.
+
+**Acceptance criteria:**
+- [ ] `packages/ui` depends only on `@janus/bridge` (no import path into `apps/mobile`)
+- [ ] `packages/ui/vite.config.ts` has no `apps/mobile` alias
+- [ ] Simulator still shows Janus with `data-platform="mobile"`
+- [ ] Desktop still shows Janus with `data-platform="desktop"`
+
+**Verification:**
+- [ ] `bun run build:ui`
+- [ ] `bun run validate:install`
+- [ ] Manual: `dev:desktop` and Simulator
+
+**Dependencies:** Task 13 (same `dist/ui` output); coordinate with Task 15
+
+**Files likely touched:** `packages/ui/vite.config.ts`, `packages/ui/src/main.ts`, `apps/mobile/src/` (entry), possibly `packages/ui/index.html` or mobile-specific HTML stub
+
+**Estimated scope:** M
+
+---
+
+## Task 17: Electron main security hardening
+
+**Description:** In `apps/desktop/src/main.ts`, set explicit secure `webPreferences` (`nodeIntegration: false`, `sandbox: true`, `webSecurity: true`). Add `webContents.setWindowOpenHandler` and navigation handlers to deny opening or navigating to unexpected `http(s):` URLs (allow `file:` / loaded bundle only).
+
+**Acceptance criteria:**
+- [ ] `contextIsolation: true` unchanged; preload still sole bridge exposure
+- [ ] Popups and top-level navigation to arbitrary http(s) URLs denied (or opened via validated `shell.openExternal` if you add external link support later)
+- [ ] `bun run dev:desktop` still loads Janus after Tasks 13–16
+
+**Verification:**
+- [ ] `bun run test`
+- [ ] Manual: desktop window still works
+
+**Dependencies:** Task 13 (working UI load)
+
+**Files likely touched:** `apps/desktop/src/main.ts`
+
+**Estimated scope:** S
+
+---
+
+## Task 18: Bootstrap, bridge, and mount unit tests
+
+**Description:** Add Vitest coverage: `apps/mobile/src/native-bridge.test.ts` (`installMobileBridge` → `platform()` mobile); `packages/ui/src/main.test.ts` (happy path with mock `window.janus`, missing `#app`); optional mount re-mount test (second `mountJanusShell` clears prior children). Extract minimal test hooks if needed without pulling Electron into unit tests.
+
+**Acceptance criteria:**
+- [ ] At least one test fails if `native-bridge` returns wrong platform
+- [ ] At least one test covers `main.ts` missing `#app` error path
+- [ ] No Electron in unit test suite (happy-dom only)
+
+**Verification:**
+- [ ] `bun run test`
+- [ ] `bun run lint`
+
+**Dependencies:** Tasks 15–16 (stable bootstrap behavior)
+
+**Files likely touched:** `packages/ui/src/main.test.ts`, `apps/mobile/src/native-bridge.test.ts`, `packages/ui/src/mount.test.ts` (extend)
+
+**Estimated scope:** S–M
+
+---
+
+## Task 19 (optional): Desktop smoke test
+
+**Description:** Wire `bun run test:smoke:desktop` (Playwright Electron or headless load of `dist/ui` with injected bridge) asserting `#app` contains **Janus** and `data-platform="desktop"`. Update `docs/install-macos.md` if implemented. Skip if dependency cost is too high — document skip.
+
+**Acceptance criteria:**
+- [ ] Script exists and passes locally after Task 13, or install doc states skipped with reason
+
+**Verification:**
+- [ ] `bun run test:smoke:desktop` when implemented
+- [ ] `bun run validate:install`
+
+**Dependencies:** Tasks 13, 14
+
+**Files likely touched:** `package.json`, `tests/smoke/desktop.spec.ts` (or similar)
+
+**Estimated scope:** S
+
+---
+
+## Checkpoint: Ship-fixes complete
+
+- [ ] Tasks 13–14 checkpoint passed (`/ship` minimum GO)
+- [ ] Tasks 15–18 acceptance criteria met (or 16/17 explicitly deferred with user approval)
+- [ ] `bun run validate:install` and `bun run test` green
+- [ ] Re-run `/ship` — no Critical blockers
+- [ ] Then: manual Simulator gate + `languages` spec approval before next module `/build`
