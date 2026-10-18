@@ -1,24 +1,12 @@
-import type { JanusBridge } from "@janus/bridge";
-import { mountJanusShell } from "./mount";
+import { startShell } from "./bootstrap";
 
-declare global {
-    interface Window {
-        janus?: JanusBridge;
-    }
+async function installMobileBridgeFromApp(): Promise<void> {
+    const { installMobileBridge } = await import("@janus/mobile/native-bridge");
+    installMobileBridge();
 }
 
-async function start(): Promise<void> {
-    if (!window.janus) {
-        const { installMobileBridge } = await import("@janus/mobile/native-bridge");
-        installMobileBridge();
-    }
-
-    const root = document.getElementById("app");
-    if (!root) {
-        throw new Error("Missing #app");
-    }
-
-    mountJanusShell(root, window.janus!);
-}
-
-start();
+void startShell({ installMobileBridge: installMobileBridgeFromApp }).catch(
+    (err) => {
+        console.error("[Janus shell]", err);
+    },
+);

@@ -330,8 +330,8 @@ Plan: `tasks/plan.md` § Shell ship-fixes. Do **not** start `languages` until Ch
 **Description:** Harden `packages/ui/src/main.ts`: after any bridge setup, throw a clear error if `window.janus` is missing. Do **not** fall back to mobile `installMobileBridge` when running under Electron (preload is the only desktop source). Add `.catch()` on `start()` so renderer failures are visible.
 
 **Acceptance criteria:**
-- [ ] Missing `#app` still throws `Missing #app`
-- [ ] Missing `window.janus` on desktop path throws explicit error (not obscure `platform()` on undefined)
+- [x] Missing `#app` still throws `Missing #app`
+- [x] Missing `window.janus` on desktop path throws explicit error (not obscure `platform()` on undefined)
 - [ ] Capacitor/mobile path still mounts with `data-platform="mobile"` after Task 16 (or interim mobile install until 16 lands)
 
 **Verification:**
