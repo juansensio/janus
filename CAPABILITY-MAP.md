@@ -16,6 +16,8 @@ Build order (full Neo loop): shell → languages → manuscript → library, ai-
 
 **Module specs** live in `docs/specs/SPEC-<module-id>.md` (for example `docs/specs/SPEC-shell.md`). This map is the index; do not add module specs at the repo root.
 
+**Layering** (`services/`, `packages/bridge`, `packages/ui`, `apps/*`): [`docs/architecture.md`](docs/architecture.md).
+
 ## Decisions recorded with this map
 
 - **Bun** for install, scripts, and workspaces; lockfile `bun.lock` is committed.

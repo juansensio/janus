@@ -102,4 +102,62 @@ describe("renderShelf", () => {
             SHELF_STRINGS.deleteConfirm("Draft"),
         );
     });
+
+    it("does not delete when confirm is cancelled", async () => {
+        const book: BookSummary = {
+            id: "550e8400-e29b-41d4-a716-446655440000",
+            title: "Draft",
+            createdAt: "2026-01-01T00:00:00.000Z",
+        };
+        const deleteBook = vi.fn(async () => {});
+        const bridge = createMockJanusBridge({
+            listBooks: async () => [book],
+            deleteBook,
+        });
+        vi.spyOn(window, "confirm").mockReturnValue(false);
+        const host = document.createElement("div");
+
+        await renderShelf(host, bridge);
+        const deleteButton = host.querySelector(
+            ".shelf-card button",
+        ) as HTMLButtonElement;
+        deleteButton.click();
+
+        expect(deleteBook).not.toHaveBeenCalled();
+        expect(host.querySelectorAll(".shelf-card")).toHaveLength(1);
+    });
+
+    it("shows load error when listBooks fails", async () => {
+        const host = document.createElement("div");
+        const bridge = createMockJanusBridge({
+            listBooks: async () => {
+                throw new Error("fail");
+            },
+        });
+
+        await renderShelf(host, bridge);
+
+        expect(host.querySelector(".shelf-error")?.textContent).toBe(
+            SHELF_STRINGS.loadFailed,
+        );
+        expect(host.querySelectorAll(".shelf-card")).toHaveLength(0);
+    });
+
+    it("shows create error when createBook fails", async () => {
+        const host = document.createElement("div");
+        const bridge = createMockJanusBridge({
+            listBooks: async () => [],
+            createBook: async () => {
+                throw new Error("fail");
+            },
+        });
+
+        await renderShelf(host, bridge);
+        host.querySelector("button")?.click();
+        await vi.waitFor(() =>
+            expect(host.querySelector(".shelf-error")?.textContent).toBe(
+                SHELF_STRINGS.createFailed,
+            ),
+        );
+    });
 });

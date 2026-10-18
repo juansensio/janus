@@ -1,6 +1,29 @@
 import type { BookSummary, JanusBridge } from "@janus/bridge";
 import { SHELF_STRINGS } from "./strings";
 
+function appendShelfError(host: HTMLElement, message: string): void {
+    host.querySelector(".shelf-error")?.remove();
+    const error = document.createElement("p");
+    error.className = "shelf-error";
+    error.textContent = message;
+    host.append(error);
+}
+
+async function refreshAfterAction(
+    host: HTMLElement,
+    bridge: JanusBridge,
+    action: () => Promise<unknown>,
+    failureMessage: string,
+): Promise<void> {
+    try {
+        await action();
+        await renderShelf(host, bridge);
+    } catch {
+        await renderShelf(host, bridge);
+        appendShelfError(host, failureMessage);
+    }
+}
+
 export async function renderShelf(
     host: HTMLElement,
     bridge: JanusBridge,
@@ -12,7 +35,12 @@ export async function renderShelf(
     newButton.type = "button";
     newButton.textContent = SHELF_STRINGS.newBook;
     newButton.addEventListener("click", () => {
-        void bridge.createBook().then(() => renderShelf(host, bridge));
+        void refreshAfterAction(
+            host,
+            bridge,
+            () => bridge.createBook(),
+            SHELF_STRINGS.createFailed,
+        );
     });
     toolbar.append(newButton);
     host.append(toolbar);
@@ -27,7 +55,8 @@ export async function renderShelf(
         books = await bridge.listBooks();
     } catch {
         const error = document.createElement("p");
-        error.textContent = "Could not load books.";
+        error.className = "shelf-error";
+        error.textContent = SHELF_STRINGS.loadFailed;
         host.append(error);
         return;
     }
@@ -64,8 +93,11 @@ export async function renderShelf(
             if (!confirmed) {
                 return;
             }
-            void bridge.deleteBook(book.id).then(() =>
-                renderShelf(host, bridge),
+            void refreshAfterAction(
+                host,
+                bridge,
+                () => bridge.deleteBook(book.id),
+                SHELF_STRINGS.deleteFailed,
             );
         });
         card.append(deleteButton);

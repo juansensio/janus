@@ -93,6 +93,7 @@ app.whenReady().then(() => {
         writeFile: (p, data, encoding) => fs.writeFile(p, data, encoding),
         rm: (p, options) => fs.rm(p, options),
         stat: (p) => fs.stat(p),
+        realpath: (p) => fs.realpath(p),
     });
 
     app.on("web-contents-created", (_event, contents) => {

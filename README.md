@@ -2,6 +2,8 @@
 
 **macOS toolchain:** [docs/install-macos.md](docs/install-macos.md) (clone → install → desktop → iOS Simulator).
 
+**Architecture:** [docs/architecture.md](docs/architecture.md) (services, bridge, shared UI, shells).
+
 `Janus` es una herramienta de escritura creativa con asistencia por IA.
 
 Inspirada en otras herramientas como https://hughhowey.com/neo/, añade funcionalidades como:

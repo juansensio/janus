@@ -12,14 +12,16 @@ Sizing: **S** = 1–2 files, **M** = 3–5 files.
 
 ## Task 1: `@janus/library` domain package
 
-**Description:** Add `services/library/` workspace package (`@janus/library`): `titles.ts` (`allocateUntitledTitle`), `book-manifest.ts` (`parseManifest`, `serializeManifest`, version 1 schema), `index.ts` (`sortBooksForShelf`, `validateBookId`, `libraryBooksDir`, public types). Root `package.json` workspaces include `services/*`. Vitest discovers `services/**/*.test.ts`. Colocated `library.test.ts` covers title allocation, sort tie-break (`createdAt` then `id`), manifest errors, id validation (`..`, slashes).
+**Description:** Add `services/library/` workspace package (`@janus/library`): `titles.ts` (`allocateUntitledTitle`), `book-manifest.ts` (`parseManifest`, `serializeManifest`, version 1 schema), `index.ts` (`sortBooksForShelf`, `validateBookId`, `libraryBooksDir`, public types). Root `package.json` workspaces include `services/`*. Vitest discovers `services/**/*.test.ts`. Colocated `library.test.ts` covers title allocation, sort tie-break (`createdAt` then `id`), manifest errors, id validation (`..`, slashes).
 
 **Acceptance criteria:**
+
 - [x] No Electron, Capacitor, DOM, or `fs` imports in `services/library/`
 - [x] Unit tests cover corrupt manifest parse failures and skip-policy helpers if extracted
 - [x] `bun run test` passes
 
 **Verification:**
+
 - [x] `bun run test`
 - [x] `bun run lint`
 
@@ -36,10 +38,12 @@ Sizing: **S** = 1–2 files, **M** = 3–5 files.
 **Description:** Add `BookSummary` type and async `listBooks()`, `createBook()`, `deleteBook(id: string)` to `@janus/bridge` `JanusBridge`. Document error `code` convention. Update all Vitest mocks with minimal async stubs so the suite stays green.
 
 **Acceptance criteria:**
+
 - [x] UI and shells import types from `@janus/bridge` only (not from `services/library` in `packages/ui`)
 - [x] `bun run test` and `bun run lint` pass
 
 **Verification:**
+
 - [x] `bun run test`
 - [x] `bun run lint`
 
@@ -56,11 +60,13 @@ Sizing: **S** = 1–2 files, **M** = 3–5 files.
 **Description:** Implement library bridge methods on desktop: `libraryRoot` under `app.getPath("userData")`, use `@janus/library` for manifests, titles, paths, sort. `ipcMain.handle` + preload `invoke` wrappers on `window.janus`. `listBooks` skips corrupt entries; `deleteBook` throws `BOOK_NOT_FOUND` when missing; `createBook` writes UUID dir + `book.json`. Vitest for pure helpers and error mapping.
 
 **Acceptance criteria:**
+
 - [x] Preload uses `contextBridge`; no Node `fs` in preload
 - [x] create/list/delete round-trip on temp dir via tests
 - [x] `bun run dev:desktop` and `desktop:prod` still open without bridge errors
 
 **Verification:**
+
 - [x] `bun run test`
 - [x] `bun run lint`
 
@@ -77,11 +83,13 @@ Sizing: **S** = 1–2 files, **M** = 3–5 files.
 **Description:** Add pinned `@capacitor/filesystem` to `apps/mobile`. Implement `listBooks`, `createBook`, `deleteBook` on mobile `JanusBridge` using app data directory and domain manifest helpers. Extend `native-bridge.test.ts`.
 
 **Acceptance criteria:**
+
 - [x] Mobile bridge methods match desktop semantics
 - [x] Default `capacitor.config.ts` has no permanent dev `server.url`
 - [x] `bun run test` green
 
 **Verification:**
+
 - [x] `bun run test`
 - [ ] Manual Simulator after Task 5
 
@@ -98,18 +106,20 @@ Sizing: **S** = 1–2 files, **M** = 3–5 files.
 **Description:** Add `packages/ui/src/shelf/`: empty state, **New book**, card grid with title + delete; `window.confirm` with spec English strings; bridge list/create/delete; `data-platform` on `#app`. Wire mount/bootstrap to shelf. Vitest with mocked bridge.
 
 **Acceptance criteria:**
+
 - [x] No title/sort/manifest logic in UI beyond display and confirm copy
 - [x] Cards are not navigation links (slice 1)
 - [x] `bun run build:ui` succeeds; shelf visible in `dev:desktop` and `desktop:prod`
 
 **Verification:**
+
 - [x] `bun run test`
 - [x] `bun run lint`
-- [ ] Manual: create/delete; quit and reopen — persistence
+- [x] Manual: create/delete; quit and reopen — persistence
 
 **Dependencies:** Tasks 2, 3, 4
 
-**Files likely touched:** `packages/ui/src/mount.ts`, `packages/ui/src/shelf/*`, `packages/ui/src/shelf.test.ts`, `packages/ui/src/bootstrap.ts`, `packages/ui/src/main.test.ts`
+**Files likely touched:** `packages/ui/src/mount.ts`, `packages/ui/src/shelf/`*, `packages/ui/src/shelf.test.ts`, `packages/ui/src/bootstrap.ts`, `packages/ui/src/main.test.ts`
 
 **Estimated scope:** M
 
@@ -120,10 +130,12 @@ Sizing: **S** = 1–2 files, **M** = 3–5 files.
 **Description:** Add **Library (slice 1)** subsection to `docs/install-macos.md`: empty shelf, New book, Untitled titles, delete confirm, restart persistence on desktop and Simulator. Note `validate:install` remains shell-only.
 
 **Acceptance criteria:**
+
 - [x] Contributor can verify library without reading `tasks/plan.md`
 - [x] English UI strings match spec table
 
 **Verification:**
+
 - [x] Manual read-through
 
 **Dependencies:** Task 5
@@ -139,9 +151,11 @@ Sizing: **S** = 1–2 files, **M** = 3–5 files.
 **Description:** Vitest (Node, temp dir): create → list → delete one book; assert on-disk layout and sorted list. Skip with documented reason if too costly.
 
 **Acceptance criteria:**
+
 - [x] Test passes locally or skip documented
 
 **Verification:**
+
 - [x] `bun run test`
 
 **Dependencies:** Task 3
@@ -157,12 +171,14 @@ Sizing: **S** = 1–2 files, **M** = 3–5 files.
 **Description:** Run install doc library checks on desktop and Simulator. Confirm `bun run validate:install` passes. Mark checkpoints in `tasks/plan.md`.
 
 **Acceptance criteria:**
-- [ ] Persistence across restart verified
-- [ ] `bun run test` and `bun run lint` green
+
+- [x] Persistence across restart verified
+- [x] `bun run test` and `bun run lint` green
 
 **Verification:**
-- [ ] Manual desktop + Simulator
-- [ ] `bun run validate:install`
+
+- [x] Manual desktop + Simulator
+- [x] `bun run validate:install`
 
 **Dependencies:** Tasks 5, 6 (7 optional)
 
@@ -182,5 +198,5 @@ Sizing: **S** = 1–2 files, **M** = 3–5 files.
 
 ## Checkpoint: Complete (after Tasks 5–8)
 
-- [ ] Shelf CRUD on desktop and Simulator; install doc updated
+- [x] Shelf CRUD on desktop and Simulator; install doc updated
 - [ ] Ready for `languages` when `SPEC-languages.md` is approved; open book blocked on `manuscript`

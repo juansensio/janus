@@ -12,5 +12,13 @@ export function isSkippableListError(error: unknown): boolean {
     ) {
         return true;
     }
+    if (
+        error !== null &&
+        typeof error === "object" &&
+        "code" in error &&
+        (error as { code: unknown }).code === "ENOENT"
+    ) {
+        return true;
+    }
     return false;
 }

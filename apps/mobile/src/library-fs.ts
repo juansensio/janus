@@ -80,5 +80,8 @@ export function createCapacitorShelfFs(): ShelfFs {
                 isDirectory: () => result.type === "directory",
             };
         },
+        async realpath(path) {
+            return path;
+        },
     };
 }

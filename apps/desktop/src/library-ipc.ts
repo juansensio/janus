@@ -9,6 +9,14 @@ export const LIBRARY_IPC_CHANNELS = {
     deleteBook: "janus:library:deleteBook",
 } as const;
 
+function rejectForBridge(error: unknown): Error {
+    const mapped =
+        error instanceof ShelfServiceError
+            ? { message: error.message, code: error.code }
+            : toBridgeRejectValue(error);
+    return Object.assign(new Error(mapped.message), { code: mapped.code });
+}
+
 export function registerLibraryIpc(
     ipcMain: IpcMain,
     libraryRoot: string,
@@ -20,9 +28,7 @@ export function registerLibraryIpc(
         try {
             return await service.listBooks();
         } catch (error) {
-            throw Object.assign(new Error(toBridgeRejectValue(error).message), {
-                code: toBridgeRejectValue(error).code,
-            });
+            throw rejectForBridge(error);
         }
     });
 
@@ -30,24 +36,23 @@ export function registerLibraryIpc(
         try {
             return await service.createBook();
         } catch (error) {
-            throw Object.assign(new Error(toBridgeRejectValue(error).message), {
-                code: toBridgeRejectValue(error).code,
-            });
+            throw rejectForBridge(error);
         }
     });
 
-    ipcMain.handle(LIBRARY_IPC_CHANNELS.deleteBook, async (_event, id: string) => {
-        try {
-            await service.deleteBook(id);
-        } catch (error) {
-            if (error instanceof ShelfServiceError) {
-                throw Object.assign(new Error(error.message), {
-                    code: error.code,
-                });
+    ipcMain.handle(
+        LIBRARY_IPC_CHANNELS.deleteBook,
+        async (_event, id: unknown) => {
+            if (typeof id !== "string") {
+                throw rejectForBridge(
+                    new ShelfServiceError("INVALID_BOOK_ID", "Invalid book id"),
+                );
             }
-            throw Object.assign(new Error(toBridgeRejectValue(error).message), {
-                code: toBridgeRejectValue(error).code,
-            });
-        }
-    });
+            try {
+                await service.deleteBook(id);
+            } catch (error) {
+                throw rejectForBridge(error);
+            }
+        },
+    );
 }

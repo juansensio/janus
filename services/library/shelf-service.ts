@@ -6,6 +6,7 @@ import {
 } from "./book-manifest";
 import { allocateUntitledTitle } from "./titles";
 import { validateBookId } from "./validate-book-id";
+import { isResolvedPathInsideRoot } from "./path-containment";
 import { libraryBooksDir, sortBooksForShelf } from "./shelf-utils";
 import { isSkippableListError } from "./list-errors";
 
@@ -24,6 +25,7 @@ export type ShelfFs = {
     writeFile(path: string, data: string, encoding: "utf8"): Promise<void>;
     rm(path: string, options?: { recursive?: boolean }): Promise<void>;
     stat(path: string): Promise<{ isDirectory(): boolean }>;
+    realpath(path: string): Promise<string>;
     join(...parts: string[]): string;
 };
 
@@ -96,9 +98,12 @@ export function createShelfService(
             for (const entry of entries) {
                 const name =
                     typeof entry === "string" ? entry : entry.name;
+                if (!validateBookId(name)) {
+                    continue;
+                }
                 const isDir =
                     typeof entry === "string"
-                        ? (await fs.stat(fs.join(booksDir, entry))).isDirectory()
+                        ? (await fs.stat(fs.join(booksDir, name))).isDirectory()
                         : entry.isDirectory();
                 if (!isDir) {
                     continue;
@@ -152,6 +157,16 @@ export function createShelfService(
                 if (error instanceof ShelfServiceError) {
                     throw error;
                 }
+                throw new ShelfServiceError(
+                    "BOOK_NOT_FOUND",
+                    "Book not found",
+                );
+            }
+            const [resolvedDir, resolvedBooksDir] = await Promise.all([
+                fs.realpath(dir),
+                fs.realpath(booksDir),
+            ]);
+            if (!isResolvedPathInsideRoot(resolvedDir, resolvedBooksDir)) {
                 throw new ShelfServiceError(
                     "BOOK_NOT_FOUND",
                     "Book not found",

@@ -10,6 +10,7 @@ import {
     validateBookId,
     type BookSummary,
 } from "./index";
+import { isResolvedPathInsideRoot } from "./path-containment";
 
 describe("allocateUntitledTitle", () => {
     it('returns "Untitled" when no titles exist', () => {
@@ -55,6 +56,12 @@ describe("validateBookId", () => {
         expect(validateBookId("../etc")).toBe(false);
         expect(validateBookId("a/b")).toBe(false);
         expect(validateBookId("a\\b")).toBe(false);
+    });
+
+    it("rejects non-string ids", () => {
+        expect(validateBookId(undefined)).toBe(false);
+        expect(validateBookId(null)).toBe(false);
+        expect(validateBookId(42)).toBe(false);
     });
 });
 
@@ -109,5 +116,30 @@ describe("book manifest", () => {
             expect(isSkippableListError(error)).toBe(true);
             expect((error as ManifestParseError).code).toBe("MANIFEST_INVALID");
         }
+    });
+
+    it("marks ENOENT as skippable when listing", () => {
+        expect(
+            isSkippableListError(
+                Object.assign(new Error("missing"), { code: "ENOENT" }),
+            ),
+        ).toBe(true);
+    });
+});
+
+describe("isResolvedPathInsideRoot", () => {
+    it("accepts a child path under the books root", () => {
+        expect(
+            isResolvedPathInsideRoot(
+                "/data/library/books/uuid",
+                "/data/library/books",
+            ),
+        ).toBe(true);
+    });
+
+    it("rejects paths outside the books root", () => {
+        expect(
+            isResolvedPathInsideRoot("/tmp/outside", "/data/library/books"),
+        ).toBe(false);
     });
 });
