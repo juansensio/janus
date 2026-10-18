@@ -13,6 +13,8 @@ import { parseManuscriptHtml, serializeManuscriptHtml } from "./manuscript-html"
 export type AiWriteFlight = {
     inFlight: boolean;
     commentId: string | null;
+    /** Set when Write fails so chrome refresh can show the message after flight ends. */
+    statusMessage: { commentId: string; text: string } | null;
 };
 
 export type ManuscriptEditorOptions = {
@@ -167,6 +169,14 @@ export function createManuscriptEditor(
                     } else {
                         write.textContent = t("manuscript.writeAi");
                         dom.removeAttribute("aria-busy");
+                        const pending =
+                            options.getWriteFlight().statusMessage;
+                        if (pending?.commentId === commentId) {
+                            status.textContent = pending.text;
+                            status.classList.add(
+                                "editor-ai-comment-status-error",
+                            );
+                        }
                     }
                 }
 

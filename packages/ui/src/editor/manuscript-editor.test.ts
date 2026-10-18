@@ -10,7 +10,11 @@ afterEach(() => {
     document.body.innerHTML = "";
 });
 
-const idleFlight = () => ({ inFlight: false, commentId: null as string | null });
+const idleFlight = () => ({
+    inFlight: false,
+    commentId: null as string | null,
+    statusMessage: null,
+});
 
 describe("manuscript editor AI comments", () => {
     it("removes an existing comment and its draft when Delete is clicked", () => {
@@ -91,7 +95,11 @@ describe("manuscript editor AI comments", () => {
         document.body.append(mount);
         const html =
             '<janus-manuscript version="1"><janus-ai-comment id="c1">Go</janus-ai-comment></janus-manuscript>';
-        const writeFlight = { inFlight: false, commentId: null as string | null };
+        const writeFlight = {
+            inFlight: false,
+            commentId: null as string | null,
+            statusMessage: null,
+        };
         let finishWrite!: () => void;
         const editor = createManuscriptEditor(mount, html, {
             lang: "en",
@@ -180,6 +188,65 @@ describe("manuscript editor AI comments", () => {
         );
         expect(editor.getHtml()).toContain('comment-id="c1"');
         expect(editor.getHtml()).toContain("Streaming");
+        editor.destroy();
+    });
+
+    it("shows refusal on status after write flight ends and chrome refreshes", async () => {
+        const mount = document.createElement("div");
+        document.body.append(mount);
+        const html =
+            '<janus-manuscript version="1"><janus-ai-comment id="c1">hola</janus-ai-comment></janus-manuscript>';
+        const writeFlight = {
+            inFlight: false,
+            commentId: null as string | null,
+            statusMessage: null as {
+                commentId: string;
+                text: string;
+            } | null,
+        };
+        const editor = createManuscriptEditor(mount, html, {
+            lang: "en",
+            showAiChrome: true,
+            getWriteFlight: () => writeFlight,
+            openAiModelOptions: ["auto"],
+            onDocChange: () => {},
+            onWriteComment: async () => {
+                writeFlight.inFlight = true;
+                writeFlight.commentId = "c1";
+                editor.refreshAiCommentChrome();
+                try {
+                    throw new Error(
+                        "Error invoking remote method 'janus:ai:writeForComment': Please provide an instruction to add or change the prose.",
+                    );
+                } catch (error) {
+                    writeFlight.statusMessage = {
+                        commentId: "c1",
+                        text:
+                            "Please provide an instruction to add or change the prose.",
+                    };
+                    throw error;
+                } finally {
+                    writeFlight.inFlight = false;
+                    writeFlight.commentId = null;
+                    editor.refreshAiCommentChrome();
+                }
+            },
+            onAcceptDraft: async () => {},
+            onRejectDraft: async () => {},
+            onTransformError: () => {},
+        });
+        mount
+            .querySelector<HTMLButtonElement>(".editor-ai-comment-write")
+            ?.click();
+        await vi.waitFor(() => {
+            const status = mount.querySelector(".editor-ai-comment-status");
+            expect(status?.textContent ?? "").toContain(
+                "instruction to add or change",
+            );
+            expect(
+                status?.classList.contains("editor-ai-comment-status-error"),
+            ).toBe(true);
+        });
         editor.destroy();
     });
 

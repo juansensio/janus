@@ -1,6 +1,7 @@
 import type { BookSummary, JanusBridge } from "@janus/bridge";
 import { getUiLocale, t } from "../i18n";
 import { createAutosaveController, type EditorSaveStatus } from "./autosave";
+import { aiWriteErrorMessage } from "./ai-write-error";
 import type { AiWriteFlight } from "./manuscript-editor";
 import { createManuscriptEditor } from "./manuscript-editor";
 
@@ -110,6 +111,7 @@ export async function renderEditor(
     const writeFlight: AiWriteFlight = {
         inFlight: false,
         commentId: null,
+        statusMessage: null,
     };
 
     let openAiModelOptions: string[] = ["auto"];
@@ -132,6 +134,7 @@ export async function renderEditor(
             autosaveRef.current?.onInput(editor.getHtml());
         },
         onWriteComment: async (commentId) => {
+            writeFlight.statusMessage = null;
             writeFlight.inFlight = true;
             writeFlight.commentId = commentId;
             addCommentButton.disabled = true;
@@ -158,8 +161,13 @@ export async function renderEditor(
                 );
                 editor.setHtml(html);
                 autosaveRef.current?.markLoaded(html);
+                writeFlight.statusMessage = null;
             } catch (error) {
                 writeError = error;
+                writeFlight.statusMessage = {
+                    commentId,
+                    text: aiWriteErrorMessage(error, t),
+                };
             } finally {
                 writeFlight.inFlight = false;
                 writeFlight.commentId = null;
