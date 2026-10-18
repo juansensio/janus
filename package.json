@@ -14,6 +14,8 @@
         "desktop:prod": "bun run build:ui && bun run --filter @janus/desktop start",
         "desktop:package": "bun run build:ui && bun run --filter @janus/desktop build && bun run --filter @janus/desktop package",
         "test": "vitest run",
+        "e2e": "bun scripts/e2e-run.ts",
+        "e2e:shots": "bun scripts/e2e-copy-artifacts.ts",
         "lint": "oxlint .",
         "cap:sync:ios": "bun run build:ui && bun apps/mobile/scripts/prepare-cap-web.ts && bun run --filter @janus/mobile cap:sync",
         "cap:open:ios": "bun run --filter @janus/mobile cap:open",
@@ -24,6 +26,7 @@
         "postinstall": "bun scripts/ensure-esbuild.ts"
     },
     "devDependencies": {
+        "@playwright/test": "1.49.1",
         "@types/node": "22.10.2",
         "happy-dom": "15.11.7",
         "oxlint": "0.15.0",
