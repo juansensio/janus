@@ -1,5 +1,6 @@
 export const SHELF_STRINGS = {
-    newBook: "New book",
+    shelfLabel: "Books",
+    addBook: "New book",
     empty: "No books yet",
     delete: "Delete",
     deleteConfirm: (title: string) =>

@@ -1,4 +1,5 @@
-import type { BookSummary, JanusBridge } from "@janus/bridge";
+import { createShellLabel, type BookSummary, type JanusBridge } from "@janus/bridge";
+import { coverClassForBookId } from "./cover-palette";
 import { SHELF_STRINGS } from "./strings";
 
 function appendShelfError(host: HTMLElement, message: string): void {
@@ -7,6 +8,56 @@ function appendShelfError(host: HTMLElement, message: string): void {
     error.className = "shelf-error";
     error.textContent = message;
     host.append(error);
+}
+
+function createDeleteIcon(): SVGSVGElement {
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("aria-hidden", "true");
+    svg.setAttribute("width", "16");
+    svg.setAttribute("height", "16");
+    svg.setAttribute("viewBox", "0 0 16 16");
+    const bar = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    bar.setAttribute("x", "3");
+    bar.setAttribute("y", "7");
+    bar.setAttribute("width", "10");
+    bar.setAttribute("height", "2");
+    bar.setAttribute("fill", "currentColor");
+    svg.append(bar);
+    return svg;
+}
+
+function appendShelfChrome(host: HTMLElement): void {
+    const header = document.createElement("header");
+    header.className = "shelf-header";
+    const wordmark = document.createElement("h1");
+    wordmark.className = "shelf-wordmark";
+    wordmark.textContent = createShellLabel();
+    header.append(wordmark);
+    host.append(header);
+}
+
+function appendAddTile(
+    track: HTMLUListElement,
+    host: HTMLElement,
+    bridge: JanusBridge,
+): void {
+    const addItem = document.createElement("li");
+    addItem.setAttribute("role", "listitem");
+    const addButton = document.createElement("button");
+    addButton.type = "button";
+    addButton.className = "shelf-add";
+    addButton.textContent = "+";
+    addButton.setAttribute("aria-label", SHELF_STRINGS.addBook);
+    addButton.addEventListener("click", () => {
+        void refreshAfterAction(
+            host,
+            bridge,
+            () => bridge.createBook(),
+            SHELF_STRINGS.createFailed,
+        );
+    });
+    addItem.append(addButton);
+    track.append(addItem);
 }
 
 async function refreshAfterAction(
@@ -29,26 +80,7 @@ export async function renderShelf(
     bridge: JanusBridge,
 ): Promise<void> {
     host.replaceChildren();
-    const toolbar = document.createElement("div");
-    toolbar.className = "shelf-toolbar";
-    const newButton = document.createElement("button");
-    newButton.type = "button";
-    newButton.textContent = SHELF_STRINGS.newBook;
-    newButton.addEventListener("click", () => {
-        void refreshAfterAction(
-            host,
-            bridge,
-            () => bridge.createBook(),
-            SHELF_STRINGS.createFailed,
-        );
-    });
-    toolbar.append(newButton);
-    host.append(toolbar);
-
-    const grid = document.createElement("div");
-    grid.className = "shelf-grid";
-    grid.setAttribute("role", "list");
-    host.append(grid);
+    appendShelfChrome(host);
 
     let books: BookSummary[] = [];
     try {
@@ -61,18 +93,33 @@ export async function renderShelf(
         return;
     }
 
+    const row = document.createElement("section");
+    row.className = "shelf-row";
+
+    const rowLabel = document.createElement("p");
+    rowLabel.className = "shelf-row-label";
+    rowLabel.textContent = SHELF_STRINGS.shelfLabel;
+    row.append(rowLabel);
+
     if (books.length === 0) {
         const empty = document.createElement("p");
-        empty.className = "shelf-empty";
+        empty.className = "shelf-empty shelf-sr-only";
         empty.textContent = SHELF_STRINGS.empty;
-        host.append(empty);
-        return;
+        row.append(empty);
     }
 
+    const track = document.createElement("ul");
+    track.className = "shelf-track";
+    track.setAttribute("role", "list");
+    row.append(track);
+
     for (const book of books) {
+        const item = document.createElement("li");
+        item.setAttribute("role", "listitem");
+
         const card = document.createElement("article");
-        card.className = "shelf-card";
-        card.setAttribute("role", "listitem");
+        card.className = `shelf-card ${coverClassForBookId(book.id)}`;
+        card.setAttribute("title", book.title);
 
         const title = document.createElement("h2");
         title.className = "shelf-card-title";
@@ -81,11 +128,12 @@ export async function renderShelf(
 
         const deleteButton = document.createElement("button");
         deleteButton.type = "button";
-        deleteButton.textContent = SHELF_STRINGS.delete;
+        deleteButton.className = "shelf-card-delete";
         deleteButton.setAttribute(
             "aria-label",
             `${SHELF_STRINGS.delete} ${book.title}`,
         );
+        deleteButton.append(createDeleteIcon());
         deleteButton.addEventListener("click", () => {
             const confirmed = window.confirm(
                 SHELF_STRINGS.deleteConfirm(book.title),
@@ -101,6 +149,10 @@ export async function renderShelf(
             );
         });
         card.append(deleteButton);
-        grid.append(card);
+        item.append(card);
+        track.append(item);
     }
+
+    appendAddTile(track, host, bridge);
+    host.append(row);
 }
