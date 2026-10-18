@@ -513,8 +513,8 @@ Plan: `tasks/plan.md` § Ship NO-GO follow-ups. Complete **before** calling shel
 **Description:** Extract copy logic from `apps/mobile/scripts/prepare-cap-web.ts` into a small function (e.g. `syncCapIndexFromMobile(uiDir)`). Unit test: copies `mobile.html` → `index.html`; missing `mobile.html` throws or returns error with clear message.
 
 **Acceptance criteria:**
-- [ ] Tests use a temp/fixture directory (no reliance on committed `dist/`)
-- [ ] `cap:sync:ios` script still calls the same behavior via thin CLI wrapper
+- [x] Tests use a temp/fixture directory (no reliance on committed `dist/`)
+- [x] `cap:sync:ios` script still calls the same behavior via thin CLI wrapper
 
 **Verification:**
 - [ ] `bun run test`
