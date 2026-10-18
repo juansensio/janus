@@ -146,7 +146,7 @@ Match `AGENTS.md`. Stable error codes on `Error`:
 
 ## Open Questions
 
-1. **Consumer subscription OAuth:** Confirm OpenAI’s supported integration for Codex/ChatGPT accounts in third-party desktop apps. **Spike required** before implementation; if no supported path, escalate: revise intent (API key slice) or pause ai-assist.
+1. **Consumer subscription OAuth:** **Resolved (2026-10-18).** Use OpenAI **Sign in with ChatGPT** open-source / local-client flow (dynamic registration, loopback PKCE, ChatGPT plan scopes, Responses API bearer token). See [`docs/adrs/ADR-ai-openai-auth.md`](../adrs/ADR-ai-openai-auth.md). **Go** for implementation; confirm SIWC usage policy fits shipping model (OSS/local vs paid/waitlist); **pivot** to API-key slice only if policy blocks distribution.
 2. **Draft placement:** Insert draft immediately after comment vs replace selection — default **after comment** as sibling block.
 3. **Replace existing draft:** Overwrite on second Write without extra confirm — default **yes** with undo = Reject.
 4. **Context limit:** Max bytes for v1 — propose **512 KiB** manuscript HTML; adjust on approval.
