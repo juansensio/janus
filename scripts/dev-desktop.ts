@@ -1,6 +1,15 @@
 import path from "node:path";
 
 const root = path.resolve(import.meta.dir, "..");
+const ensure = Bun.spawn(["bun", "run", "ensure:esbuild"], {
+    cwd: root,
+    stdout: "inherit",
+    stderr: "inherit",
+});
+if ((await ensure.exited) !== 0) {
+    process.exit(ensure.exitCode ?? 1);
+}
+
 const port = Number(process.env.JANUS_UI_DEV_PORT ?? 5173);
 const devUrl = `http://127.0.0.1:${port}/`;
 

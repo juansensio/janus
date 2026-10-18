@@ -71,6 +71,18 @@ bun run ensure:electron
 
 Do not run a root `postinstall` hook that touches Electron while `bun install` is still extracting it—that race can leave a broken ~250 KB `Electron.app`.
 
+### Vite / esbuild: `The service was stopped`
+
+On some macOS setups, unsigned `esbuild` binaries are killed (exit **137**) and Vite fails while loading `vite.config.ts` with **The service was stopped**.
+
+After `bun install`, run:
+
+```bash
+bun run ensure:esbuild
+```
+
+Root `postinstall` runs this automatically on **macOS** (adhoc `codesign` on `esbuild` + `@esbuild/darwin-arm64`). If `build:ui` or `dev:desktop` still fails, rerun `ensure:esbuild` manually.
+
 ### iOS Simulator (manual gate)
 
 Capacitor sync and Xcode are required for mobile:

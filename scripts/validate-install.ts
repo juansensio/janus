@@ -15,6 +15,7 @@ function fail(message: string): never {
 }
 
 async function main(): Promise<void> {
+    await $`bun run ensure:esbuild`.cwd(root);
     await $`bun run test`.cwd(root);
     await $`bun run build:ui`.cwd(root);
 
