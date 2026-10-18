@@ -26,15 +26,32 @@ describe("assertManuscriptContextSize", () => {
 });
 
 describe("buildGenerateDraftMessages", () => {
-    it("includes comment text and manuscript html", () => {
+    const manuscriptHtml =
+        '<janus-manuscript version="1"><janus-p>Opening</janus-p><janus-ai-comment id="c1">Continue</janus-ai-comment></janus-manuscript>';
+
+    it("includes prose context with WRITE mark and the instruction", () => {
         const messages = buildGenerateDraftMessages({
-            manuscriptHtml: "<janus-manuscript></janus-manuscript>",
+            manuscriptHtml,
             commentId: "c1",
             commentText: "Write the opening",
             locale: "en",
         });
+        expect(messages.user).toContain("<<<WRITE>>>");
+        expect(messages.user).toContain("Opening");
         expect(messages.user).toContain("Write the opening");
-        expect(messages.user).toContain("c1");
+        expect(messages.user).not.toContain("janus-manuscript");
+        expect(messages.user).not.toContain("janus-p");
+    });
+
+    it("asks for draft prose in the manuscript language and refusal in locale", () => {
+        const messages = buildGenerateDraftMessages({
+            manuscriptHtml,
+            commentId: "c1",
+            commentText: "Go",
+            locale: "es",
+        });
+        expect(messages.system).toContain("manuscript language");
+        expect(messages.system).toContain('locale "es"');
     });
 });
 
@@ -108,6 +125,9 @@ describe("fetchListedInferenceModelSlug", () => {
 });
 
 describe("createOpenAiCodexProvider", () => {
+    const manuscriptHtml =
+        '<janus-manuscript version="1"><janus-ai-comment id="c1">Go</janus-ai-comment></janus-manuscript>';
+
     it("maps streamed responses to draft html", async () => {
         const fetchImpl = vi.fn(async (url: string, init?: RequestInit) => {
             if (url.endsWith("/v1/models")) {
@@ -130,7 +150,10 @@ describe("createOpenAiCodexProvider", () => {
                     sseBody([
                         {
                             type: "response.output_text.delta",
-                            delta: "<janus-p>Generated</janus-p>",
+                            delta: JSON.stringify({
+                                kind: "draft",
+                                paragraphs: ["Generated"],
+                            }),
                         },
                         { type: "response.completed" },
                     ]),
@@ -140,7 +163,7 @@ describe("createOpenAiCodexProvider", () => {
         const result = await provider.generateDraft(
             { provider: "openai-codex", accessToken: "token" },
             {
-                manuscriptHtml: "<janus-manuscript></janus-manuscript>",
+                manuscriptHtml,
                 commentId: "c1",
                 commentText: "Go",
                 locale: "en",
@@ -149,8 +172,12 @@ describe("createOpenAiCodexProvider", () => {
         expect(result.draftHtml).toBe("<janus-p>Generated</janus-p>");
     });
 
-    it("invokes onDraftHtmlDelta while reading the response body", async () => {
+    it("invokes onDraftHtmlDelta once after the JSON body is complete", async () => {
         const deltas: string[] = [];
+        const draftJson = JSON.stringify({
+            kind: "draft",
+            paragraphs: ["Hello"],
+        });
         const fetchImpl = vi.fn(async (url: string) => {
             if (url.endsWith("/v1/models")) {
                 return {
@@ -165,12 +192,12 @@ describe("createOpenAiCodexProvider", () => {
                 start(controller) {
                     controller.enqueue(
                         new TextEncoder().encode(
-                            'data: {"type":"response.output_text.delta","delta":"He"}\n\n',
+                            `data: {"type":"response.output_text.delta","delta":${JSON.stringify(draftJson.slice(0, 3))}}\n\n`,
                         ),
                     );
                     controller.enqueue(
                         new TextEncoder().encode(
-                            'data: {"type":"response.output_text.delta","delta":"llo"}\n\n',
+                            `data: {"type":"response.output_text.delta","delta":${JSON.stringify(draftJson.slice(3))}}\n\n`,
                         ),
                     );
                     controller.close();
@@ -189,7 +216,7 @@ describe("createOpenAiCodexProvider", () => {
         const result = await provider.generateDraft(
             { provider: "openai-codex", accessToken: "token" },
             {
-                manuscriptHtml: "<janus-manuscript></janus-manuscript>",
+                manuscriptHtml,
                 commentId: "c1",
                 commentText: "Go",
                 locale: "en",
@@ -199,14 +226,106 @@ describe("createOpenAiCodexProvider", () => {
             },
         );
         expect(result.draftHtml).toBe("<janus-p>Hello</janus-p>");
-        expect(deltas).toEqual([
-            "<janus-p>He</janus-p>",
-            "<janus-p>Hello</janus-p>",
-        ]);
+        expect(deltas).toEqual(["<janus-p>Hello</janus-p>"]);
+    });
+
+    it("throws AI_COMMENT_NOT_INSTRUCTION for refusal JSON without delta", async () => {
+        const deltas: string[] = [];
+        const fetchImpl = vi.fn(async (url: string) => {
+            if (url.endsWith("/v1/models")) {
+                return {
+                    ok: true,
+                    status: 200,
+                    json: async () => ({
+                        models: [{ slug: "gpt-test", visibility: "list" }],
+                    }),
+                };
+            }
+            return {
+                ok: true,
+                status: 200,
+                headers: new Headers({
+                    "content-type": "text/event-stream",
+                }),
+                text: async () =>
+                    sseBody([
+                        {
+                            type: "response.output_text.delta",
+                            delta: JSON.stringify({
+                                kind: "refusal",
+                                message: "Not an instruction.",
+                            }),
+                        },
+                    ]),
+            };
+        });
+        const provider = createOpenAiCodexProvider(fetchImpl as typeof fetch);
+        await expect(
+            provider.generateDraft(
+                { provider: "openai-codex", accessToken: "token" },
+                {
+                    manuscriptHtml,
+                    commentId: "c1",
+                    commentText: "hola",
+                    locale: "en",
+                },
+                { onDraftHtmlDelta: (html) => deltas.push(html) },
+            ),
+        ).rejects.toMatchObject({
+            code: "AI_COMMENT_NOT_INSTRUCTION",
+            message: "Not an instruction.",
+        });
+        expect(deltas).toEqual([]);
+    });
+
+    it("throws AI_PROVIDER_ERROR for non-JSON bodies", async () => {
+        const fetchImpl = vi.fn(async (url: string) => {
+            if (url.endsWith("/v1/models")) {
+                return {
+                    ok: true,
+                    status: 200,
+                    json: async () => ({
+                        models: [{ slug: "gpt-test", visibility: "list" }],
+                    }),
+                };
+            }
+            return {
+                ok: true,
+                status: 200,
+                headers: new Headers({
+                    "content-type": "text/event-stream",
+                }),
+                text: async () =>
+                    sseBody([
+                        {
+                            type: "response.output_text.delta",
+                            delta: "<janus-p>nope</janus-p>",
+                        },
+                    ]),
+            };
+        });
+        const provider = createOpenAiCodexProvider(fetchImpl as typeof fetch);
+        await expect(
+            provider.generateDraft(
+                { provider: "openai-codex", accessToken: "token" },
+                {
+                    manuscriptHtml,
+                    commentId: "c1",
+                    commentText: "Go",
+                    locale: "en",
+                },
+            ),
+        ).rejects.toMatchObject({ code: "AI_PROVIDER_ERROR" });
     });
 
     it("parses SSE when the body starts with event: (non-stream content-type)", async () => {
-        const delta = { type: "response.output_text.delta", delta: "From event" };
+        const delta = {
+            type: "response.output_text.delta",
+            delta: JSON.stringify({
+                kind: "draft",
+                paragraphs: ["From event"],
+            }),
+        };
         const fetchImpl = vi.fn(async (url: string) => {
             if (url.endsWith("/v1/models")) {
                 return {
@@ -231,7 +350,7 @@ describe("createOpenAiCodexProvider", () => {
         const result = await provider.generateDraft(
             { provider: "openai-codex", accessToken: "token" },
             {
-                manuscriptHtml: "<janus-manuscript></janus-manuscript>",
+                manuscriptHtml,
                 commentId: "c1",
                 commentText: "Go",
                 locale: "en",
@@ -255,7 +374,10 @@ describe("createOpenAiCodexProvider", () => {
                     sseBody([
                         {
                             type: "response.output_text.delta",
-                            delta: "Hi",
+                            delta: JSON.stringify({
+                                kind: "draft",
+                                paragraphs: ["Hi"],
+                            }),
                         },
                         { type: "response.completed" },
                     ]),
@@ -269,7 +391,7 @@ describe("createOpenAiCodexProvider", () => {
                 model: "gpt-fixed",
             },
             {
-                manuscriptHtml: "<janus-manuscript></janus-manuscript>",
+                manuscriptHtml,
                 commentId: "c1",
                 commentText: "Go",
                 locale: "en",

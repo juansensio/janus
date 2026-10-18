@@ -42,15 +42,15 @@
 
 **Acceptance criteria:**
 
-- [ ] Prompt for a comment contains the prose view and `<<<WRITE>>>`, and does not contain the raw manuscript HTML
-- [ ] Prompt tells the model to write draft paragraphs in the manuscript’s language and the refusal message in `locale`
-- [ ] Parser accepts a draft payload and a refusal payload
-- [ ] Parser rejects prose, HTML, and JSON without `kind`
+- [x] Prompt for a comment contains the prose view and `<<<WRITE>>>`, and does not contain the raw manuscript HTML
+- [x] Prompt tells the model to write draft paragraphs in the manuscript’s language and the refusal message in `locale`
+- [x] Parser accepts a draft payload and a refusal payload
+- [x] Parser rejects prose, HTML, and JSON without `kind`
 
 **Verification:**
 
-- [ ] `bun run test services/ai-assist/ai-assist.test.ts`
-- [ ] `bun run lint`
+- [x] `bun run test services/ai-assist/ai-assist.test.ts`
+- [x] `bun run lint`
 
 **Dependencies:** Task 1
 
@@ -80,14 +80,14 @@
 
 **Acceptance criteria:**
 
-- [ ] Streamed draft JSON yields `draftHtml` of `<janus-p>` paragraphs and a single delta with that HTML
-- [ ] A refusal JSON throws `AI_COMMENT_NOT_INSTRUCTION` and invokes no delta
-- [ ] A non-JSON body throws `AI_PROVIDER_ERROR` and invokes no delta
+- [x] Streamed draft JSON yields `draftHtml` of `<janus-p>` paragraphs and a single delta with that HTML
+- [x] A refusal JSON throws `AI_COMMENT_NOT_INSTRUCTION` and invokes no delta
+- [x] A non-JSON body throws `AI_PROVIDER_ERROR` and invokes no delta
 
 **Verification:**
 
-- [ ] `bun run test services/ai-assist`
-- [ ] `bun run lint`
+- [x] `bun run test services/ai-assist`
+- [x] `bun run lint`
 
 **Dependencies:** Task 2
 

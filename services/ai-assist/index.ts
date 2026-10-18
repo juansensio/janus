@@ -5,6 +5,11 @@ export {
 export { buildGenerateDraftMessages } from "./prompt";
 export { WRITE_CONTEXT_MARK, buildWriteContext } from "./write-context";
 export {
+    draftParagraphsToHtml,
+    parseWriteResult,
+    type WriteResult,
+} from "./write-result";
+export {
     AiAssistError,
     type AiAssistErrorCode,
     type AiProvider,

@@ -12,6 +12,7 @@ import {
     type GenerateDraftInput,
     type GenerateDraftResult,
 } from "./provider";
+import { draftParagraphsToHtml, parseWriteResult } from "./write-result";
 
 export type FetchFn = typeof fetch;
 
@@ -28,31 +29,12 @@ function extractDraftTextFromJson(data: {
     );
 }
 
-export function wrapDraftHtml(text: string): string {
-    const trimmed = text.trim();
-    return trimmed.includes("<janus-p>")
-        ? trimmed
-        : `<janus-p>${trimmed}</janus-p>`;
-}
-
-function sseFeederOptions(onDraftHtmlDelta?: (draftHtml: string) => void) {
-    return onDraftHtmlDelta
-        ? {
-              onTextDelta: (text: string) =>
-                  onDraftHtmlDelta(wrapDraftHtml(text)),
-          }
-        : undefined;
-}
-
 async function readOpenAiResponseText(
     response: Response,
     contentType: string,
-    onDraftHtmlDelta?: (draftHtml: string) => void,
 ): Promise<string> {
     if (response.body) {
-        const feeder = createResponsesSseFeeder(
-            sseFeederOptions(onDraftHtmlDelta),
-        );
+        const feeder = createResponsesSseFeeder();
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
         while (true) {
@@ -67,9 +49,7 @@ async function readOpenAiResponseText(
 
     const raw = await response.text();
     if (isResponsesSseBody(raw, contentType)) {
-        const feeder = createResponsesSseFeeder(
-            sseFeederOptions(onDraftHtmlDelta),
-        );
+        const feeder = createResponsesSseFeeder();
         feeder.feed(raw);
         return feeder.finish();
     }
@@ -83,6 +63,22 @@ async function readOpenAiResponseText(
             }>;
         },
     );
+}
+
+function draftFromProviderText(
+    text: string,
+    onDraftHtmlDelta?: (draftHtml: string) => void,
+): GenerateDraftResult {
+    const parsed = parseWriteResult(text);
+    if (parsed.kind === "refusal") {
+        throw new AiAssistError(
+            "AI_COMMENT_NOT_INSTRUCTION",
+            parsed.message,
+        );
+    }
+    const draftHtml = draftParagraphsToHtml(parsed.paragraphs);
+    onDraftHtmlDelta?.(draftHtml);
+    return { draftHtml };
 }
 
 export function createOpenAiCodexProvider(fetchImpl: FetchFn = fetch): AiProvider {
@@ -142,13 +138,8 @@ export function createOpenAiCodexProvider(fetchImpl: FetchFn = fetch): AiProvide
             }
 
             const contentType = response.headers.get("content-type") ?? "";
-            const text = await readOpenAiResponseText(
-                response,
-                contentType,
-                callbacks?.onDraftHtmlDelta,
-            );
-
-            return { draftHtml: wrapDraftHtml(text) };
+            const text = await readOpenAiResponseText(response, contentType);
+            return draftFromProviderText(text, callbacks?.onDraftHtmlDelta);
         },
     };
 }
