@@ -7,7 +7,6 @@ import {
     buildOpenAiModelOptions,
     createOpenAiCodexProvider,
     fetchListedModelSlugs,
-    isAllowedOpenAiModelPreference,
     normalizeOpenAiModelPreference,
     OPENAI_MODEL_PREFERENCE_AUTO,
     resolveWriteModelSlug,
@@ -194,7 +193,8 @@ export function createAiBridgeService(
                     "OpenAI model settings are unavailable",
                 );
             }
-            if (!isAllowedOpenAiModelPreference(preference)) {
+            const current = await resolveOpenAiModelSettings();
+            if (!current.options.includes(preference)) {
                 throw new LibraryBridgeError(
                     "AI_PROVIDER_ERROR",
                     "Unknown OpenAI model preference",

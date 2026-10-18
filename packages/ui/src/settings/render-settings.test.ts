@@ -21,7 +21,9 @@ describe("renderSettings", () => {
             }),
         });
         await renderSettings(host, bridge, { onBack: () => {} });
-        expect(host.textContent).toContain("/data/custom-library");
+        await vi.waitFor(() =>
+            expect(host.textContent).toContain("/data/custom-library"),
+        );
         expect(host.textContent).toContain("Custom folder");
     });
 
@@ -35,7 +37,9 @@ describe("renderSettings", () => {
             }),
         });
         await renderSettings(host, bridge, { onBack: () => {} });
-        expect(host.querySelector(".settings-choose")).not.toBeNull();
+        await vi.waitFor(() =>
+            expect(host.querySelector(".settings-choose")).not.toBeNull(),
+        );
         expect(host.textContent).toContain(t("settings.devDefaultNote"));
     });
 
@@ -53,6 +57,7 @@ describe("renderSettings", () => {
             ".settings-openai-model",
         ) as HTMLSelectElement;
         expect(modelSelect).not.toBeNull();
+        await vi.waitFor(() => expect(modelSelect.disabled).toBe(false));
         const labels = [...modelSelect.options].map((o) => o.textContent);
         expect(labels).toContain("Auto");
         expect(labels).toContain("GPT-4o");
@@ -116,6 +121,50 @@ describe("renderSettings", () => {
         root.querySelector<HTMLButtonElement>(".shelf-settings")?.click();
         await vi.waitFor(() =>
             expect(root.querySelector(".settings-path")?.textContent).toBe(
+                "/data/library",
+            ),
+        );
+    });
+
+    it("shows loading placeholders before async settings resolve", async () => {
+        initTestI18n("en");
+        const host = document.createElement("div");
+        let resolveRoot!: (value: {
+            path: string;
+            source: "user-data";
+        }) => void;
+        const bridge = createMockJanusBridge({
+            getLibraryRoot: () =>
+                new Promise((resolve) => {
+                    resolveRoot = resolve;
+                }),
+            getAiProviderStatus: () =>
+                new Promise(() => {
+                    /* pending */
+                }),
+            getOpenAiModelSettings: () =>
+                new Promise(() => {
+                    /* pending */
+                }),
+        });
+        void renderSettings(host, bridge, { onBack: () => {} });
+        await vi.waitFor(() =>
+            expect(host.querySelector(".settings-title")).not.toBeNull(),
+        );
+        expect(host.textContent).toContain(t("settings.language"));
+        expect(host.querySelector(".settings-path")?.textContent).toBe(
+            t("settings.loading"),
+        );
+        const modelSelect = host.querySelector(
+            ".settings-openai-model",
+        ) as HTMLSelectElement;
+        expect(modelSelect.disabled).toBe(true);
+        expect(
+            host.querySelector(".settings-ai-actions button")?.disabled,
+        ).toBe(true);
+        resolveRoot({ path: "/data/library", source: "user-data" });
+        await vi.waitFor(() =>
+            expect(host.querySelector(".settings-path")?.textContent).toBe(
                 "/data/library",
             ),
         );

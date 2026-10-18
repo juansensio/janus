@@ -61,3 +61,20 @@
     color: #f5a8a8;
     font-size: 0.875rem;
 }
+
+.settings-pending {
+    opacity: 0.55;
+}
+
+.settings-back:disabled,
+.settings-choose:disabled,
+.settings-openai-model:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+}
+
+.settings-library-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}

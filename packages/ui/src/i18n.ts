@@ -20,3 +20,15 @@ export function t(key: string, vars?: Record<string, string>): string {
     }
     return formatMessage(template, vars);
 }
+
+/** Returns translated copy when the key exists; otherwise `undefined`. */
+export function tOptional(
+    key: string,
+    vars?: Record<string, string>,
+): string | undefined {
+    const template = messages[key];
+    if (template === undefined) {
+        return undefined;
+    }
+    return formatMessage(template, vars);
+}

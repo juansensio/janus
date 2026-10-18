@@ -22,6 +22,31 @@ function formatSourceLabel(source: string): string {
     }
 }
 
+function nextSettingsSession(host: HTMLElement): string {
+    const session = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    host.dataset.settingsSession = session;
+    return session;
+}
+
+function isSettingsSession(host: HTMLElement, session: string): boolean {
+    return host.dataset.settingsSession === session;
+}
+
+function setSelectLoading(select: HTMLSelectElement): void {
+    select.replaceChildren();
+    const option = document.createElement("option");
+    option.value = "";
+    option.textContent = t("settings.loading");
+    select.append(option);
+    select.value = "";
+    select.disabled = true;
+    select.setAttribute("aria-busy", "true");
+}
+
+function clearSelectLoading(select: HTMLSelectElement): void {
+    select.removeAttribute("aria-busy");
+}
+
 export async function renderSettings(
     host: HTMLElement,
     bridge: JanusBridge,
@@ -29,8 +54,12 @@ export async function renderSettings(
 ): Promise<void> {
     host.replaceChildren();
     host.className = "janus-settings";
+    const session = nextSettingsSession(host);
 
     const uiLanguage = await bridge.getUiLanguage();
+    if (!isSettingsSession(host, session)) {
+        return;
+    }
     initI18n(uiLanguage);
 
     const header = document.createElement("header");
@@ -40,6 +69,7 @@ export async function renderSettings(
     backButton.type = "button";
     backButton.className = "settings-back";
     backButton.textContent = t("settings.backToShelf");
+    backButton.addEventListener("click", () => options.onBack());
 
     const title = document.createElement("h1");
     title.className = "settings-title";
@@ -80,57 +110,121 @@ export async function renderSettings(
     host.append(languageLabel, languageSelect);
 
     const isDesktop = bridge.platform() === "desktop";
+
+    let aiConnected = false;
+    let providerConnected: boolean | undefined;
+    let aiToggle: HTMLButtonElement | null = null;
+
     if (isDesktop) {
         const aiTitle = document.createElement("p");
         aiTitle.className = "settings-label";
         aiTitle.textContent = t("ai.settingsTitle");
+
         const aiStatus = document.createElement("p");
-        aiStatus.className = "settings-source";
+        aiStatus.className = "settings-source settings-pending";
+        aiStatus.textContent = t("settings.loading");
+        aiStatus.setAttribute("aria-busy", "true");
+
         const aiActions = document.createElement("div");
         aiActions.className = "settings-ai-actions";
-        try {
-            const status = await bridge.getAiProviderStatus();
-            aiStatus.textContent = status.connected
-                ? t("ai.connected")
-                : t("ai.notConnected");
-            const toggle = document.createElement("button");
-            toggle.type = "button";
-            toggle.className = "settings-choose";
-            toggle.textContent = status.connected
+        aiToggle = document.createElement("button");
+        aiToggle.type = "button";
+        aiToggle.className = "settings-choose";
+        aiToggle.textContent = t("settings.loading");
+        aiToggle.disabled = true;
+        aiActions.append(aiToggle);
+
+        const modelLabel = document.createElement("p");
+        modelLabel.className = "settings-label";
+        modelLabel.textContent = t("ai.modelLabel");
+
+        const modelSelect = document.createElement("select");
+        modelSelect.className = "settings-openai-model";
+        modelSelect.setAttribute("aria-label", t("ai.modelLabel"));
+        setSelectLoading(modelSelect);
+
+        const modelHint = document.createElement("p");
+        modelHint.className = "settings-note";
+
+        const syncModelNotConnectedHint = () => {
+            if (providerConnected === false) {
+                modelHint.textContent = t("ai.modelNotConnectedHint");
+            }
+        };
+
+        host.append(
+            aiTitle,
+            aiStatus,
+            aiActions,
+            modelLabel,
+            modelSelect,
+            modelHint,
+        );
+
+        const wireAiToggle = (connected: boolean) => {
+            if (!aiToggle || !isSettingsSession(host, session)) {
+                return;
+            }
+            aiConnected = connected;
+            aiToggle.disabled = false;
+            aiToggle.textContent = connected
                 ? t("ai.disconnect")
                 : t("ai.connect");
-            toggle.addEventListener("click", () => {
+            aiToggle.onclick = () => {
                 void (async () => {
                     error.textContent = "";
+                    aiToggle!.disabled = true;
                     try {
-                        if (status.connected) {
+                        if (aiConnected) {
                             await bridge.disconnectOpenAiCodex();
                         } else {
                             await bridge.connectOpenAiCodex();
                         }
                         await renderSettings(host, bridge, options);
                     } catch (connectError) {
+                        aiToggle!.disabled = false;
                         error.textContent = t(
                             aiConnectErrorKey(connectError),
                         );
                     }
                 })();
-            });
-            aiActions.append(toggle);
+            };
+        };
 
-            const modelLabel = document.createElement("p");
-            modelLabel.className = "settings-label";
-            modelLabel.textContent = t("ai.modelLabel");
+        void (async () => {
+            try {
+                const status = await bridge.getAiProviderStatus();
+                if (!isSettingsSession(host, session)) {
+                    return;
+                }
+                aiStatus.textContent = status.connected
+                    ? t("ai.connected")
+                    : t("ai.notConnected");
+                aiStatus.classList.remove("settings-pending");
+                aiStatus.removeAttribute("aria-busy");
+                providerConnected = status.connected;
+                wireAiToggle(status.connected);
+                syncModelNotConnectedHint();
+            } catch {
+                if (!isSettingsSession(host, session)) {
+                    return;
+                }
+                aiStatus.textContent = t("ai.notConnected");
+                aiStatus.classList.remove("settings-pending");
+                aiStatus.removeAttribute("aria-busy");
+                providerConnected = false;
+                wireAiToggle(false);
+                syncModelNotConnectedHint();
+            }
+        })();
 
-            const modelSelect = document.createElement("select");
-            modelSelect.className = "settings-openai-model";
-            modelSelect.setAttribute("aria-label", t("ai.modelLabel"));
-
-            const modelHint = document.createElement("p");
-            modelHint.className = "settings-note";
-
+        void (async () => {
             try {
                 const modelSettings = await bridge.getOpenAiModelSettings();
+                if (!isSettingsSession(host, session)) {
+                    return;
+                }
+                modelSelect.replaceChildren();
                 for (const value of modelSettings.options) {
                     const option = document.createElement("option");
                     option.value = value;
@@ -138,49 +232,36 @@ export async function renderSettings(
                     modelSelect.append(option);
                 }
                 modelSelect.value = modelSettings.preference;
-                if (!status.connected) {
-                    modelHint.textContent = t("ai.modelNotConnectedHint");
-                }
+                modelSelect.disabled = false;
+                clearSelectLoading(modelSelect);
+                syncModelNotConnectedHint();
+                modelSelect.addEventListener("change", () => {
+                    void (async () => {
+                        error.textContent = "";
+                        modelSelect.disabled = true;
+                        try {
+                            const result =
+                                await bridge.setOpenAiModelPreference(
+                                    modelSelect.value,
+                                );
+                            modelSelect.value = result.preference;
+                        } catch {
+                            error.textContent = t("ai.modelSaveFailed");
+                        } finally {
+                            if (isSettingsSession(host, session)) {
+                                modelSelect.disabled = false;
+                            }
+                        }
+                    })();
+                });
             } catch {
-                modelHint.textContent = t("settings.chooseFailed");
-                modelSelect.disabled = true;
+                if (!isSettingsSession(host, session)) {
+                    return;
+                }
+                modelHint.textContent = t("ai.modelLoadFailed");
+                setSelectLoading(modelSelect);
             }
-
-            modelSelect.addEventListener("change", () => {
-                void (async () => {
-                    error.textContent = "";
-                    try {
-                        const result = await bridge.setOpenAiModelPreference(
-                            modelSelect.value,
-                        );
-                        modelSelect.value = result.preference;
-                    } catch {
-                        error.textContent = t("settings.chooseFailed");
-                    }
-                })();
-            });
-
-            host.append(
-                aiTitle,
-                aiStatus,
-                aiActions,
-                modelLabel,
-                modelSelect,
-                modelHint,
-            );
-        } catch {
-            aiStatus.textContent = t("ai.notConnected");
-            host.append(aiTitle, aiStatus, aiActions);
-        }
-    }
-
-    let rootInfo: Awaited<ReturnType<JanusBridge["getLibraryRoot"]>>;
-    try {
-        rootInfo = await bridge.getLibraryRoot();
-    } catch {
-        error.textContent = t("settings.chooseFailed");
-        backButton.addEventListener("click", () => options.onBack());
-        return;
+        })();
     }
 
     const locationLabel = document.createElement("p");
@@ -188,58 +269,99 @@ export async function renderSettings(
     locationLabel.textContent = t("settings.libraryLocation");
 
     const pathEl = document.createElement("p");
-    pathEl.className = "settings-path";
-    pathEl.textContent = rootInfo.path;
-    pathEl.title = rootInfo.path;
+    pathEl.className = "settings-path settings-pending";
+    pathEl.textContent = t("settings.loading");
+    pathEl.setAttribute("aria-busy", "true");
 
     const sourceEl = document.createElement("p");
-    sourceEl.className = "settings-source";
-    sourceEl.textContent = formatSourceLabel(rootInfo.source);
+    sourceEl.className = "settings-source settings-pending";
+    sourceEl.textContent = t("settings.loading");
 
-    host.append(locationLabel, pathEl, sourceEl);
+    const libraryActions = document.createElement("div");
+    libraryActions.className = "settings-library-actions";
 
-    const canChoose = isDesktop && rootInfo.source !== "env";
+    const choosePlaceholder = document.createElement("button");
+    choosePlaceholder.type = "button";
+    choosePlaceholder.className = "settings-choose";
+    choosePlaceholder.textContent = t("settings.loading");
+    choosePlaceholder.disabled = true;
+    libraryActions.append(choosePlaceholder);
 
-    if (rootInfo.source === "dev-default") {
-        const note = document.createElement("p");
-        note.className = "settings-note";
-        note.textContent = t("settings.devDefaultNote");
-        host.append(note);
-    }
+    host.append(locationLabel, pathEl, sourceEl, libraryActions);
 
-    if (canChoose) {
-        const chooseButton = document.createElement("button");
-        chooseButton.type = "button";
-        chooseButton.className = "settings-choose";
-        chooseButton.textContent = t("settings.chooseFolder");
-        chooseButton.addEventListener("click", () => {
-            void (async () => {
-                error.textContent = "";
-                try {
-                    const result = await bridge.chooseLibraryRoot();
-                    if (result.needsReload) {
-                        window.location.reload();
-                    }
-                } catch (err) {
-                    const code =
-                        err !== null &&
-                        typeof err === "object" &&
-                        "code" in err
-                            ? String((err as { code: unknown }).code)
-                            : "";
-                    if (code === "LIBRARY_ROOT_CANCELLED") {
-                        return;
-                    }
-                    if (code === "LIBRARY_ROOT_NOT_EMPTY") {
-                        error.textContent = t("settings.libraryRootNotEmpty");
-                        return;
-                    }
-                    error.textContent = t("settings.chooseFailed");
-                }
-            })();
-        });
-        host.append(chooseButton);
-    }
+    void (async () => {
+        try {
+            const rootInfo = await bridge.getLibraryRoot();
+            if (!isSettingsSession(host, session)) {
+                return;
+            }
+            pathEl.textContent = rootInfo.path;
+            pathEl.title = rootInfo.path;
+            pathEl.classList.remove("settings-pending");
+            pathEl.removeAttribute("aria-busy");
+            sourceEl.textContent = formatSourceLabel(rootInfo.source);
+            sourceEl.classList.remove("settings-pending");
 
-    backButton.addEventListener("click", () => options.onBack());
+            libraryActions.replaceChildren();
+            const canChoose = isDesktop && rootInfo.source !== "env";
+
+            if (rootInfo.source === "dev-default") {
+                const note = document.createElement("p");
+                note.className = "settings-note";
+                note.textContent = t("settings.devDefaultNote");
+                libraryActions.append(note);
+            }
+
+            if (canChoose) {
+                const chooseButton = document.createElement("button");
+                chooseButton.type = "button";
+                chooseButton.className = "settings-choose";
+                chooseButton.textContent = t("settings.chooseFolder");
+                chooseButton.addEventListener("click", () => {
+                    void (async () => {
+                        error.textContent = "";
+                        chooseButton.disabled = true;
+                        try {
+                            const result = await bridge.chooseLibraryRoot();
+                            if (result.needsReload) {
+                                window.location.reload();
+                            }
+                        } catch (err) {
+                            const code =
+                                err !== null &&
+                                typeof err === "object" &&
+                                "code" in err
+                                    ? String((err as { code: unknown }).code)
+                                    : "";
+                            if (code === "LIBRARY_ROOT_CANCELLED") {
+                                chooseButton.disabled = false;
+                                return;
+                            }
+                            if (code === "LIBRARY_ROOT_NOT_EMPTY") {
+                                error.textContent = t(
+                                    "settings.libraryRootNotEmpty",
+                                );
+                                chooseButton.disabled = false;
+                                return;
+                            }
+                            error.textContent = t("settings.chooseFailed");
+                            chooseButton.disabled = false;
+                        }
+                    })();
+                });
+                libraryActions.append(chooseButton);
+            }
+        } catch {
+            if (!isSettingsSession(host, session)) {
+                return;
+            }
+            error.textContent = t("settings.chooseFailed");
+            pathEl.textContent = "—";
+            pathEl.classList.remove("settings-pending");
+            pathEl.removeAttribute("aria-busy");
+            sourceEl.textContent = "";
+            sourceEl.classList.remove("settings-pending");
+            libraryActions.replaceChildren();
+        }
+    })();
 }

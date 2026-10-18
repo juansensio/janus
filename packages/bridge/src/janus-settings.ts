@@ -1,7 +1,7 @@
 export type JanusSettings = {
     libraryRoot?: string;
     uiLocale?: string;
-    /** `"auto"` or an allowlisted OpenAI model slug */
+    /** `"auto"` or an OpenAI model slug from the account catalog */
     openAiModel?: string;
 };
 

@@ -14,9 +14,7 @@ export {
 export { createOpenAiCodexProvider, type FetchFn } from "./openai-codex-provider";
 export {
     OPENAI_MODEL_PREFERENCE_AUTO,
-    JANUS_OPENAI_MODEL_ALLOWLIST,
     buildOpenAiModelOptions,
-    isAllowedOpenAiModelPreference,
     normalizeOpenAiModelPreference,
     resolveProviderModelSlug,
     resolveWriteModelSlug,
