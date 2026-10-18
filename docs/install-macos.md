@@ -55,7 +55,18 @@ This runs unit tests, builds the UI, and asserts `dist/ui` contains the expected
 
 ## UI build output
 
-Shared UI is built to **`dist/ui`** at the repo root. Electron loads it from disk; Capacitor `webDir` points at the same folder. Always run `bun run build:ui` before `cap:sync:ios`.
+Shared UI is built to **`dist/ui`** at the repo root.
+
+| Artifact | Purpose |
+|----------|---------|
+| `index.html` | **Desktop** (Electron loads this file from disk after `build:ui`) |
+| `mobile.html` | **Capacitor source** entry (mobile bootstrap via Vite alias) |
+
+Capacitor `webDir` is the same `dist/ui` folder. Before sync, `cap:sync:ios` runs **`prepare-cap-web`**, which copies `mobile.html` → `index.html` so the native app loads the mobile shell entry while desktop keeps its own `index.html` in the build output until sync overwrites it for the mobile bundle only on your machine’s synced tree.
+
+The Vite alias `@janus/mobile-entry` (in `packages/ui/vite.config.ts`) is **build-only wiring** for the mobile HTML entry; runtime UI code does not import `apps/mobile`.
+
+Always run `bun run build:ui` before `cap:sync:ios`.
 
 ## Optional desktop smoke test
 

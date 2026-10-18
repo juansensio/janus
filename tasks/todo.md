@@ -552,8 +552,8 @@ Plan: `tasks/plan.md` § Ship NO-GO follow-ups. Complete **before** calling shel
 **Description:** Update `docs/install-macos.md`: `build:ui` emits `index.html` (desktop) and `mobile.html` (Capacitor entry); `cap:sync:ios` runs `prepare-cap-web` to copy mobile → `index.html` before sync. One line on `@janus/mobile-entry` as build-only Vite alias.
 
 **Acceptance criteria:**
-- [ ] Contributor can understand desktop vs mobile artifact without reading `tasks/plan.md`
-- [ ] README link unchanged or updated if needed
+- [x] Contributor can understand desktop vs mobile artifact without reading `tasks/plan.md`
+- [x] README link unchanged or updated if needed
 
 **Verification:**
 - [ ] Manual read-through
