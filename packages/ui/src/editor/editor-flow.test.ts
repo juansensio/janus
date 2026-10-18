@@ -22,7 +22,8 @@ describe("editor autosave flow", () => {
         document.body.append(root);
         const bridge = createMockJanusBridge({
             listBooks: async () => [sampleBook],
-            readManuscript: async () => "",
+            readManuscript: async () =>
+                '<janus-manuscript version="1"></janus-manuscript>',
             writeManuscript: write,
         });
         await mountJanusShell(root, bridge);
@@ -33,11 +34,12 @@ describe("editor autosave flow", () => {
         await vi.waitFor(() =>
             expect(root.querySelector(".editor-field")).not.toBeNull(),
         );
-        const field = root.querySelector("textarea")!;
-        field.value = "New words";
-        field.dispatchEvent(new Event("input", { bubbles: true }));
+        root.querySelector<HTMLButtonElement>(".editor-add-comment")?.click();
         await vi.advanceTimersByTimeAsync(1000);
-        expect(write).toHaveBeenCalledWith(sampleBook.id, "New words");
+        expect(write).toHaveBeenCalled();
+        const saved = write.mock.calls.at(-1)?.[1] as string;
+        expect(saved).toContain("janus-ai-comment");
+        expect(saved).toContain("AI instruction");
     });
 
     it("flushes on Shelf before returning to the shelf", async () => {
@@ -46,7 +48,8 @@ describe("editor autosave flow", () => {
         document.body.append(root);
         const bridge = createMockJanusBridge({
             listBooks: async () => [sampleBook],
-            readManuscript: async () => "start",
+            readManuscript: async () =>
+                '<janus-manuscript version="1"><janus-p>start</janus-p></janus-manuscript>',
             writeManuscript: write,
         });
         await mountJanusShell(root, bridge);
@@ -57,14 +60,14 @@ describe("editor autosave flow", () => {
         await vi.waitFor(() =>
             expect(root.querySelector(".editor-field")).not.toBeNull(),
         );
-        const field = root.querySelector("textarea")!;
-        field.value = "start plus";
-        field.dispatchEvent(new Event("input", { bubbles: true }));
+        root.querySelector<HTMLButtonElement>(".editor-add-comment")?.click();
         root.querySelector<HTMLButtonElement>(".editor-back")?.click();
         await vi.waitFor(() =>
             expect(root.querySelector(".shelf-wordmark")).not.toBeNull(),
         );
-        expect(write).toHaveBeenCalledWith(sampleBook.id, "start plus");
+        expect(write).toHaveBeenCalled();
+        const saved = write.mock.calls.at(-1)?.[1] as string;
+        expect(saved).toContain("janus-ai-comment");
     });
 
     it("stays on editor when flush fails", async () => {
@@ -77,7 +80,8 @@ describe("editor autosave flow", () => {
         document.body.append(root);
         const bridge = createMockJanusBridge({
             listBooks: async () => [sampleBook],
-            readManuscript: async () => "",
+            readManuscript: async () =>
+                '<janus-manuscript version="1"></janus-manuscript>',
             writeManuscript: write,
         });
         await mountJanusShell(root, bridge);
@@ -88,9 +92,7 @@ describe("editor autosave flow", () => {
         await vi.waitFor(() =>
             expect(root.querySelector(".editor-field")).not.toBeNull(),
         );
-        const field = root.querySelector("textarea")!;
-        field.value = "oops";
-        field.dispatchEvent(new Event("input", { bubbles: true }));
+        root.querySelector<HTMLButtonElement>(".editor-add-comment")?.click();
         root.querySelector<HTMLButtonElement>(".editor-back")?.click();
         await vi.waitFor(() =>
             expect(root.querySelector(".editor-error")?.textContent).toContain(

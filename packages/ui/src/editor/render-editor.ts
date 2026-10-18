@@ -1,6 +1,7 @@
 import type { BookSummary, JanusBridge } from "@janus/bridge";
 import { getUiLocale, t } from "../i18n";
 import { createAutosaveController, type EditorSaveStatus } from "./autosave";
+import { createManuscriptEditor } from "./manuscript-editor";
 
 const AUTOSAVE_INTERVAL_MS = 1000;
 
@@ -45,7 +46,12 @@ export async function renderEditor(
     backButton.className = "editor-back";
     backButton.textContent = t("manuscript.backToShelf");
 
-    header.append(backButton);
+    const addCommentButton = document.createElement("button");
+    addCommentButton.type = "button";
+    addCommentButton.className = "editor-add-comment";
+    addCommentButton.textContent = t("manuscript.addAiComment");
+
+    header.append(backButton, addCommentButton);
     chrome.append(header);
 
     const status = document.createElement("p");
@@ -55,15 +61,18 @@ export async function renderEditor(
     const saveError = document.createElement("p");
     saveError.className = "editor-error";
 
+    const transformError = document.createElement("p");
+    transformError.className = "editor-error";
+
     const loadError = document.createElement("p");
     loadError.className = "editor-error";
 
-    chrome.append(status, saveError, loadError);
+    chrome.append(status, saveError, transformError, loadError);
     host.append(chrome);
 
-    let loadedText = "";
+    let loadedHtml = "";
     try {
-        loadedText = await bridge.readManuscript(book.id);
+        loadedHtml = await bridge.readManuscript(book.id);
     } catch {
         loadError.textContent = t("manuscript.loadFailed");
         backButton.addEventListener("click", () => {
@@ -72,6 +81,9 @@ export async function renderEditor(
         return;
     }
 
+    const locale = getUiLocale();
+    document.documentElement.lang = locale;
+
     const page = document.createElement("article");
     page.className = "editor-page";
 
@@ -79,42 +91,67 @@ export async function renderEditor(
     title.className = "editor-title";
     title.textContent = book.title;
 
-    const field = document.createElement("textarea");
+    const field = document.createElement("div");
     field.className = "editor-field";
     field.setAttribute("aria-label", book.title);
-    field.lang = getUiLocale();
-    field.spellcheck = true;
-    field.value = loadedText;
 
     page.append(title, field);
     host.append(page);
 
+    const autosaveRef: { current: ReturnType<typeof createAutosaveController> | null } =
+        { current: null };
+
+    let editor = createManuscriptEditor(field, loadedHtml, {
+        lang: locale,
+        onDocChange: () => {
+            autosaveRef.current?.onInput(editor.getHtml());
+        },
+        onAcceptDraft: async (draftId) => {
+            transformError.textContent = "";
+            const html = await bridge.acceptAiDraft(book.id, draftId);
+            editor.setHtml(html);
+            autosave.markLoaded(html);
+        },
+        onRejectDraft: async (draftId) => {
+            transformError.textContent = "";
+            const html = await bridge.rejectAiDraft(book.id, draftId);
+            editor.setHtml(html);
+            autosave.markLoaded(html);
+        },
+        onTransformError: (message) => {
+            transformError.textContent = message;
+        },
+    });
+
     const autosave = createAutosaveController({
         intervalMs: AUTOSAVE_INTERVAL_MS,
-        getText: () => field.value,
+        getText: () => editor.getHtml(),
         save: (text) => bridge.writeManuscript(book.id, text),
         onStatus: (saveStatus) => {
             setStatus(status, saveStatus, saveError);
         },
     });
-    autosave.markLoaded(loadedText);
+    autosaveRef.current = autosave;
+    autosave.markLoaded(loadedHtml);
 
-    field.addEventListener("input", () => {
-        autosave.onInput(field.value);
+    addCommentButton.addEventListener("click", () => {
+        editor.insertAiComment();
+        autosave.onInput(editor.getHtml());
     });
 
-    field.focus();
-    field.setSelectionRange(field.value.length, field.value.length);
+    editor.focus();
 
     backButton.addEventListener("click", () => {
         void (async () => {
             if (!autosave.isDirty()) {
+                editor.destroy();
                 autosave.dispose();
                 options.onBack();
                 return;
             }
             try {
                 await autosave.flush();
+                editor.destroy();
                 autosave.dispose();
                 options.onBack();
             } catch {

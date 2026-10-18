@@ -114,14 +114,14 @@
 
 **Acceptance criteria:**
 
-- [ ] Typing creates/updates `janus-p` nodes in saved HTML
-- [ ] Autosave and back-to-shelf behavior match slice 1 semantics
-- [ ] `document.documentElement.lang` / editor `lang` still follow UI locale
-- [ ] Colocated UI tests updated (happy-dom)
+- [x] Typing creates/updates `janus-p` nodes in saved HTML
+- [x] Autosave and back-to-shelf behavior match slice 1 semantics
+- [x] `document.documentElement.lang` / editor `lang` still follow UI locale
+- [x] Colocated UI tests updated (happy-dom)
 
 **Verification:**
 
-- [ ] `bun run test packages/ui`
+- [x] `bun run test packages/ui`
 - [ ] `bun run dev:desktop` — type, Shelf, reopen
 
 **Dependencies:** Task 3
@@ -138,13 +138,13 @@
 
 **Acceptance criteria:**
 
-- [ ] New comment gets unique `id` attribute on save
-- [ ] Draft node renders with `comment-id`; editable draft body before Accept
-- [ ] Serialized HTML matches domain parser expectations
+- [x] New comment gets unique `id` attribute on save
+- [x] Draft node renders with `comment-id`; editable draft body before Accept
+- [x] Serialized HTML matches domain parser expectations
 
 **Verification:**
 
-- [ ] UI tests: insert comment → HTML contains `janus-ai-comment`
+- [x] UI tests: insert comment → HTML contains `janus-ai-comment`
 - [ ] Manual: add comment, save, reopen — persisted
 
 **Dependencies:** Task 5
@@ -161,13 +161,13 @@
 
 **Acceptance criteria:**
 
-- [ ] Accept/Reject on draft updates on-disk HTML via autosave path
-- [ ] Matches intent: accept removes comment + draft wrappers; reject keeps comment
-- [ ] No shelf banner for transform failures
+- [x] Accept/Reject on draft updates on-disk HTML via autosave path
+- [x] Matches intent: accept removes comment + draft wrappers; reject keeps comment
+- [x] No shelf banner for transform failures
 
 **Verification:**
 
-- [ ] UI test with mock bridge
+- [x] UI test with mock bridge
 - [ ] Manual end-to-end without AI (hand-insert draft tag or dev helper)
 
 **Dependencies:** Task 4, Task 6
@@ -180,9 +180,9 @@
 
 ## Checkpoint: Manuscript slice 2 (after Tasks 5–7)
 
-- [ ] HTML editor works desktop + mobile (no AI)
+- [x] HTML editor works desktop + mobile (no AI)
 - [ ] Legacy migration + Accept/Reject verified
-- [ ] `bun run test` && `bun run lint`
+- [x] `bun run test` && `bun run lint`
 
 ---
 

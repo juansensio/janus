@@ -46,14 +46,17 @@ describe("renderEditor", () => {
         expect(write).not.toHaveBeenCalled();
     });
 
-    it("loads text into the field", async () => {
+    it("loads html into the prosemirror field", async () => {
         const host = document.createElement("div");
+        const html =
+            '<janus-manuscript version="1"><janus-p>Hello</janus-p></janus-manuscript>';
         const bridge = createMockJanusBridge({
-            readManuscript: async () => "Hello\n",
+            readManuscript: async () => html,
         });
         await renderEditor(host, bridge, sampleBook, { onBack: () => {} });
-        const field = host.querySelector("textarea");
-        expect(field?.value).toBe("Hello\n");
+        expect(host.querySelector(".editor-prosemirror")?.textContent).toContain(
+            "Hello",
+        );
         expect(host.querySelector(".editor-title")?.textContent).toBe("Draft");
     });
 });
@@ -64,7 +67,8 @@ describe("mountJanusShell editor flow", () => {
         document.body.append(root);
         const bridge = createMockJanusBridge({
             listBooks: async () => [sampleBook],
-            readManuscript: async () => "Stored",
+            readManuscript: async () =>
+                '<janus-manuscript version="1"><janus-p>Stored</janus-p></janus-manuscript>',
         });
         await mountJanusShell(root, bridge);
         await vi.waitFor(() =>
@@ -72,7 +76,9 @@ describe("mountJanusShell editor flow", () => {
         );
         root.querySelector<HTMLButtonElement>(".shelf-card-open")?.click();
         await vi.waitFor(() =>
-            expect(root.querySelector(".editor-field")?.value).toBe("Stored"),
+            expect(root.querySelector(".editor-prosemirror")?.textContent).toContain(
+                "Stored",
+            ),
         );
     });
 
