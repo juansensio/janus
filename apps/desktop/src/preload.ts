@@ -1,5 +1,6 @@
 import type { JanusBridge } from "@janus/bridge";
 import { contextBridge, ipcRenderer } from "electron";
+import { AI_IPC_CHANNELS, type AiWriteDraftDeltaPayload } from "./ai-ipc";
 import { invokeLibraryIpc } from "./library-ipc-error";
 
 const invoke = (channel: string, ...args: unknown[]) =>
@@ -36,8 +37,46 @@ const bridge: JanusBridge = {
     getAiProviderStatus: () => invoke("janus:ai:getAiProviderStatus"),
     connectOpenAiCodex: () => invoke("janus:ai:connectOpenAiCodex"),
     disconnectOpenAiCodex: () => invoke("janus:ai:disconnectOpenAiCodex"),
-    writeForComment: (id: string, commentId: string, locale: string) =>
-        invoke("janus:ai:writeForComment", id, commentId, locale),
+    writeForComment: async (
+        id: string,
+        commentId: string,
+        locale: string,
+        options?: { onDraftDelta?: (draftHtml: string) => void },
+    ) => {
+        const onDraftDelta = options?.onDraftDelta;
+        if (!onDraftDelta) {
+            return invoke(
+                AI_IPC_CHANNELS.writeForComment,
+                id,
+                commentId,
+                locale,
+            );
+        }
+        const requestId = crypto.randomUUID();
+        const handler = (
+            _event: Electron.IpcRendererEvent,
+            payload: AiWriteDraftDeltaPayload,
+        ) => {
+            if (payload.requestId === requestId) {
+                onDraftDelta(payload.draftHtml);
+            }
+        };
+        ipcRenderer.on(AI_IPC_CHANNELS.writeDraftDelta, handler);
+        try {
+            return await invoke(
+                AI_IPC_CHANNELS.writeForComment,
+                id,
+                commentId,
+                locale,
+                requestId,
+            );
+        } finally {
+            ipcRenderer.removeListener(
+                AI_IPC_CHANNELS.writeDraftDelta,
+                handler,
+            );
+        }
+    },
     getLibraryRoot: () => invoke("janus:settings:getLibraryRoot"),
     chooseLibraryRoot: () => invoke("janus:settings:chooseLibraryRoot"),
     getUiLanguage: () => invoke("janus:language:getUiLanguage"),

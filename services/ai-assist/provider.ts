@@ -16,6 +16,11 @@ export type GenerateDraftResult = {
     draftHtml: string;
 };
 
+export type GenerateDraftCallbacks = {
+    /** Called as provider text accumulates; argument is draft HTML (janus-p wrapped). */
+    onDraftHtmlDelta?: (draftHtml: string) => void;
+};
+
 export type AiAssistErrorCode =
     | "AI_NOT_SUPPORTED"
     | "AI_NOT_CONNECTED"
@@ -39,5 +44,6 @@ export interface AiProvider {
     generateDraft(
         session: AiProviderSession,
         input: GenerateDraftInput,
+        callbacks?: GenerateDraftCallbacks,
     ): Promise<GenerateDraftResult>;
 }

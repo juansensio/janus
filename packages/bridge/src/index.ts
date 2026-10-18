@@ -96,6 +96,7 @@ export interface JanusBridge {
         id: string,
         commentId: string,
         locale: string,
+        options?: { onDraftDelta?: (draftHtml: string) => void },
     ): Promise<string>;
     getLibraryRoot(): Promise<LibraryRootInfo>;
     chooseLibraryRoot(): Promise<ChooseLibraryRootResult>;

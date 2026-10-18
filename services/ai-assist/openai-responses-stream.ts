@@ -17,60 +17,126 @@ type StreamEvent = {
     error?: { code?: string; message?: string };
 };
 
-export function parseResponsesSse(sseText: string): string {
-    const deltas: string[] = [];
-    let doneText: string | undefined;
-    let failureMessage: string | undefined;
+type SseParseState = {
+    deltas: string[];
+    doneText?: string;
+    failureMessage?: string;
+};
 
-    for (const line of sseText.split("\n")) {
-        const trimmed = line.trim();
-        if (!trimmed.startsWith("data:")) {
-            continue;
-        }
-        const payload = trimmed.slice(5).trim();
-        if (!payload || payload === "[DONE]") {
-            continue;
-        }
-        let event: StreamEvent;
-        try {
-            event = JSON.parse(payload) as StreamEvent;
-        } catch {
-            continue;
-        }
-        switch (event.type) {
-            case "response.output_text.delta":
-                if (event.delta) {
-                    deltas.push(event.delta);
-                }
-                break;
-            case "response.output_text.done":
-                if (event.text) {
-                    doneText = event.text;
-                }
-                break;
-            case "response.failed":
-                failureMessage =
-                    event.response?.error?.message ??
-                    event.response?.error?.code ??
-                    "OpenAI response failed";
-                break;
-            case "error":
-                failureMessage =
-                    event.error?.message ??
-                    event.error?.code ??
-                    "OpenAI stream error";
-                break;
-            default:
-                break;
-        }
+function accumulatedText(state: SseParseState): string {
+    if (state.doneText !== undefined) {
+        return state.doneText;
     }
+    return state.deltas.join("");
+}
 
-    if (failureMessage) {
-        throw new AiAssistError("AI_PROVIDER_ERROR", failureMessage);
+function applyStreamEvent(
+    event: StreamEvent,
+    state: SseParseState,
+    onTextDelta?: (accumulated: string) => void,
+): void {
+    switch (event.type) {
+        case "response.output_text.delta":
+            if (event.delta) {
+                state.deltas.push(event.delta);
+                onTextDelta?.(accumulatedText(state));
+            }
+            break;
+        case "response.output_text.done":
+            if (event.text) {
+                state.doneText = event.text;
+                onTextDelta?.(accumulatedText(state));
+            }
+            break;
+        case "response.failed":
+            state.failureMessage =
+                event.response?.error?.message ??
+                event.response?.error?.code ??
+                "OpenAI response failed";
+            break;
+        case "error":
+            state.failureMessage =
+                event.error?.message ??
+                event.error?.code ??
+                "OpenAI stream error";
+            break;
+        default:
+            break;
     }
+}
 
-    if (doneText !== undefined) {
-        return doneText;
+function parseSseDataPayload(
+    payload: string,
+    state: SseParseState,
+    onTextDelta?: (accumulated: string) => void,
+): void {
+    if (!payload || payload === "[DONE]") {
+        return;
     }
-    return deltas.join("");
+    let event: StreamEvent;
+    try {
+        event = JSON.parse(payload) as StreamEvent;
+    } catch {
+        return;
+    }
+    applyStreamEvent(event, state, onTextDelta);
+}
+
+function processSseLine(
+    line: string,
+    state: SseParseState,
+    onTextDelta?: (accumulated: string) => void,
+): void {
+    const trimmed = line.trim();
+    if (!trimmed.startsWith("data:")) {
+        return;
+    }
+    const payload = trimmed.slice(5).trim();
+    parseSseDataPayload(payload, state, onTextDelta);
+}
+
+function finalizeSseState(state: SseParseState): string {
+    if (state.failureMessage) {
+        throw new AiAssistError("AI_PROVIDER_ERROR", state.failureMessage);
+    }
+    return accumulatedText(state);
+}
+
+export type ResponsesSseFeeder = {
+    feed(chunk: string): void;
+    finish(): string;
+};
+
+export function createResponsesSseFeeder(options?: {
+    onTextDelta?: (accumulated: string) => void;
+}): ResponsesSseFeeder {
+    const state: SseParseState = { deltas: [] };
+    let lineBuffer = "";
+
+    return {
+        feed(chunk: string) {
+            lineBuffer += chunk;
+            const lines = lineBuffer.split("\n");
+            lineBuffer = lines.pop() ?? "";
+            for (const line of lines) {
+                processSseLine(line, state, options?.onTextDelta);
+            }
+        },
+        finish() {
+            if (lineBuffer.trim()) {
+                processSseLine(lineBuffer, state, options?.onTextDelta);
+            }
+            lineBuffer = "";
+            return finalizeSseState(state);
+        },
+    };
+}
+
+export function parseResponsesSse(
+    sseText: string,
+    options?: { onTextDelta?: (accumulated: string) => void },
+): string {
+    const feeder = createResponsesSseFeeder(options);
+    feeder.feed(sseText);
+    return feeder.finish();
 }

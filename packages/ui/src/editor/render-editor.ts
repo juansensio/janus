@@ -125,11 +125,21 @@ export async function renderEditor(
             addCommentButton.disabled = true;
             editor.refreshAiCommentChrome();
             let writeError: unknown;
+            const streamingDraftId = crypto.randomUUID();
             try {
                 const html = await bridge.writeForComment(
                     book.id,
                     commentId,
                     locale,
+                    {
+                        onDraftDelta: (draftHtml) => {
+                            editor.applyStreamingDraft(
+                                commentId,
+                                streamingDraftId,
+                                draftHtml,
+                            );
+                        },
+                    },
                 );
                 editor.setHtml(html);
                 autosaveRef.current?.markLoaded(html);

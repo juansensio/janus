@@ -145,6 +145,38 @@ describe("editor autosave flow", () => {
         }
     });
 
+    it("shows draft text while writeForComment streams deltas", async () => {
+        const root = document.createElement("main");
+        document.body.append(root);
+        const commentHtml =
+            '<janus-manuscript version="1"><janus-ai-comment id="c1">Prompt</janus-ai-comment></janus-manuscript>';
+        const finalHtml =
+            '<janus-manuscript version="1"><janus-ai-comment id="c1">Prompt</janus-ai-comment><janus-ai-draft id="d1" comment-id="c1"><janus-p>Done</janus-p></janus-ai-draft></janus-manuscript>';
+        const bridge = createMockJanusBridge({
+            listBooks: async () => [sampleBook],
+            readManuscript: async () => commentHtml,
+            writeForComment: async (_id, _commentId, _locale, options) => {
+                options?.onDraftDelta?.("<janus-p>Partial</janus-p>");
+                return finalHtml;
+            },
+        });
+        await mountJanusShell(root, bridge);
+        await vi.waitFor(() =>
+            expect(root.querySelector(".shelf-card-open")).not.toBeNull(),
+        );
+        root.querySelector<HTMLButtonElement>(".shelf-card-open")?.click();
+        await vi.waitFor(() =>
+            expect(root.querySelector(".editor-ai-comment-write")).not.toBeNull(),
+        );
+        root.querySelector<HTMLButtonElement>(".editor-ai-comment-write")?.click();
+        await vi.waitFor(() =>
+            expect(root.textContent ?? "").toContain("Partial"),
+        );
+        await vi.waitFor(() =>
+            expect(root.textContent ?? "").toContain("Done"),
+        );
+    });
+
     it("disables Add comment while Write is in flight", async () => {
         const root = document.createElement("main");
         document.body.append(root);

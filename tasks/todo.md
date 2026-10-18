@@ -134,6 +134,27 @@
 
 ---
 
+## Task 5: Stream draft tokens to editor during Write
+
+**Description:** Surface OpenAI response deltas in the UI while `writeForComment` runs. Provider parses SSE incrementally; desktop forwards chunks over IPC; renderer updates the draft block without autosave until the final HTML returns.
+
+**Acceptance criteria:**
+
+- [x] `generateDraft` accepts `onDraftHtmlDelta` and fires on each accumulated chunk
+- [x] Desktop `writeForComment` + `janus:ai:writeDraftDelta` IPC when renderer passes `onDraftDelta`
+- [x] Editor `applyStreamingDraft` updates draft in place without marking autosave dirty
+- [x] Tests: provider stream body, SSE delta callback, editor flow with partial then final text
+
+**Verification:**
+
+- [x] `bun run test services/ai-assist packages/ui/src/editor`
+- [x] `bun run lint`
+- [ ] Manual desktop: Write shows draft text growing before request completes
+
+**Dependencies:** Task 4
+
+---
+
 ## Checkpoint: Complete
 
 - [x] Spec UI bullets satisfied: loading on Write, buttons disabled until response, errors inline on comment

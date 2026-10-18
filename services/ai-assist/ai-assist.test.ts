@@ -61,6 +61,20 @@ describe("parseResponsesSse", () => {
         expect(text).toBe("Hello world");
     });
 
+    it("notifies onTextDelta while parsing", () => {
+        const seen: string[] = [];
+        parseResponsesSse(
+            sseBody([
+                { type: "response.output_text.delta", delta: "Hi" },
+                { type: "response.output_text.delta", delta: " there" },
+            ]),
+            {
+                onTextDelta: (text) => seen.push(text),
+            },
+        );
+        expect(seen).toEqual(["Hi", "Hi there"]);
+    });
+
     it("prefers output_text.done over deltas", () => {
         const text = parseResponsesSse(
             sseBody([
@@ -133,6 +147,62 @@ describe("createOpenAiCodexProvider", () => {
             },
         );
         expect(result.draftHtml).toBe("<janus-p>Generated</janus-p>");
+    });
+
+    it("invokes onDraftHtmlDelta while reading the response body", async () => {
+        const deltas: string[] = [];
+        const fetchImpl = vi.fn(async (url: string) => {
+            if (url.endsWith("/v1/models")) {
+                return {
+                    ok: true,
+                    status: 200,
+                    json: async () => ({
+                        models: [{ slug: "gpt-test", visibility: "list" }],
+                    }),
+                };
+            }
+            const stream = new ReadableStream({
+                start(controller) {
+                    controller.enqueue(
+                        new TextEncoder().encode(
+                            'data: {"type":"response.output_text.delta","delta":"He"}\n\n',
+                        ),
+                    );
+                    controller.enqueue(
+                        new TextEncoder().encode(
+                            'data: {"type":"response.output_text.delta","delta":"llo"}\n\n',
+                        ),
+                    );
+                    controller.close();
+                },
+            });
+            return {
+                ok: true,
+                status: 200,
+                headers: new Headers({
+                    "content-type": "text/event-stream",
+                }),
+                body: stream,
+            };
+        });
+        const provider = createOpenAiCodexProvider(fetchImpl as typeof fetch);
+        const result = await provider.generateDraft(
+            { provider: "openai-codex", accessToken: "token" },
+            {
+                manuscriptHtml: "<janus-manuscript></janus-manuscript>",
+                commentId: "c1",
+                commentText: "Go",
+                locale: "en",
+            },
+            {
+                onDraftHtmlDelta: (html) => deltas.push(html),
+            },
+        );
+        expect(result.draftHtml).toBe("<janus-p>Hello</janus-p>");
+        expect(deltas).toEqual([
+            "<janus-p>He</janus-p>",
+            "<janus-p>Hello</janus-p>",
+        ]);
     });
 
     it("parses SSE when the body starts with event: (non-stream content-type)", async () => {

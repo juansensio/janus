@@ -128,6 +128,31 @@ describe("manuscript editor AI comments", () => {
         editor.destroy();
     });
 
+    it("applyStreamingDraft inserts draft content for the comment", () => {
+        const mount = document.createElement("div");
+        document.body.append(mount);
+        const html =
+            '<janus-manuscript version="1"><janus-ai-comment id="c1">Go</janus-ai-comment></janus-manuscript>';
+        const editor = createManuscriptEditor(mount, html, {
+            lang: "en",
+            showAiChrome: true,
+            getWriteFlight: idleFlight,
+            onDocChange: () => {},
+            onWriteComment: async () => {},
+            onAcceptDraft: async () => {},
+            onRejectDraft: async () => {},
+            onTransformError: () => {},
+        });
+        editor.applyStreamingDraft(
+            "c1",
+            "d-stream",
+            "<janus-p>Streaming</janus-p>",
+        );
+        expect(editor.getHtml()).toContain('comment-id="c1"');
+        expect(editor.getHtml()).toContain("Streaming");
+        editor.destroy();
+    });
+
     it("shows inline error when Write fails", async () => {
         const mount = document.createElement("div");
         document.body.append(mount);

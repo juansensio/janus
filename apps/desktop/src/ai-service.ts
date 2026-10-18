@@ -108,6 +108,7 @@ export function createAiBridgeService(
             bookId: string,
             commentId: string,
             locale: string,
+            options?: { onDraftDelta?: (draftHtml: string) => void },
         ): Promise<string> {
             try {
                 let session = await loadAiSession();
@@ -144,6 +145,7 @@ export function createAiBridgeService(
                 }
                 assertManuscriptContextSize(html);
                 const accessToken = accessTokenForSession(session);
+                const draftId = randomUUID();
                 try {
                     const { draftHtml } = await provider.generateDraft(
                         {
@@ -156,12 +158,15 @@ export function createAiBridgeService(
                             commentText,
                             locale,
                         },
+                        {
+                            onDraftHtmlDelta: options?.onDraftDelta,
+                        },
                     );
                     const next = insertOrReplaceDraft(
                         html,
                         commentId,
                         draftHtml,
-                        randomUUID(),
+                        draftId,
                     );
                     await manuscript.writeManuscript(bookId, next);
                     return next;
@@ -187,12 +192,15 @@ export function createAiBridgeService(
                                 commentText,
                                 locale,
                             },
+                            {
+                                onDraftHtmlDelta: options?.onDraftDelta,
+                            },
                         );
                         const next = insertOrReplaceDraft(
                             html,
                             commentId,
                             draftHtml,
-                            randomUUID(),
+                            draftId,
                         );
                         await manuscript.writeManuscript(bookId, next);
                         return next;

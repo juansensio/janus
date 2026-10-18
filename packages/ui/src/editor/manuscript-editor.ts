@@ -1,4 +1,4 @@
-import { deleteAiComment } from "@janus/manuscript";
+import { deleteAiComment, insertOrReplaceDraft } from "@janus/manuscript";
 import { baseKeymap } from "prosemirror-commands";
 import { history, redo, undo } from "prosemirror-history";
 import { keymap } from "prosemirror-keymap";
@@ -33,6 +33,11 @@ export type ManuscriptEditor = {
     insertAiComment(): string;
     refreshAiCommentChrome(): void;
     showWriteErrorForComment(commentId: string, error: unknown): void;
+    applyStreamingDraft(
+        commentId: string,
+        draftId: string,
+        draftHtml: string,
+    ): void;
 };
 
 export function createManuscriptEditor(
@@ -42,12 +47,16 @@ export function createManuscriptEditor(
 ): ManuscriptEditor {
     const doc = parseManuscriptHtml(initialHtml);
     const chromeRefreshers = new Set<() => void>();
+    let suppressDocChange = false;
 
     const changePlugin = new Plugin({
         view() {
             return {
                 update(view, prevState) {
-                    if (!view.state.doc.eq(prevState.doc)) {
+                    if (
+                        !suppressDocChange &&
+                        !view.state.doc.eq(prevState.doc)
+                    ) {
                         options.onDocChange();
                     }
                 },
@@ -270,6 +279,30 @@ export function createManuscriptEditor(
             }
             statusEl.textContent = t(aiWriteErrorKey(error));
             statusEl.classList.add("editor-ai-comment-status-error");
+        },
+        applyStreamingDraft(
+            commentId: string,
+            draftId: string,
+            draftHtml: string,
+        ): void {
+            suppressDocChange = true;
+            try {
+                const html = insertOrReplaceDraft(
+                    serializeManuscriptHtml(view.state.doc),
+                    commentId,
+                    draftHtml,
+                    draftId,
+                );
+                const nextDoc = parseManuscriptHtml(html);
+                view.updateState(
+                    EditorState.create({
+                        doc: nextDoc,
+                        plugins: view.state.plugins,
+                    }),
+                );
+            } finally {
+                suppressDocChange = false;
+            }
         },
     };
 }

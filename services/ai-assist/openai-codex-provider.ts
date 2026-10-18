@@ -1,13 +1,14 @@
 import { fetchListedInferenceModelSlug } from "./openai-models";
 import {
+    createResponsesSseFeeder,
     isResponsesSseBody,
-    parseResponsesSse,
 } from "./openai-responses-stream";
 import { buildGenerateDraftMessages } from "./prompt";
 import {
     AiAssistError,
     type AiProvider,
     type AiProviderSession,
+    type GenerateDraftCallbacks,
     type GenerateDraftInput,
     type GenerateDraftResult,
 } from "./provider";
@@ -27,11 +28,61 @@ function extractDraftTextFromJson(data: {
     );
 }
 
-function wrapDraftHtml(text: string): string {
+export function wrapDraftHtml(text: string): string {
     const trimmed = text.trim();
     return trimmed.includes("<janus-p>")
         ? trimmed
         : `<janus-p>${trimmed}</janus-p>`;
+}
+
+function sseFeederOptions(onDraftHtmlDelta?: (draftHtml: string) => void) {
+    return onDraftHtmlDelta
+        ? {
+              onTextDelta: (text: string) =>
+                  onDraftHtmlDelta(wrapDraftHtml(text)),
+          }
+        : undefined;
+}
+
+async function readOpenAiResponseText(
+    response: Response,
+    contentType: string,
+    onDraftHtmlDelta?: (draftHtml: string) => void,
+): Promise<string> {
+    if (response.body) {
+        const feeder = createResponsesSseFeeder(
+            sseFeederOptions(onDraftHtmlDelta),
+        );
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) {
+                break;
+            }
+            feeder.feed(decoder.decode(value, { stream: true }));
+        }
+        return feeder.finish();
+    }
+
+    const raw = await response.text();
+    if (isResponsesSseBody(raw, contentType)) {
+        const feeder = createResponsesSseFeeder(
+            sseFeederOptions(onDraftHtmlDelta),
+        );
+        feeder.feed(raw);
+        return feeder.finish();
+    }
+    return extractDraftTextFromJson(
+        JSON.parse(raw) as {
+            output?: Array<{
+                content?: Array<{
+                    type?: string;
+                    text?: string;
+                }>;
+            }>;
+        },
+    );
 }
 
 export function createOpenAiCodexProvider(fetchImpl: FetchFn = fetch): AiProvider {
@@ -41,6 +92,7 @@ export function createOpenAiCodexProvider(fetchImpl: FetchFn = fetch): AiProvide
         async generateDraft(
             session: AiProviderSession,
             input: GenerateDraftInput,
+            callbacks?: GenerateDraftCallbacks,
         ): Promise<GenerateDraftResult> {
             const model =
                 session.model ??
@@ -89,20 +141,12 @@ export function createOpenAiCodexProvider(fetchImpl: FetchFn = fetch): AiProvide
                 );
             }
 
-            const raw = await response.text();
             const contentType = response.headers.get("content-type") ?? "";
-            const text = isResponsesSseBody(raw, contentType)
-                ? parseResponsesSse(raw)
-                : extractDraftTextFromJson(
-                      JSON.parse(raw) as {
-                          output?: Array<{
-                              content?: Array<{
-                                  type?: string;
-                                  text?: string;
-                              }>;
-                          }>;
-                      },
-                  );
+            const text = await readOpenAiResponseText(
+                response,
+                contentType,
+                callbacks?.onDraftHtmlDelta,
+            );
 
             return { draftHtml: wrapDraftHtml(text) };
         },

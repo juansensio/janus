@@ -14,7 +14,13 @@ export const AI_IPC_CHANNELS = {
     connectOpenAiCodex: "janus:ai:connectOpenAiCodex",
     disconnectOpenAiCodex: "janus:ai:disconnectOpenAiCodex",
     writeForComment: "janus:ai:writeForComment",
+    writeDraftDelta: "janus:ai:writeDraftDelta",
 } as const;
+
+export type AiWriteDraftDeltaPayload = {
+    requestId: string;
+    draftHtml: string;
+};
 
 function rejectForBridge(error: unknown): LibraryIpcReject {
     if (isLibraryIpcReject(error)) {
@@ -60,7 +66,13 @@ export function registerAiIpc(
 
     ipcMain.handle(
         AI_IPC_CHANNELS.writeForComment,
-        async (_event, bookId: unknown, commentId: unknown, locale: unknown) => {
+        async (
+            event,
+            bookId: unknown,
+            commentId: unknown,
+            locale: unknown,
+            requestId: unknown,
+        ) => {
             if (typeof bookId !== "string" || typeof commentId !== "string") {
                 throw rejectForBridge(
                     new LibraryBridgeError("INVALID_BOOK_ID", "Invalid book id"),
@@ -73,11 +85,21 @@ export function registerAiIpc(
                     }),
                 );
             }
+            const onDraftDelta =
+                typeof requestId === "string"
+                    ? (draftHtml: string) => {
+                          event.sender.send(AI_IPC_CHANNELS.writeDraftDelta, {
+                              requestId,
+                              draftHtml,
+                          } satisfies AiWriteDraftDeltaPayload);
+                      }
+                    : undefined;
             try {
                 return await service().writeForComment(
                     bookId,
                     commentId,
                     locale,
+                    { onDraftDelta },
                 );
             } catch (error) {
                 throw rejectForBridge(error);
