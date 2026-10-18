@@ -53,7 +53,7 @@ vi.mock("@capacitor/filesystem", () => {
                 },
             ),
             rmdir: vi.fn(async ({ path }: { path: string }) => {
-                for (const key of [...store.keys()]) {
+                for (const key of store.keys()) {
                     if (key === path || key.startsWith(`${path}/`)) {
                         store.delete(key);
                     }

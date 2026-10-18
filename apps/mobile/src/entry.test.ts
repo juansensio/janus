@@ -1,6 +1,19 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { installMobileBridge } from "./native-bridge";
 import { startShell } from "@janus/ui/bootstrap";
+
+vi.mock("@capacitor/filesystem", () => ({
+    Directory: { Data: "DATA" },
+    Encoding: { UTF8: "utf8" },
+    Filesystem: {
+        mkdir: vi.fn(async () => {}),
+        readdir: vi.fn(async () => ({ files: [] })),
+        readFile: vi.fn(async () => ({ data: "" })),
+        writeFile: vi.fn(async () => {}),
+        rmdir: vi.fn(async () => {}),
+        stat: vi.fn(async () => ({ type: "directory" })),
+    },
+}));
 
 afterEach(() => {
     delete (window as { janus?: unknown }).janus;

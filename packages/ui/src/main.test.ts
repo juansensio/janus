@@ -24,6 +24,7 @@ describe("shell entry (main bootstrap)", () => {
 
         expect(root.querySelector("h1")?.textContent).toBe("Janus");
         expect(root.dataset.platform).toBe("desktop");
+        expect(root.querySelector(".janus-shelf")).not.toBeNull();
     });
 
     it("throws Missing #app when root element is absent", async () => {
