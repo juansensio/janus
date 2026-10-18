@@ -61,14 +61,14 @@ Sizing: **S** = 1–2 files, **M** = 3–5 files.
 
 **Acceptance criteria:**
 
-- [ ] Preload exposes `readManuscript` / `writeManuscript` on `window.janus`
-- [ ] Invalid id and missing book reject before manuscript I/O
-- [ ] Read/write hit real `manuscript.md` under user library root in integration-style tests
+- [x] Preload exposes `readManuscript` / `writeManuscript` on `window.janus`
+- [x] Invalid id and missing book reject before manuscript I/O
+- [x] Read/write hit real `manuscript.md` under user library root in integration-style tests
 
 **Verification:**
 
-- [ ] `bun run test` (`apps/desktop` manuscript IPC tests)
-- [ ] `bun run lint`
+- [x] `bun run test` (`apps/desktop` manuscript IPC tests)
+- [x] `bun run lint`
 
 **Dependencies:** Task 2
 
@@ -84,13 +84,13 @@ Sizing: **S** = 1–2 files, **M** = 3–5 files.
 
 **Acceptance criteria:**
 
-- [ ] Mobile `window.janus` implements manuscript read/write
-- [ ] Tests cover forward to manuscript service with mock FS
+- [x] Mobile `window.janus` implements manuscript read/write
+- [x] Tests cover forward to manuscript service with mock FS
 
 **Verification:**
 
-- [ ] `bun run test` (`apps/mobile`)
-- [ ] `bun run lint`
+- [x] `bun run test` (`apps/mobile`)
+- [x] `bun run lint`
 
 **Dependencies:** Task 2
 
@@ -106,14 +106,14 @@ Sizing: **S** = 1–2 files, **M** = 3–5 files.
 
 **Acceptance criteria:**
 
-- [ ] Clicking the card (not edit/delete) opens the editor for that book
-- [ ] Successful load shows title + textarea content from `readManuscript`
-- [ ] Load error shows inline message; **Shelf** returns to shelf without calling write
+- [x] Clicking the card (not edit/delete) opens the editor for that book
+- [x] Successful load shows title + textarea content from `readManuscript`
+- [x] Load error shows inline message; **Shelf** returns to shelf without calling write
 
 **Verification:**
 
-- [ ] `bun run test` (editor open + load failure cases)
-- [ ] `bun run lint`
+- [x] `bun run test` (editor open + load failure cases)
+- [x] `bun run lint`
 - [ ] Manual: open book with no `manuscript.md` → empty field; **Shelf** → no new file on disk
 
 **Dependencies:** Tasks 2–4 (mock bridge sufficient for UI tests; shells for manual)
@@ -130,14 +130,14 @@ Sizing: **S** = 1–2 files, **M** = 3–5 files.
 
 **Acceptance criteria:**
 
-- [ ] Typing triggers saves at ≤1 Hz while dirty; no writes when text matches last successful save
-- [ ] **Shelf** flushes pending text before showing shelf; failed flush does not navigate away
-- [ ] Opening the same book again shows last saved text (including Unicode)
+- [x] Typing triggers saves at ≤1 Hz while dirty; no writes when text matches last successful save
+- [x] **Shelf** flushes pending text before showing shelf; failed flush does not navigate away
+- [x] Opening the same book again shows last saved text (including Unicode)
 
 **Verification:**
 
-- [ ] `bun run test` (editor autosave tests)
-- [ ] `bun run lint`
+- [x] `bun run test` (editor autosave tests)
+- [x] `bun run lint`
 - [ ] Manual: type, wait for Saved, shelf, reopen; kill app and relaunch
 
 **Dependencies:** Task 5
@@ -154,12 +154,12 @@ Sizing: **S** = 1–2 files, **M** = 3–5 files.
 
 **Acceptance criteria:**
 
-- [ ] Spec status and map footnote match shipped behavior
-- [ ] Install doc lists manual checks for slice 1 success criteria
+- [x] Spec status and map footnote match shipped behavior
+- [x] Install doc lists manual checks for slice 1 success criteria
 
 **Verification:**
 
-- [ ] `bun run test` && `bun run lint`
+- [x] `bun run test` && `bun run lint`
 - [ ] Manual walkthrough per install doc
 
 **Dependencies:** Task 6
@@ -172,20 +172,20 @@ Sizing: **S** = 1–2 files, **M** = 3–5 files.
 
 ## Checkpoint: Contract (after Tasks 1–2)
 
-- [ ] Domain + bridge tests green
-- [ ] Mock manuscript round-trip works
+- [x] Domain + bridge tests green
+- [x] Mock manuscript round-trip works
 
 ## Checkpoint: Shells (after Tasks 3–4)
 
-- [ ] Desktop + mobile tests green
-- [ ] Stable error `code` on bad id / missing book
+- [x] Desktop + mobile tests green
+- [x] Stable error `code` on bad id / missing book
 
 ## Checkpoint: Core flow (after Tasks 5–6)
 
-- [ ] UI tests green
+- [x] UI tests green
 - [ ] Desktop manual: create book → open → type → shelf → reopen → quit → relaunch → reopen
 
 ## Checkpoint: Complete (after Task 7)
 
-- [ ] Docs and map updated
+- [x] Docs and map updated
 - [ ] Shelf rename/delete/delete-dir behavior unchanged

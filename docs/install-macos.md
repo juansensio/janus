@@ -56,12 +56,22 @@ After `bun run dev:desktop` or `bun run desktop:prod`, verify the dark bookshelf
 2. **New book** — click **+**; a **New book** dialog opens with **Untitled** (or **Untitled 2**, …) prefilled. Press **Create** to add the card, or **Cancel** to leave the shelf unchanged. Enter a custom name before **Create** to use that title.
 3. **Rename** — hover or focus a card, click the pencil (edit) icon; change the name in **Rename book** and press **Save**.
 4. **Delete** — hover or focus a card, click the minus icon; confirm with **Delete "{title}"? This cannot be undone.**; the card disappears.
-5. **Scroll** — with several books, the row scrolls horizontally.
+5. **Wrap** — with several books, cards wrap within the window width (no horizontal scrollbar on the shelf row; the page may scroll vertically).
 6. **Persistence** — quit the app completely and reopen (`dev:desktop` or `desktop:prod`); the same books and titles remain in the same order.
 
-On **iOS Simulator** (`bun run dev:ios` for live reload, or `cap:sync:ios` + Xcode Run for production-like), repeat steps 1–5 with `data-platform="mobile"`.
+On **iOS Simulator** (`bun run dev:ios` for live reload, or `cap:sync:ios` + Xcode Run for production-like), repeat steps 1–6 with `data-platform="mobile"`.
 
-`bun run validate:install` remains a **shell** toolchain check (tests + `build:ui` artifacts); it does not launch Electron or the Simulator. Use the steps above for library sign-off.
+### Manuscript (slice 1 — open and autosave)
+
+After the shelf checks above:
+
+1. **Open** — click a book card (not the edit or delete icons). The editor shows the book title, a **Shelf** control, and a text field. A book with no `manuscript.md` yet opens empty.
+2. **Type** — enter text; after about a second the status shows **Saved** (no Save button).
+3. **Shelf** — return to the bookshelf; reopen the same book and confirm the text is still there.
+4. **Relaunch** — quit the app completely, reopen, open the book again; text persists.
+5. **Shelf actions** — rename and delete still work from the shelf; delete removes the book folder including `manuscript.md`.
+
+`bun run validate:install` remains a **shell** toolchain check (tests + `build:ui` artifacts); it does not launch Electron or the Simulator. Use the steps above for library and manuscript sign-off.
 
 If Electron fails to start (missing `path.txt`, *“failed to install correctly”*, or `Electron Framework.framework` not loaded), the `node_modules/electron/dist` bundle is probably incomplete. Fix it with:
 

@@ -10,9 +10,11 @@
 
 Build order (full Neo loop): shell → languages → manuscript → library, ai-assist
 
-**Library slice 1** (`docs/specs/SPEC-library.md`, approved): shelf CRUD only — **build after shell**, before `languages` and `manuscript`. Open-book / manuscript integration stays blocked until `manuscript` exists.
+**Library slice 1** (`docs/specs/SPEC-library.md`, approved): shelf CRUD only — **build after shell**, before `languages` and `manuscript`.
 
-`library` (full) and `ai-assist` can be specified in parallel after `manuscript`.
+**Manuscript slice 1** (`docs/specs/SPEC-manuscript.md`, approved): open book, edit `manuscript.md`, autosave — **build after library slice 1c**; does **not** wait on `languages`. Delivers library “open book” (slice 2 in `SPEC-library.md`).
+
+`library` (full) and `ai-assist` can be specified in parallel after `manuscript` slice 1.
 
 **Module specs** live in `docs/specs/SPEC-<module-id>.md` (for example `docs/specs/SPEC-shell.md`). This map is the index; do not add module specs at the repo root.
 

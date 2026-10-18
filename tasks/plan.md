@@ -36,33 +36,33 @@ Task 1: @janus/manuscript domain + tests
 Full acceptance criteria: **`tasks/todo.md`** Tasks **1–7**.
 
 ### Phase 1: Domain and contract
-- [ ] Task 1: `services/manuscript` read/write + Vitest
-- [ ] Task 2: `JanusBridge` manuscript methods + mock store
+- [x] Task 1: `services/manuscript` read/write + Vitest
+- [x] Task 2: `JanusBridge` manuscript methods + mock store
 
 ### Checkpoint: Contract
-- [ ] `bun run test` green for manuscript + bridge packages
-- [ ] Mock bridge round-trips text per book id
+- [x] `bun run test` green for manuscript + bridge packages
+- [x] Mock bridge round-trips text per book id
 
 ### Phase 2: Shells
-- [ ] Task 3: Desktop manuscript IPC + preload + tests
-- [ ] Task 4: Mobile `native-bridge` manuscript methods + tests
+- [x] Task 3: Desktop manuscript IPC + preload + tests
+- [x] Task 4: Mobile `native-bridge` manuscript methods + tests
 
 ### Checkpoint: Shells
-- [ ] Desktop and mobile tests pass; invalid/missing id reject with stable `code`
+- [x] Desktop and mobile tests pass; invalid/missing id reject with stable `code`
 
 ### Phase 3: Writer flow
-- [ ] Task 5: Card opens editor; load failure UX; editor chrome + styles
-- [ ] Task 6: Autosave (1s), Shelf flush, save failure stays on editor
+- [x] Task 5: Card opens editor; load failure UX; editor chrome + styles
+- [x] Task 6: Autosave (1s), Shelf flush, save failure stays on editor
 
 ### Checkpoint: Core flow
-- [ ] UI tests cover open, autosave rate, flush, failed save
+- [x] UI tests cover open, autosave rate, flush, failed save
 - [ ] Manual: type, return to shelf, reopen, quit/relaunch (desktop)
 
 ### Phase 4: Sign-off
-- [ ] Task 7: Approve spec status, CAPABILITY-MAP footnote, `install-macos.md` manuscript steps
+- [x] Task 7: Approve spec status, CAPABILITY-MAP footnote, `install-macos.md` manuscript steps
 
 ### Checkpoint: Complete
-- [ ] `bun run test` && `bun run lint`
+- [x] `bun run test` && `bun run lint`
 - [ ] Rename/delete on shelf unchanged; delete removes `manuscript.md` with book dir
 
 ## Risks and mitigations

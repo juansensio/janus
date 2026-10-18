@@ -1,6 +1,6 @@
 # Spec: manuscript
 
-> Status: **not approved**. **Slice 1 — open, write, autosave.** Depends on signed-off **shell** and implemented **library** slice 1c (shelf CRUD, naming, dark shelf). Does **not** wait on `languages`.
+> Status: **Slice 1 approved** (2026-10-18). **Open, write, autosave.** Depends on signed-off **shell** and implemented **library** slice 1c+ (shelf CRUD, naming, dark shelf). Does **not** wait on `languages`.
 
 This is one module from [`CAPABILITY-MAP.md`](../../CAPABILITY-MAP.md). It is not a new map. Library slice 2 in [`SPEC-library.md`](SPEC-library.md) (“selecting a card opens the manuscript”) is delivered here. Library still owns which books exist and what `book.json` says. Manuscript owns the writing file and the editor.
 
