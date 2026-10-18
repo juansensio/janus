@@ -485,6 +485,7 @@ Writers name books explicitly when adding them and can fix titles on the shelf w
 | `library.dialog.save` | Save |
 | `library.dialog.cancel` | Cancel |
 | `library.dialog.invalidTitle` | Enter a book name. |
+| `library.dialog.duplicateTitle` | That name is already on your shelf. Choose a different book name. |
 | `library.rename` | Rename |
 | `library.renameFailed` | Could not rename the book. |
 

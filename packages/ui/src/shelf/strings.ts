@@ -17,5 +17,6 @@ export const SHELF_STRINGS = {
     dialogSave: "Save",
     dialogCancel: "Cancel",
     dialogInvalidTitle: "Enter a book name.",
-    dialogDuplicateTitle: "A book with this name already exists.",
+    dialogDuplicateTitle:
+        "That name is already on your shelf. Choose a different book name.",
 } as const;

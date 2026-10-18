@@ -31,7 +31,9 @@ export function assertTitleNotDuplicate(
         (book) => book.id !== excludeId && book.title === title,
     );
     if (clash) {
-        throw new DuplicateBookTitleError("A book with this name already exists");
+        throw new DuplicateBookTitleError(
+            "That name is already on your shelf. Choose a different book name.",
+        );
     }
 }
 
