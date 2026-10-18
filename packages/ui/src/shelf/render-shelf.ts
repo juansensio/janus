@@ -1,5 +1,8 @@
 import { createShellLabel, type BookSummary, type JanusBridge } from "@janus/bridge";
-import { openBookNameDialog } from "./book-name-dialog";
+import {
+    openBookNameDialog,
+    type OpenBookNameDialogOptions,
+} from "./book-name-dialog";
 import { coverClassForBookId } from "./cover-palette";
 import { SHELF_STRINGS } from "./strings";
 
@@ -53,6 +56,23 @@ function appendShelfChrome(host: HTMLElement): void {
     host.append(header);
 }
 
+function openBookNameDialogThenRefreshShelf(
+    host: HTMLElement,
+    bridge: JanusBridge,
+    options: Omit<OpenBookNameDialogOptions, "onConfirm"> & {
+        submit: (title: string) => Promise<void>;
+    },
+): void {
+    const { submit, ...dialogOptions } = options;
+    openBookNameDialog({
+        ...dialogOptions,
+        onConfirm: async (title) => {
+            await submit(title);
+            await renderShelf(host, bridge);
+        },
+    });
+}
+
 function appendAddTile(
     track: HTMLUListElement,
     host: HTMLElement,
@@ -66,17 +86,17 @@ function appendAddTile(
     addButton.textContent = "+";
     addButton.setAttribute("aria-label", SHELF_STRINGS.addBook);
     addButton.addEventListener("click", () => {
-        void bridge.suggestNewBookTitle().then((initialValue) => {
-            openBookNameDialog({
+        void (async () => {
+            const initialValue = await bridge.suggestNewBookTitle();
+            openBookNameDialogThenRefreshShelf(host, bridge, {
                 mode: "create",
                 initialValue,
                 returnFocusTo: addButton,
-                onConfirm: async (title) => {
+                submit: async (title) => {
                     await bridge.createBook(title);
-                    await renderShelf(host, bridge);
                 },
             });
-        });
+        })();
     });
     addItem.append(addButton);
     track.append(addItem);
@@ -157,13 +177,12 @@ export async function renderShelf(
         );
         editButton.append(createEditIcon());
         editButton.addEventListener("click", () => {
-            openBookNameDialog({
+            openBookNameDialogThenRefreshShelf(host, bridge, {
                 mode: "rename",
                 initialValue: book.title,
                 returnFocusTo: editButton,
-                onConfirm: async (newTitle) => {
+                submit: async (newTitle) => {
                     await bridge.renameBook(book.id, newTitle);
-                    await renderShelf(host, bridge);
                 },
             });
         });

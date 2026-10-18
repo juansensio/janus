@@ -1,4 +1,8 @@
-import type { JanusBridgeErrorCode } from "@janus/bridge";
+import {
+    bridgeErrorCode,
+    unwrapIpcInvokeMessage,
+    type JanusBridgeErrorCode,
+} from "@janus/bridge";
 
 /** Serializable reject payload for `ipcMain.handle` (custom `Error` fields do not reach the renderer). */
 export type LibraryIpcReject = {
@@ -24,14 +28,6 @@ export function isLibraryIpcReject(value: unknown): value is LibraryIpcReject {
     );
 }
 
-const IPC_INVOKE_WRAP =
-    /^Error invoking remote method '[^']+':(?: Error:)? (.+)$/;
-
-export function unwrapIpcInvokeMessage(message: string): string {
-    const match = message.match(IPC_INVOKE_WRAP);
-    return match?.[1] ?? message;
-}
-
 /** Rebuild a renderer-side `Error` with stable `code` after `ipcRenderer.invoke`. */
 export function libraryErrorFromIpcFailure(error: unknown): Error {
     if (isLibraryIpcReject(error)) {
@@ -48,18 +44,6 @@ export function libraryErrorFromIpcFailure(error: unknown): Error {
     return Object.assign(new Error("Library operation failed"), {
         code: "UNKNOWN",
     });
-}
-
-function bridgeErrorCode(error: unknown): string | undefined {
-    if (
-        error !== null &&
-        typeof error === "object" &&
-        "code" in error &&
-        typeof (error as { code: unknown }).code === "string"
-    ) {
-        return (error as { code: string }).code;
-    }
-    return undefined;
 }
 
 export async function invokeLibraryIpc<T>(

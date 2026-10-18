@@ -1,3 +1,9 @@
+export {
+    bridgeErrorCode,
+    extractErrorMessage,
+    unwrapIpcInvokeMessage,
+} from "./bridge-error";
+
 export type Platform = "desktop" | "mobile";
 
 /** Shelf row returned by library bridge methods. */

@@ -64,6 +64,26 @@ function toShelfServiceError(error: unknown): ShelfServiceError {
     throw error;
 }
 
+function normalizeTitleForService(titleRaw: string): string {
+    try {
+        return normalizeBookTitle(titleRaw);
+    } catch (error) {
+        throw toShelfServiceError(error);
+    }
+}
+
+function ensureTitleUnique(
+    title: string,
+    books: BookSummary[],
+    excludeId?: string,
+): void {
+    try {
+        assertTitleNotDuplicate(title, books, excludeId);
+    } catch (error) {
+        throw toShelfServiceError(error);
+    }
+}
+
 export type ShelfService = {
     listBooks(): Promise<BookSummary[]>;
     suggestNewBookTitle(): Promise<string>;
@@ -148,18 +168,9 @@ export function createShelfService(
 
         async createBook(titleRaw: string): Promise<BookSummary> {
             await ensureBooksDir();
-            let title: string;
-            try {
-                title = normalizeBookTitle(titleRaw);
-            } catch (error) {
-                throw toShelfServiceError(error);
-            }
+            const title = normalizeTitleForService(titleRaw);
             const existing = await this.listBooks();
-            try {
-                assertTitleNotDuplicate(title, existing);
-            } catch (error) {
-                throw toShelfServiceError(error);
-            }
+            ensureTitleUnique(title, existing);
             const id = createId().toLowerCase();
             if (!validateBookId(id)) {
                 throw new Error("Generated book id is invalid");
@@ -182,12 +193,7 @@ export function createShelfService(
         },
 
         async renameBook(id: string, titleRaw: string): Promise<BookSummary> {
-            let title: string;
-            try {
-                title = normalizeBookTitle(titleRaw);
-            } catch (error) {
-                throw toShelfServiceError(error);
-            }
+            const title = normalizeTitleForService(titleRaw);
             const dir = bookDir(id);
             const manifestPath = fs.join(dir, "book.json");
             let manifest;
@@ -204,11 +210,7 @@ export function createShelfService(
                 throw error;
             }
             const existing = await this.listBooks();
-            try {
-                assertTitleNotDuplicate(title, existing, id);
-            } catch (error) {
-                throw toShelfServiceError(error);
-            }
+            ensureTitleUnique(title, existing, id);
             const updated = {
                 ...manifest,
                 title,

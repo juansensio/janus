@@ -3,7 +3,6 @@ import {
     isLibraryIpcReject,
     libraryErrorFromIpcFailure,
     toLibraryIpcReject,
-    unwrapIpcInvokeMessage,
 } from "./library-ipc-error";
 
 describe("library-ipc-error", () => {
@@ -28,13 +27,4 @@ describe("library-ipc-error", () => {
         );
     });
 
-    it("unwraps electron invoke wrapper message", () => {
-        expect(
-            unwrapIpcInvokeMessage(
-                "Error invoking remote method 'janus:library:createBook': Error: That name is already on your shelf. Choose a different book name.",
-            ),
-        ).toBe(
-            "That name is already on your shelf. Choose a different book name.",
-        );
-    });
 });
