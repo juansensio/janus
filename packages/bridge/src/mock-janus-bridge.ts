@@ -97,6 +97,7 @@ export function createMockJanusBridge(
             mockEditorZoomPercent = valid;
             return buildEditorZoomResult(valid);
         },
+        subscribeEditorZoomMenuAction: () => () => {},
         getAiProviderStatus: async () => ({ connected: false }),
         connectOpenAiCodex: async () => {
             throw Object.assign(new Error("Not supported in mock"), {

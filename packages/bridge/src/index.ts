@@ -83,6 +83,8 @@ export {
     type EditorZoomResult,
 } from "./editor-zoom";
 
+export type EditorZoomMenuAction = "in" | "out" | "reset";
+
 export interface JanusBridge {
     platform(): Platform;
     listBooks(): Promise<BookSummary[]>;
@@ -117,6 +119,9 @@ export interface JanusBridge {
     setUiLanguage(code: string): Promise<UiLanguageResult>;
     getEditorZoom(): Promise<EditorZoomResult>;
     setEditorZoom(percent: number): Promise<EditorZoomResult>;
+    subscribeEditorZoomMenuAction(
+        listener: (action: EditorZoomMenuAction) => void,
+    ): () => void;
 }
 
 export function createShellLabel(): string {

@@ -112,6 +112,7 @@ export function installMobileBridge(): void {
             });
             return buildEditorZoomResult(valid);
         },
+        subscribeEditorZoomMenuAction: () => () => {},
     };
     window.janus = bridge;
 }

@@ -41,11 +41,11 @@
 
 ## Task 7: Editor keyboard shortcuts
 
-- [ ] Document keydown handler (in/out/reset, skip `<select>`)
-- [ ] Vitest
+- [x] Document keydown handler (in/out/reset, skip `<select>`)
+- [x] Vitest
 
 ## Task 8: Desktop View menu
 
-- [ ] `zoom-menu.ts` Application menu + `webContents.send`
-- [ ] Preload forwards to callback; editor subscribes
-- [ ] Vitest smoke for menu template / channel
+- [x] `zoom-menu.ts` Application menu + `webContents.send`
+- [x] Preload forwards to callback; editor subscribes
+- [x] Vitest smoke for menu template / channel

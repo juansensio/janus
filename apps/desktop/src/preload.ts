@@ -93,6 +93,20 @@ const bridge: JanusBridge = {
     getEditorZoom: () => invoke(ZOOM_IPC_CHANNELS.getEditorZoom),
     setEditorZoom: (percent: number) =>
         invoke(ZOOM_IPC_CHANNELS.setEditorZoom, percent),
+    subscribeEditorZoomMenuAction: (listener) => {
+        const handler = (
+            _event: Electron.IpcRendererEvent,
+            action: unknown,
+        ) => {
+            if (action === "in" || action === "out" || action === "reset") {
+                listener(action);
+            }
+        };
+        ipcRenderer.on(ZOOM_IPC_CHANNELS.menuAction, handler);
+        return () => {
+            ipcRenderer.removeListener(ZOOM_IPC_CHANNELS.menuAction, handler);
+        };
+    },
 };
 
 contextBridge.exposeInMainWorld("janus", bridge);
