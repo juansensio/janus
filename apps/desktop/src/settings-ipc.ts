@@ -38,6 +38,7 @@ export function registerSettingsIpc(
         userDataPath: string;
         fs: LibraryRootFs;
         showDirectoryPicker: () => Promise<string | null>;
+        reloadLibraryContext?: () => Promise<void>;
     },
 ): void {
     ipcMain.handle(SETTINGS_IPC_CHANNELS.getLibraryRoot, async () => {
@@ -72,6 +73,7 @@ export function registerSettingsIpc(
                 { ...settings, libraryRoot: chosen },
                 options.fs,
             );
+            await options.reloadLibraryContext?.();
             return { path: chosen, needsReload: true as const };
         } catch (error) {
             throw rejectForBridge(error);

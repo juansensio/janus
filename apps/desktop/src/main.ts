@@ -115,12 +115,27 @@ app.whenReady().then(async () => {
             fs: rootFs,
         },
     );
-    const root = libraryContext.resolved.path;
-    registerLibraryIpc(ipcMain, root, libraryFs);
-    registerManuscriptIpc(ipcMain, root, {
-        ...libraryFs,
-        rename: (from, to) => fs.rename(from, to),
-    });
+    const reloadLibraryContext = async (): Promise<void> => {
+        libraryContext = await initDesktopLibraryContext({
+            env: process.env,
+            userDataPath,
+            isDev: isJanusDevMode(),
+            fs: rootFs,
+        });
+    };
+    registerLibraryIpc(
+        ipcMain,
+        () => libraryContext.resolved.path,
+        libraryFs,
+    );
+    registerManuscriptIpc(
+        ipcMain,
+        () => libraryContext.resolved.path,
+        {
+            ...libraryFs,
+            rename: (from, to) => fs.rename(from, to),
+        },
+    );
     registerSettingsIpc(
         ipcMain,
         () => libraryContext,
@@ -128,6 +143,7 @@ app.whenReady().then(async () => {
             userDataPath,
             fs: rootFs,
             showDirectoryPicker: createElectronDirectoryPicker(dialog),
+            reloadLibraryContext,
         },
     );
 

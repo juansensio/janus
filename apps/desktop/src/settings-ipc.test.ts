@@ -111,6 +111,42 @@ describe("registerSettingsIpc", () => {
         expect(writeFile).toHaveBeenCalled();
     });
 
+    it("reloads library context after choosing a new folder", async () => {
+        const handlers = new Map<string, (...args: unknown[]) => unknown>();
+        const reloadLibraryContext = vi.fn(async () => {});
+        const ipcMain = {
+            handle(channel: string, fn: (...args: unknown[]) => unknown) {
+                handlers.set(channel, fn);
+            },
+        };
+        registerSettingsIpc(
+            ipcMain as import("electron").IpcMain,
+            () => ({
+                resolved: { path: "/data/library", source: "user-data" },
+                settings: {},
+            }),
+            {
+                userDataPath: "/user",
+                fs: {
+                    readFile: async () => "{}",
+                    writeFile: async () => {},
+                    mkdir: async () => {},
+                    rename: vi.fn(async () => {}),
+                    readdir: async (dir: string) =>
+                        dir === "/data/library/books" ? ["book-id"] : [],
+                    stat: async () => ({ isDirectory: () => true }),
+                },
+                showDirectoryPicker: async () => "/Volumes/Books/Janus",
+                reloadLibraryContext,
+            },
+        );
+        const chooseHandler = handlers.get(
+            SETTINGS_IPC_CHANNELS.chooseLibraryRoot,
+        );
+        await chooseHandler!(null);
+        expect(reloadLibraryContext).toHaveBeenCalledOnce();
+    });
+
     it("moves library from current root before saving settings", async () => {
         const handlers = new Map<string, (...args: unknown[]) => unknown>();
         const rename = vi.fn(async () => {});

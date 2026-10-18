@@ -29,14 +29,12 @@ function rejectForBridge(error: unknown): LibraryIpcReject {
 
 export function registerLibraryIpc(
     ipcMain: IpcMain,
-    libraryRoot: string,
+    getLibraryRoot: () => string,
     fs: LibraryFs,
 ): void {
-    const service = createLibraryService(libraryRoot, fs);
-
     ipcMain.handle(LIBRARY_IPC_CHANNELS.listBooks, async () => {
         try {
-            return await service.listBooks();
+            return await createLibraryService(getLibraryRoot(), fs).listBooks();
         } catch (error) {
             throw rejectForBridge(error);
         }
@@ -44,7 +42,10 @@ export function registerLibraryIpc(
 
     ipcMain.handle(LIBRARY_IPC_CHANNELS.suggestNewBookTitle, async () => {
         try {
-            return await service.suggestNewBookTitle();
+            return await createLibraryService(
+                getLibraryRoot(),
+                fs,
+            ).suggestNewBookTitle();
         } catch (error) {
             throw rejectForBridge(error);
         }
@@ -60,7 +61,9 @@ export function registerLibraryIpc(
             );
         }
         try {
-            return await service.createBook(title);
+            return await createLibraryService(getLibraryRoot(), fs).createBook(
+                title,
+            );
         } catch (error) {
             throw rejectForBridge(error);
         }
@@ -83,7 +86,10 @@ export function registerLibraryIpc(
                 );
             }
             try {
-                return await service.renameBook(id, title);
+                return await createLibraryService(
+                    getLibraryRoot(),
+                    fs,
+                ).renameBook(id, title);
             } catch (error) {
                 throw rejectForBridge(error);
             }
@@ -99,7 +105,7 @@ export function registerLibraryIpc(
                 );
             }
             try {
-                await service.deleteBook(id);
+                await createLibraryService(getLibraryRoot(), fs).deleteBook(id);
             } catch (error) {
                 throw rejectForBridge(error);
             }

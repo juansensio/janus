@@ -166,6 +166,39 @@ describe("createLibraryService", () => {
 });
 
 describe("registerLibraryIpc", () => {
+    it("lists books from the library root returned by the getter", async () => {
+        const rootA = await fs.mkdtemp(path.join(os.tmpdir(), "janus-lib-a-"));
+        const rootB = await fs.mkdtemp(path.join(os.tmpdir(), "janus-lib-b-"));
+        let activeRoot = rootA;
+        const handlers = new Map<string, (...args: unknown[]) => unknown>();
+        const ipcMain = {
+            handle(channel: string, fn: (...args: unknown[]) => unknown) {
+                handlers.set(channel, fn);
+            },
+        };
+        const seed = createLibraryService(
+            rootA,
+            nodeLibraryFs(),
+            () => "550e8400-e29b-41d4-a716-446655440000",
+        );
+        await seed.createBook("In A");
+
+        registerLibraryIpc(
+            ipcMain as import("electron").IpcMain,
+            () => activeRoot,
+            nodeLibraryFs(),
+        );
+        const listHandler = handlers.get(LIBRARY_IPC_CHANNELS.listBooks);
+
+        await expect(listHandler!(null)).resolves.toHaveLength(1);
+
+        activeRoot = rootB;
+        await expect(listHandler!(null)).resolves.toEqual([]);
+
+        await fs.rm(rootA, { recursive: true });
+        await fs.rm(rootB, { recursive: true });
+    });
+
     it("maps INVALID_BOOK_ID when delete id is not a string", async () => {
         const root = await fs.mkdtemp(path.join(os.tmpdir(), "janus-lib-"));
         const handlers = new Map<string, (...args: unknown[]) => unknown>();
@@ -177,7 +210,7 @@ describe("registerLibraryIpc", () => {
 
         registerLibraryIpc(
             ipcMain as import("electron").IpcMain,
-            root,
+            () => root,
             nodeLibraryFs(),
         );
 

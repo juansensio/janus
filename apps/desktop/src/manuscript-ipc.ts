@@ -29,11 +29,9 @@ function rejectForBridge(error: unknown): LibraryIpcReject {
 
 export function registerManuscriptIpc(
     ipcMain: IpcMain,
-    libraryRoot: string,
+    getLibraryRoot: () => string,
     fs: ManuscriptBridgeFs,
 ): void {
-    const service = createManuscriptBridgeService(libraryRoot, fs);
-
     ipcMain.handle(
         MANUSCRIPT_IPC_CHANNELS.readManuscript,
         async (_event, id: unknown) => {
@@ -43,7 +41,10 @@ export function registerManuscriptIpc(
                 );
             }
             try {
-                return await service.readManuscript(id);
+                return await createManuscriptBridgeService(
+                    getLibraryRoot(),
+                    fs,
+                ).readManuscript(id);
             } catch (error) {
                 throw rejectForBridge(error);
             }
@@ -66,7 +67,10 @@ export function registerManuscriptIpc(
                 );
             }
             try {
-                await service.writeManuscript(id, text);
+                await createManuscriptBridgeService(
+                    getLibraryRoot(),
+                    fs,
+                ).writeManuscript(id, text);
             } catch (error) {
                 throw rejectForBridge(error);
             }

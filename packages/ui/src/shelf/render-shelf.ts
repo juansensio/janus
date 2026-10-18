@@ -73,6 +73,7 @@ function appendShelfChrome(
 function openBookNameDialogThenRefreshShelf(
     host: HTMLElement,
     bridge: JanusBridge,
+    shelfOptions: RenderShelfOptions,
     options: Omit<OpenBookNameDialogOptions, "onConfirm"> & {
         submit: (title: string) => Promise<void>;
     },
@@ -82,7 +83,7 @@ function openBookNameDialogThenRefreshShelf(
         ...dialogOptions,
         onConfirm: async (title) => {
             await submit(title);
-            await renderShelf(host, bridge);
+            await renderShelf(host, bridge, shelfOptions);
         },
     });
 }
@@ -91,6 +92,7 @@ function appendAddTile(
     track: HTMLUListElement,
     host: HTMLElement,
     bridge: JanusBridge,
+    shelfOptions: RenderShelfOptions,
 ): void {
     const addItem = document.createElement("li");
     addItem.setAttribute("role", "listitem");
@@ -102,7 +104,7 @@ function appendAddTile(
     addButton.addEventListener("click", () => {
         void (async () => {
             const initialValue = await bridge.suggestNewBookTitle();
-            openBookNameDialogThenRefreshShelf(host, bridge, {
+            openBookNameDialogThenRefreshShelf(host, bridge, shelfOptions, {
                 mode: "create",
                 initialValue,
                 returnFocusTo: addButton,
@@ -119,14 +121,15 @@ function appendAddTile(
 async function refreshAfterAction(
     host: HTMLElement,
     bridge: JanusBridge,
+    shelfOptions: RenderShelfOptions,
     action: () => Promise<unknown>,
     failureMessage: string,
 ): Promise<void> {
     try {
         await action();
-        await renderShelf(host, bridge);
+        await renderShelf(host, bridge, shelfOptions);
     } catch {
-        await renderShelf(host, bridge);
+        await renderShelf(host, bridge, shelfOptions);
         appendShelfError(host, failureMessage);
     }
 }
@@ -209,7 +212,7 @@ export async function renderShelf(
         editButton.append(createEditIcon());
         editButton.addEventListener("click", (event) => {
             event.stopPropagation();
-            openBookNameDialogThenRefreshShelf(host, bridge, {
+            openBookNameDialogThenRefreshShelf(host, bridge, options, {
                 mode: "rename",
                 initialValue: book.title,
                 returnFocusTo: editButton,
@@ -239,6 +242,7 @@ export async function renderShelf(
             void refreshAfterAction(
                 host,
                 bridge,
+                options,
                 () => bridge.deleteBook(book.id),
                 SHELF_STRINGS.deleteFailed,
             );
@@ -248,6 +252,6 @@ export async function renderShelf(
         track.append(item);
     }
 
-    appendAddTile(track, host, bridge);
+    appendAddTile(track, host, bridge, options);
     host.append(row);
 }

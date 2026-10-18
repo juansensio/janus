@@ -131,6 +131,48 @@ describe("renderShelf", () => {
         );
     });
 
+    it("keeps shelf navigation callbacks after creating a book", async () => {
+        const book = {
+            id: "550e8400-e29b-41d4-a716-446655440001",
+            title: "My Book",
+            createdAt: "2026-01-02T00:00:00.000Z",
+        };
+        const onOpenBook = vi.fn();
+        const onOpenSettings = vi.fn();
+        const listBooks = vi
+            .fn()
+            .mockResolvedValueOnce([])
+            .mockResolvedValueOnce([book]);
+        const host = document.createElement("div");
+        document.body.append(host);
+        const bridge = createMockJanusBridge({
+            platform: () => "desktop",
+            listBooks,
+            suggestNewBookTitle: async () => "Untitled",
+            createBook: async () => book,
+        });
+
+        await renderShelf(host, bridge, { onOpenBook, onOpenSettings });
+        (host.querySelector(".shelf-add") as HTMLButtonElement).click();
+        await vi.waitFor(() =>
+            expect(document.querySelector(".shelf-dialog")).not.toBeNull(),
+        );
+        clickDialogPrimary();
+        await vi.waitFor(() =>
+            expect(host.querySelector(".shelf-card-open")).not.toBeNull(),
+        );
+
+        expect(host.querySelector(".shelf-settings")).not.toBeNull();
+        (
+            host.querySelector(".shelf-card-open") as HTMLButtonElement
+        ).click();
+        expect(onOpenBook).toHaveBeenCalledWith(book);
+        (
+            host.querySelector(".shelf-settings") as HTMLButtonElement
+        ).click();
+        expect(onOpenSettings).toHaveBeenCalledOnce();
+    });
+
     it("keeps create dialog open when createBook rejects duplicate title", async () => {
         const createBook = vi.fn(async () => {
             throw Object.assign(new Error("duplicate"), {

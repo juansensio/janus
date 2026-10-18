@@ -83,7 +83,7 @@ describe("registerManuscriptIpc", () => {
 
         registerManuscriptIpc(
             ipcMain as import("electron").IpcMain,
-            root,
+            () => root,
             nodeFs(),
         );
 

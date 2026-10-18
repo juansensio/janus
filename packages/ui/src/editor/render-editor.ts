@@ -34,6 +34,9 @@ export async function renderEditor(
     host.replaceChildren();
     host.className = "janus-editor";
 
+    const chrome = document.createElement("div");
+    chrome.className = "editor-chrome";
+
     const header = document.createElement("header");
     header.className = "editor-header";
 
@@ -42,12 +45,8 @@ export async function renderEditor(
     backButton.className = "editor-back";
     backButton.textContent = EDITOR_STRINGS.backToShelf;
 
-    const title = document.createElement("h1");
-    title.className = "editor-title";
-    title.textContent = book.title;
-
-    header.append(backButton, title);
-    host.append(header);
+    header.append(backButton);
+    chrome.append(header);
 
     const status = document.createElement("p");
     status.className = "editor-status";
@@ -59,7 +58,8 @@ export async function renderEditor(
     const loadError = document.createElement("p");
     loadError.className = "editor-error";
 
-    host.append(status, saveError, loadError);
+    chrome.append(status, saveError, loadError);
+    host.append(chrome);
 
     let loadedText = "";
     try {
@@ -72,10 +72,21 @@ export async function renderEditor(
         return;
     }
 
+    const page = document.createElement("article");
+    page.className = "editor-page";
+
+    const title = document.createElement("h1");
+    title.className = "editor-title";
+    title.textContent = book.title;
+
     const field = document.createElement("textarea");
     field.className = "editor-field";
+    field.setAttribute("aria-label", book.title);
+    field.spellcheck = false;
     field.value = loadedText;
-    host.append(field);
+
+    page.append(title, field);
+    host.append(page);
 
     const autosave = createAutosaveController({
         intervalMs: AUTOSAVE_INTERVAL_MS,
