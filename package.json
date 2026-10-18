@@ -1,0 +1,25 @@
+{
+    "name": "janus",
+    "private": true,
+    "workspaces": [
+        "packages/*",
+        "apps/*"
+    ],
+    "scripts": {
+        "build:ui": "bun run --filter @janus/ui build",
+        "dev:desktop": "bun run build:ui && bun run --filter @janus/desktop start",
+        "test": "vitest run",
+        "lint": "oxlint .",
+        "cap:sync:ios": "bun run build:ui && bun run --filter @janus/mobile cap:sync",
+        "cap:open:ios": "bun run --filter @janus/mobile cap:open",
+        "validate:install": "bun scripts/validate-install.ts",
+        "ensure:electron": "bun scripts/ensure-electron.ts"
+    },
+    "devDependencies": {
+        "@types/node": "22.10.2",
+        "happy-dom": "15.11.7",
+        "oxlint": "0.15.0",
+        "typescript": "5.7.2",
+        "vitest": "2.1.8"
+    }
+}
