@@ -50,8 +50,8 @@ Sizing: **S** = 1–2 files, **M** = 3–5 files. No task should exceed ~5 files
 **Description:** `@janus/bridge` with `Platform`, `JanusBridge`, `createShellLabel()` per spec. Colocated Vitest test for `createShellLabel()`.
 
 **Acceptance criteria:**
-- [ ] Exports match spec; no Electron/Capacitor/DOM imports
-- [ ] Unit test asserts label is `"Janus"`
+- [x] Exports match spec; no Electron/Capacitor/DOM imports
+- [x] Unit test asserts label is `"Janus"`
 
 **Verification:**
 - [ ] `bun run test`

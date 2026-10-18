@@ -34,7 +34,7 @@ Full acceptance criteria: **`tasks/todo.md`** (12 tasks, all **S** or **M**).
 ### Phase 1: Foundation
 - [x] Task 1: Root workspace skeleton
 - [x] Task 2: Root test and lint runners
-- [ ] Task 3: `packages/bridge`
+- [x] Task 3: `packages/bridge`
 
 ### Checkpoint: Foundation
 - [ ] `bun install`; `bun run test`; `bun run lint`
