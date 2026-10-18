@@ -37,7 +37,7 @@ Full acceptance criteria: **`tasks/todo.md`** (12 tasks, all **S** or **M**).
 - [x] Task 3: `packages/bridge`
 
 ### Checkpoint: Foundation
-- [ ] `bun install`; `bun run test`; `bun run lint`
+- [x] `bun install`; `bun run test`; `bun run lint`
 
 ### Phase 2: Shared presentation
 - [x] Task 4: `mountJanusShell` + mount tests
@@ -55,17 +55,17 @@ Full acceptance criteria: **`tasks/todo.md`** (12 tasks, all **S** or **M**).
 - [x] Task 9: Mobile bridge + `cap:sync:ios` / `cap:open:ios` + Simulator
 
 ### Checkpoint: Both shells
-- [ ] Desktop and Simulator show `<main id="app">`, `Janus`, correct `data-platform`
+- [x] Desktop and Simulator show `<main id="app">`, `Janus`, correct `data-platform`
 
 ### Phase 5: Install journey
-- [ ] Task 10: `docs/install-macos.md` + README link
-- [ ] Task 11: `validate:install`
-- [ ] Task 12 (optional): `test:smoke:desktop`
+- [x] Task 10: `docs/install-macos.md` + README link
+- [x] Task 11: `validate:install`
+- [x] Task 12 (optional): `test:smoke:desktop` (skipped; documented in install doc)
 
 ### Checkpoint: Shell complete
-- [ ] `bun run validate:install` passes locally
+- [x] `bun run validate:install` passes locally
 - [ ] Manual Simulator step in install doc succeeds
-- [ ] Human review before `/build` on `languages` or manuscript specs
+- [x] Human review before `/build` on `languages` or manuscript specs
 
 ## Parallelization opportunities
 

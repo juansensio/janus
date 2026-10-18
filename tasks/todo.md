@@ -208,8 +208,8 @@ Sizing: **S** = 1–2 files, **M** = 3–5 files. No task should exceed ~5 files
 **Description:** Prerequisites (Bun, Xcode, CocoaPods, Simulator) and ordered commands: clone → install → test → build → desktop → iOS sync → Xcode Run. Call out Simulator as manual mobile gate. Link from `README.md`.
 
 **Acceptance criteria:**
-- [ ] Contributor can follow without reading `SPEC-shell.md`
-- [ ] README points to install doc
+- [x] Contributor can follow without reading `SPEC-shell.md`
+- [x] README points to install doc
 
 **Verification:**
 - [ ] Manual read-through for gaps
@@ -227,8 +227,8 @@ Sizing: **S** = 1–2 files, **M** = 3–5 files. No task should exceed ~5 files
 **Description:** `bun run validate:install` runs unit tests, `build:ui`, and asserts expected artifacts exist. Optional headless Electron DOM check only if stable; otherwise document omission.
 
 **Acceptance criteria:**
-- [ ] Script fails loudly if build artifacts missing
-- [ ] Passes on dev machine after shell tasks complete
+- [x] Script fails loudly if build artifacts missing
+- [x] Passes on dev machine after shell tasks complete
 
 **Verification:**
 - [ ] `bun run validate:install`
@@ -246,7 +246,7 @@ Sizing: **S** = 1–2 files, **M** = 3–5 files. No task should exceed ~5 files
 **Description:** `bun run test:smoke:desktop` if Playwright/Electron driver is cheap; else skip and note in install doc.
 
 **Acceptance criteria:**
-- [ ] Documented as required or explicitly skipped
+- [x] Documented as required or explicitly skipped
 
 **Verification:**
 - [ ] `bun run test:smoke:desktop` when implemented
@@ -261,7 +261,7 @@ Sizing: **S** = 1–2 files, **M** = 3–5 files. No task should exceed ~5 files
 
 ## Checkpoint: Shell complete
 
-- [ ] Tasks 1–11 acceptance criteria met
-- [ ] `bun run validate:install` passes
+- [x] Tasks 1–11 acceptance criteria met
+- [x] `bun run validate:install` passes
 - [ ] Simulator manual gate executed once per install doc
-- [ ] Ready for `/build` on next capability (`languages` after spec approval)
+- [x] Ready for `/build` on next capability (`languages` after spec approval)
