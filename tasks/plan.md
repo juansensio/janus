@@ -47,7 +47,7 @@ Full acceptance criteria: **`tasks/todo.md`** (12 tasks, all **S** or **M**).
 - [x] `bun run build:ui` produces consumable output
 
 ### Phase 3: Desktop shell
-- [ ] Task 6: Electron main + window
+- [x] Task 6: Electron main + window
 - [ ] Task 7: Preload + `window.janus` + visible Janus
 
 ### Phase 4: Mobile shell

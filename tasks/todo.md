@@ -119,9 +119,9 @@ Sizing: **S** = 1–2 files, **M** = 3–5 files. No task should exceed ~5 files
 **Description:** `apps/desktop` package with `main.ts`: create `BrowserWindow`, `contextIsolation: true`, load built UI from Task 5 output (file or dev URL stub). Window opens; `#app` may be empty until Task 7.
 
 **Acceptance criteria:**
-- [ ] `bun run dev:desktop` (or interim script) opens a window
-- [ ] Renderer loads the shared UI document with `<main id="app">`
-- [ ] No domain logic in main
+- [x] `bun run dev:desktop` (or interim script) opens a window
+- [x] Renderer loads the shared UI document with `<main id="app">`
+- [x] No domain logic in main
 
 **Verification:**
 - [ ] `bun run build:ui` then start desktop
