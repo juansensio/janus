@@ -15,13 +15,13 @@ Sizing: **S** = 1–2 files, **M** = 3–5 files.
 **Description:** Add `services/library/` workspace package (`@janus/library`): `titles.ts` (`allocateUntitledTitle`), `book-manifest.ts` (`parseManifest`, `serializeManifest`, version 1 schema), `index.ts` (`sortBooksForShelf`, `validateBookId`, `libraryBooksDir`, public types). Root `package.json` workspaces include `services/*`. Vitest discovers `services/**/*.test.ts`. Colocated `library.test.ts` covers title allocation, sort tie-break (`createdAt` then `id`), manifest errors, id validation (`..`, slashes).
 
 **Acceptance criteria:**
-- [ ] No Electron, Capacitor, DOM, or `fs` imports in `services/library/`
-- [ ] Unit tests cover corrupt manifest parse failures and skip-policy helpers if extracted
-- [ ] `bun run test` passes
+- [x] No Electron, Capacitor, DOM, or `fs` imports in `services/library/`
+- [x] Unit tests cover corrupt manifest parse failures and skip-policy helpers if extracted
+- [x] `bun run test` passes
 
 **Verification:**
-- [ ] `bun run test`
-- [ ] `bun run lint`
+- [x] `bun run test`
+- [x] `bun run lint`
 
 **Dependencies:** None (shell complete)
 

@@ -42,7 +42,7 @@ Task 6 + 7
 Full acceptance criteria: **`tasks/todo.md`** Tasks **1–8**.
 
 ### Phase 1: Foundation
-- [ ] Task 1: `@janus/library` domain package
+- [x] Task 1: `@janus/library` domain package
 - [ ] Task 2: Extend `JanusBridge` contract
 
 ### Checkpoint: Foundation
