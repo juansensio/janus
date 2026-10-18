@@ -16,4 +16,6 @@ When `/plan` starts a new `docs/specs/SPEC-<module-id>.md`, move the previous pa
 | `library-slice-1d/` | `docs/specs/SPEC-library.md` | Slice 1d — wrapping shelf track (2026-10-18; Task 2 spec doc optional) |
 | `manuscript-slice-1/` | `docs/specs/SPEC-manuscript.md` | Slice 1 — open, write, autosave (2026-10-18; manual sign-off) |
 | `library-root-slice-1/` | `docs/specs/SPEC-library-root.md` | Slice 1 — configurable library directory (2026-10-18) |
-| `library-root-slice-2-1e/` | `SPEC-library-root` slice 2 + `SPEC-library` slice 1e | Relocate on folder pick; title-based book dirs (2026-10-18; manual checkpoints waived) |
+| `library-root-slice-2-1e/` | `SPEC-library-root` slice 2 + `SPEC-library` slice 1e | Relocate on folder pick; title-based book dirs (2026-10-18). Wrap leftover → languages Task 8 |
+| `languages-slice-1/` | `docs/specs/SPEC-languages.md` | Interface locale `en`/`es`, catalogs, Settings picker (2026-10-18) |
+| `perf-command-phase-1/` | `docs/specs/SPEC-perf-command.md` | Janus `/perf` agent workflow (2026-10-18) |
