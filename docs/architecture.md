@@ -29,7 +29,7 @@ apps/mobile           Capacitor FS + mobile bridge install
 |-------|----------|----------------|
 | **Domain** | `services/<domain>/` | Rules, on-disk shapes, validation. Depends on plain values and injected ports (e.g. filesystem), not on Electron, Capacitor, or the DOM. |
 | **Contract** | `packages/bridge` | Stable API the webview may call: `JanusBridge`, shared DTOs (`BookSummary`), error codes, test mocks. |
-| **Presentation** | `packages/ui` | Structure, styling, user events. Calls the bridge; does **not** import `services/*`. |
+| **Presentation** | `packages/ui` | Structure, styling, user events. Calls the bridge; does **not** import `services/*`. Modals: [`docs/ui-modals.md`](ui-modals.md). |
 | **Shell / infra** | `apps/desktop`, `apps/mobile` | Process boundaries, IPC, preload, native FS adapters, wiring domain services into `JanusBridge`. |
 
 Dependency direction:

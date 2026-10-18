@@ -48,8 +48,11 @@ export function openBookNameDialog(options: OpenBookNameDialogOptions): void {
 
     const validation = document.createElement("p");
     validation.className = "shelf-dialog-validation";
+    validation.id = "shelf-book-name-dialog-error";
     validation.hidden = true;
+    validation.setAttribute("role", "alert");
     validation.textContent = SHELF_STRINGS.dialogInvalidTitle;
+    input.setAttribute("aria-describedby", validation.id);
 
     const form = document.createElement("form");
     form.className = "shelf-dialog-form";
@@ -80,15 +83,26 @@ export function openBookNameDialog(options: OpenBookNameDialogOptions): void {
 
     const focusable = [input, cancelButton, confirmButton];
 
+    function clearFieldError(): void {
+        validation.hidden = true;
+        validation.textContent = SHELF_STRINGS.dialogInvalidTitle;
+        input.removeAttribute("aria-invalid");
+    }
+
+    function showFieldError(message: string): void {
+        validation.textContent = message;
+        validation.hidden = false;
+        input.setAttribute("aria-invalid", "true");
+        input.focus();
+    }
+
     function updateConfirmState(): void {
         const invalid = isWhitespaceOnly(input.value);
         confirmButton.disabled = invalid;
         if (!invalid) {
-            validation.hidden = true;
-            validation.textContent = SHELF_STRINGS.dialogInvalidTitle;
+            clearFieldError();
         } else {
-            validation.hidden = false;
-            validation.textContent = SHELF_STRINGS.dialogInvalidTitle;
+            showFieldError(SHELF_STRINGS.dialogInvalidTitle);
         }
     }
 
@@ -137,12 +151,7 @@ export function openBookNameDialog(options: OpenBookNameDialogOptions): void {
             try {
                 await onConfirm(input.value);
             } catch (error) {
-                validation.textContent = messageForDialogSubmitError(
-                    error,
-                    mode,
-                );
-                validation.hidden = false;
-                input.focus();
+                showFieldError(messageForDialogSubmitError(error, mode));
                 return;
             }
             if (overlay.isConnected) {

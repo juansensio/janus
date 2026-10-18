@@ -1,0 +1,27 @@
+---
+description: Modal and dialog UX in packages/ui — Escape, Enter, inline explicit errors
+globs: packages/ui/**/*.ts,packages/ui/**/*.css,docs/specs/SPEC-*.md
+alwaysApply: false
+---
+
+# UI modals (Janus)
+
+When adding or changing a **modal / dialog** in `packages/ui`, read [`docs/ui-modals.md`](docs/ui-modals.md) and match the book-name dialog pattern.
+
+## Required behavior
+
+1. **Escape** closes without persisting (cancel); return focus to the control that opened the dialog.
+2. **Enter** submits via a **`<form>`** + primary `type="submit"` (not click-only confirm).
+3. **Errors stay in the modal** — use an inline region under the field (e.g. `.shelf-dialog-validation`). Do **not** close the modal and show `.shelf-error` on the shelf for the same failed submit.
+4. **Explicit copy** — map bridge `code` to user-facing strings (`DUPLICATE_BOOK_TITLE`, `INVALID_BOOK_TITLE`, …). Generic “Could not create…” only when the failure is truly unknown.
+5. **Desktop IPC** — reject with `{ message, code }` from main; preload must rebuild `Error` with `code` (`apps/desktop/src/library-ipc-error.ts`).
+
+## Tests
+
+Add colocated Vitest tests: Escape cancel, Enter/submit success path, failed submit keeps modal + inline message. Reference: `packages/ui/src/shelf/book-name-dialog.test.ts`.
+
+## Reference files
+
+- `packages/ui/src/shelf/book-name-dialog.ts`
+- `packages/ui/src/shelf/dialog-submit-error.ts`
+- `packages/ui/src/shelf/render-shelf.ts` (onConfirm throws on failure; no shelf banner for dialog submit)
