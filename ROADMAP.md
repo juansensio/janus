@@ -4,10 +4,10 @@ Informal product backlog — **not** the active build plan. For approved modules
 
 ## UI
 
-- Zoom page
 - Side panels:
   - Left for navigation
   - Right for comments and notes
+- 
 - Reference documents
   - Side-by-side view with resizable panels
 
