@@ -9,6 +9,7 @@
 | library | Bookshelf: create, open, and arrange books | manuscript |
 | ai-assist | AI comment in HTML; Write (full book context) → persisted draft; Accept/Reject; OpenAI Codex connect (desktop). | manuscript |
 | zoom | Manuscript editor page zoom level (persisted preference, shortcuts, desktop View menu) | shell, manuscript, languages |
+| pdf-export | Desktop export of open manuscript to a readable PDF | shell, manuscript, library |
 
 Build order (full Neo loop): shell → languages → manuscript → library, ai-assist
 
@@ -37,6 +38,8 @@ Build order (full Neo loop): shell → languages → manuscript → library, ai-
 **Zoom slice 1** (`docs/specs/SPEC-zoom.md`, approved 2026-10-18): discrete manuscript page zoom in the editor; persisted `editorZoomPercent`; Settings control; desktop View menu and keyboard shortcuts.
 
 **Zoom slice 2** (`docs/specs/SPEC-zoom.md`, approved 2026-10-19): pinned editor bar `+ zoom (X%) −`; the page card scales with the level (paper and type together).
+
+**PDF export slice 1** (`docs/specs/SPEC-pdf-export.md`, approved 2026-10-19): desktop editor **Export PDF** → A4 PDF (`janus-p` only; title-only when empty).
 
 `library` (full) and `ai-assist` can be specified in parallel after `manuscript` slice 1; **implementation order** for the HTML+AI MVP is manuscript slice 2 → ai-assist slice 1.
 
