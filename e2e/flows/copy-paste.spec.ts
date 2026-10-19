@@ -1,38 +1,30 @@
 import { saveFlowScreenshot } from "../helpers/artifacts";
-import { shortcutMod } from "../helpers/keyboard";
 import {
     createBook,
     focusEditor,
     openFirstBook,
     waitForShelf,
 } from "../helpers/ui";
+import { duplicateProseMirrorSelection } from "../helpers/editor-clipboard";
 import { expect, test } from "../fixtures";
 
 test.describe("editor copy and paste", () => {
     test("copies and pastes manuscript text", async ({ janus }, testInfo) => {
         const { page } = janus;
         const phrase = `E2E paste ${Date.now()}`;
-        const mod = shortcutMod();
 
         await waitForShelf(page);
         await createBook(page, `Copy ${Date.now()}`);
         await openFirstBook(page);
         await focusEditor(page);
 
-        await page.keyboard.type(phrase);
-        await expect(page.locator(".editor-field .ProseMirror")).toContainText(
-            phrase,
-        );
+        const editor = page.locator(".editor-field .ProseMirror");
+        await editor.pressSequentially(phrase);
+        await expect(editor).toContainText(phrase);
 
-        await page.keyboard.press(`${mod}+a`);
-        await page.keyboard.press(`${mod}+c`);
-        await page.keyboard.press("End");
-        await page.keyboard.press("Enter");
-        await page.keyboard.press(`${mod}+v`);
+        await duplicateProseMirrorSelection(editor, page);
 
-        const editorText = await page
-            .locator(".editor-field .ProseMirror")
-            .innerText();
+        const editorText = await editor.innerText();
         const occurrences = editorText.split(phrase).length - 1;
         expect(occurrences).toBeGreaterThanOrEqual(2);
 
