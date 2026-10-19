@@ -6,10 +6,15 @@ import {
     AiAssistError,
     buildOpenAiModelOptions,
     createOpenAiCodexProvider,
+    createOpenAiModelCatalogCache,
     fetchListedModelSlugs,
+    invalidateOpenAiModelCatalog,
     normalizeOpenAiModelPreference,
     OPENAI_MODEL_PREFERENCE_AUTO,
+    readListedSlugsFromCache,
     resolveWriteModelSlug,
+    shouldRefreshOpenAiModelCatalog,
+    storeListedSlugsInCache,
     type FetchFn,
 } from "@janus/ai-assist";
 import {
@@ -101,6 +106,45 @@ export function createAiBridgeService(
     const settingsFs = deps.settingsFs;
 
     const provider = createOpenAiCodexProvider(fetchImpl);
+    const modelCatalogCache = createOpenAiModelCatalogCache();
+
+    async function loadListedSlugsForSession(): Promise<string[] | null> {
+        const session = await loadAiSession();
+        if (!session) {
+            return null;
+        }
+        if (!shouldRefreshOpenAiModelCatalog(modelCatalogCache)) {
+            return readListedSlugsFromCache(modelCatalogCache);
+        }
+        try {
+            let active = session;
+            if (!isDevOverrideSession(session)) {
+                active = await ensureFreshAccessToken(
+                    fetchImpl,
+                    session as StoredAiSession,
+                );
+            }
+            const listedSlugs = await fetchListedModelSlugs(
+                accessTokenForSession(active),
+                fetchImpl,
+            );
+            storeListedSlugsInCache(modelCatalogCache, listedSlugs);
+            return listedSlugs;
+        } catch {
+            return null;
+        }
+    }
+
+    function openAiModelSettingsFromPreference(
+        preference: string,
+        listedSlugs: string[] | null,
+    ): OpenAiModelSettings {
+        const options = buildOpenAiModelOptions(listedSlugs);
+        const resolvedPreference = options.includes(preference)
+            ? preference
+            : normalizeOpenAiModelPreference(undefined);
+        return { preference: resolvedPreference, options };
+    }
 
     async function resolveOpenAiModelSettings(): Promise<OpenAiModelSettings> {
         if (!userDataPath || !settingsFs) {
@@ -113,30 +157,8 @@ export function createAiBridgeService(
         const preference = normalizeOpenAiModelPreference(
             settings.openAiModel,
         );
-        const session = await loadAiSession();
-        let listedSlugs: string[] | null = null;
-        if (session) {
-            try {
-                let active = session;
-                if (!isDevOverrideSession(session)) {
-                    active = await ensureFreshAccessToken(
-                        fetchImpl,
-                        session as StoredAiSession,
-                    );
-                }
-                listedSlugs = await fetchListedModelSlugs(
-                    accessTokenForSession(active),
-                    fetchImpl,
-                );
-            } catch {
-                listedSlugs = null;
-            }
-        }
-        const options = buildOpenAiModelOptions(listedSlugs);
-        const resolvedPreference = options.includes(preference)
-            ? preference
-            : normalizeOpenAiModelPreference(undefined);
-        return { preference: resolvedPreference, options };
+        const listedSlugs = await loadListedSlugsForSession();
+        return openAiModelSettingsFromPreference(preference, listedSlugs);
     }
 
     async function providerSessionForWrite(
@@ -150,7 +172,11 @@ export function createAiBridgeService(
                 settings.openAiModel,
             );
         }
-        const model = resolveWriteModelSlug(commentModel, settingsPreference);
+        let model = resolveWriteModelSlug(commentModel, settingsPreference);
+        if (!model) {
+            const cached = readListedSlugsFromCache(modelCatalogCache);
+            model = cached?.[0];
+        }
         return model
             ? { provider: "openai-codex", accessToken, model }
             : { provider: "openai-codex", accessToken };
@@ -163,6 +189,7 @@ export function createAiBridgeService(
         },
 
         async connectOpenAiCodex(): Promise<void> {
+            invalidateOpenAiModelCatalog(modelCatalogCache);
             const override = allowDevOpenAiTokenOverride
                 ? process.env.JANUS_OPENAI_ACCESS_TOKEN?.trim()
                 : undefined;
@@ -184,6 +211,7 @@ export function createAiBridgeService(
                 await revokeRefreshToken(fetchImpl, session.refreshToken);
             }
             await clearAiSession();
+            invalidateOpenAiModelCatalog(modelCatalogCache);
         },
 
         async getOpenAiModelSettings(): Promise<OpenAiModelSettings> {
@@ -199,20 +227,24 @@ export function createAiBridgeService(
                     "OpenAI model settings are unavailable",
                 );
             }
-            const current = await resolveOpenAiModelSettings();
+            const settings = await loadJanusSettings(userDataPath, settingsFs);
+            const listedSlugs = await loadListedSlugsForSession();
+            const current = openAiModelSettingsFromPreference(
+                normalizeOpenAiModelPreference(settings.openAiModel),
+                listedSlugs,
+            );
             if (!current.options.includes(preference)) {
                 throw new LibraryBridgeError(
                     "AI_PROVIDER_ERROR",
                     "Unknown OpenAI model preference",
                 );
             }
-            const settings = await loadJanusSettings(userDataPath, settingsFs);
             await saveJanusSettings(
                 userDataPath,
                 { ...settings, openAiModel: preference },
                 settingsFs,
             );
-            return resolveOpenAiModelSettings();
+            return openAiModelSettingsFromPreference(preference, listedSlugs);
         },
 
         async writeForComment(
@@ -243,6 +275,7 @@ export function createAiBridgeService(
                         );
                     } catch (error) {
                         await clearAiSession();
+                        invalidateOpenAiModelCatalog(modelCatalogCache);
                         throw error;
                     }
                 }
