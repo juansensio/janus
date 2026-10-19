@@ -25,4 +25,12 @@ export {
     resolveProviderModelSlug,
     resolveWriteModelSlug,
 } from "./openai-model-catalog";
+export {
+    createOpenAiModelCatalogCache,
+    invalidateOpenAiModelCatalog,
+    readListedSlugsFromCache,
+    shouldRefreshOpenAiModelCatalog,
+    storeListedSlugsInCache,
+    type OpenAiModelCatalogCache,
+} from "./openai-model-catalog-cache";
 export { fetchListedModelSlugs } from "./openai-models";

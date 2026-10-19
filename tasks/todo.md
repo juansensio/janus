@@ -1,55 +1,63 @@
-# Active tasks: zoom slice 2
+# Active tasks: ai-assist slice 3 — model catalog cache
 
-**Spec:** [`docs/specs/SPEC-zoom.md`](../docs/specs/SPEC-zoom.md) (Slice 2)
+**Spec:** [`docs/specs/SPEC-ai-assist-slice-3-model-catalog-cache.md`](../docs/specs/SPEC-ai-assist-slice-3-model-catalog-cache.md)
 
-**Archived:** slice 1 → [`tasks/archive/zoom-slice-1/`](archive/zoom-slice-1/)
+**Archived:** zoom slice 2 → [`tasks/archive/zoom-slice-2/`](archive/zoom-slice-2/)
 
-## Task 1: Scaled page layout and scrollport
+## Task 1: Domain catalog cache helpers
 
-- [x] Wrap `.editor-page` in `.editor-scrollport` in `render-editor.ts`; keep `.editor-chrome` outside scrollport
-- [x] `editor.css`: scale page width, padding, and base `font-size` with `--editor-page-zoom`; drop per-element `calc(* var(--editor-page-zoom))` on title/body in favor of `em`
-- [x] Editor column fills viewport; scrollport `overflow: auto`; page stays centered when it fits
-- [x] Acceptance: at 100% wide window, 100% page width matches pre-slice-2 behavior; at 200% page width ≈ 2× 100% width
-- [x] Verify: `bun run test packages/ui/src/editor`
+- [x] Add `services/ai-assist/openai-model-catalog-cache.ts`: cache state type, `invalidateOpenAiModelCatalog`, `readListedSlugsFromCache`, `storeListedSlugsInCache` (or equivalent); session-only — no TTL until product asks
+- [x] Export from `services/ai-assist/index.ts` if needed by desktop
+- [x] Unit tests: miss → store → hit; invalidate → miss
+- [x] Acceptance: pure functions; no `fetch` in domain
+- [x] Verify: `bun run test services/ai-assist/openai-model-catalog-cache.test.ts`
 
-**Files:** `packages/ui/src/editor/render-editor.ts`, `packages/ui/src/styles/editor.css`
+**Files:** `services/ai-assist/openai-model-catalog-cache.ts`, `openai-model-catalog-cache.test.ts`, `index.ts`
 
-## Task 2: Controller percent-change notification
+## Task 2: Desktop `ai-service` session cache
 
-- [x] Add `onPercentChange?: (percent: number) => void` (or subscribe API) to `createEditorZoomController`; fire after `applyLocal` and after successful persist
-- [x] Acceptance: keyboard step and `applyDirection` both notify with the displayed percent
-- [x] Verify: extend `editor-zoom.test.ts`; `bun run test packages/ui/src/editor/editor-zoom.test.ts`
+- [ ] Hold mutable catalog in `createAiBridgeService`; fetch `/v1/models` only on cache miss when session exists
+- [ ] `setOpenAiModelPreference`: validate against cached options + persist; return settings **without** refetching catalog
+- [ ] Invalidate on `disconnectOpenAiCodex`; clear on connect path when session replaced (dev override + SIWC success)
+- [ ] Extend `ai-service.model.test.ts`: count models fetches — 1st `getOpenAiModelSettings` → 1; 2nd → 0; `setOpenAiModelPreference` → 0 extra; after disconnect → no fetch until connected again
+- [ ] Verify: `bun run test apps/desktop/src/ai-service.model.test.ts`
 
-**Files:** `packages/ui/src/editor/editor-zoom.ts`, `packages/ui/src/editor/editor-zoom.test.ts`
+**Files:** `apps/desktop/src/ai-service.ts`, `apps/desktop/src/ai-service.model.test.ts`
 
-## Task 3: Bottom zoom bar + catalogs
+## Checkpoint (after Task 2)
 
-- [x] Add `editor-zoom-bar.ts`: `+`, label `zoom (X%)` via `t("manuscript.editorZoomBar", { percent })`, `−`; disable minus at 75%, plus at 200%
-- [x] Mount bar in `render-editor.ts`; wire to controller; dispose on teardown
-- [x] Keys in `en.json` / `es.json` for bar label and accessible names for `+` / `−`
-- [x] Acceptance: bar visible in editor; clicks persist; label matches CSS variable percent
-- [x] Verify: manual or Task 4 tests
+- [ ] Settings model dropdown path is cache-backed in main (manual: change model — brief disable only)
+- [ ] `bun run test services/ai-assist apps/desktop/src/ai-service.model.test.ts`
 
-**Files:** `packages/ui/src/editor/editor-zoom-bar.ts`, `packages/ui/src/editor/render-editor.ts`, `services/languages/locales/en.json`, `services/languages/locales/es.json`
+## Task 3: Write path shares catalog
 
-## Task 4: Unit tests for bar and layout
+- [ ] When `resolveWriteModelSlug` yields undefined (auto), set provider `model` from first cached listed slug if present; else existing fetch path
+- [ ] Optional: warm cache on first `getOpenAiModelSettings` so Write rarely cold-misses
+- [ ] Acceptance: with warm cache, `writeForComment` mock flow does not call `/v1/models`
+- [ ] Verify: extend `ai-service` test or focused test with delayed models + write mock
 
-- [x] Vitest: bar label updates on `onPercentChange`; plus/minus call `applyDirection`; disabled at min/max
-- [x] Vitest: `.editor-page` computed width ratio ~1.1 when `--editor-page-zoom` is 1.1 (happy-dom)
-- [x] Verify: `bun run test packages/ui`; `bun run lint`
+**Files:** `apps/desktop/src/ai-service.ts`, tests as above
 
-**Files:** `packages/ui/src/editor/editor-zoom-bar.test.ts`, `editor-zoom.test.ts` (if needed)
+## Task 4: Non-blocking editor model options
 
-## Task 5: E2E bar step and page width
+- [ ] `ManuscriptEditor`: `setOpenAiModelOptions(options: string[])` updates shared list and rebuilds each comment model `<select>` (keep “use default” option + current value)
+- [ ] `render-editor.ts`: call `createManuscriptEditor` immediately after manuscript load (with `["auto"]`); `void` async `getOpenAiModelSettings` → `setOpenAiModelOptions`
+- [ ] Vitest: editor mount / field content before delayed bridge resolves; options appear after resolve
+- [ ] Verify: `bun run test packages/ui/src/editor/`; `bun run test packages/ui/src/settings/render-settings-model.test.ts`
 
-- [x] Helper(s) to read bar label and `.editor-page` width in `e2e/helpers/ui.ts`
-- [x] From 100%, click bar `+` once → 110% label and wider page box than baseline
-- [x] Verify: `bun run e2e e2e/flows/zoom.spec.ts`
+**Files:** `packages/ui/src/editor/manuscript-editor.ts`, `manuscript-editor.test.ts`, `render-editor.ts` (+ test if added)
 
-**Files:** `e2e/flows/zoom.spec.ts`, `e2e/helpers/ui.ts`
+## Task 5: Ship gate
+
+- [ ] `bun run test` and `bun run lint` green
+- [ ] Spec success criteria in `SPEC-ai-assist-slice-3-model-catalog-cache.md` satisfied
+- [ ] Add/update `tasks/queue.md` row for slice 3 (`spec-approved` → `in-progress` → `done` when merged)
+- [ ] Optional one-line note in `CAPABILITY-MAP.md` under ai-assist (per spec)
+
+**Files:** `tasks/queue.md`, `CAPABILITY-MAP.md` (if doing map note)
 
 ## Checkpoint (after Task 5)
 
-- [x] All slice 2 acceptance criteria in SPEC-zoom.md
-- [x] `bun run test` and `bun run lint` green
-- [x] Ready for `/build` completion / PR review
+- [ ] Connected desktop: open book — text visible without waiting on models API (test-backed)
+- [ ] At most one models list fetch per connect session under normal navigation
+- [ ] Ready for PR / human review

@@ -1,64 +1,79 @@
-# Active plan: zoom slice 2
+# Active plan: ai-assist slice 3 — responsive model catalog
 
-**Source spec:** [`docs/specs/SPEC-zoom.md`](../docs/specs/SPEC-zoom.md) — section *Slice 2 — editor zoom bar and page scale*
+**Source spec:** [`docs/specs/SPEC-ai-assist-slice-3-model-catalog-cache.md`](../docs/specs/SPEC-ai-assist-slice-3-model-catalog-cache.md)
 
-**Archived:** zoom slice 1 (complete) → [`tasks/archive/zoom-slice-1/`](archive/zoom-slice-1/)
+**Archived:** zoom slice 2 (complete) → [`tasks/archive/zoom-slice-2/`](archive/zoom-slice-2/)
 
 ## Overview
 
-Writers get a pinned bottom bar (`+ zoom (X%) −`) in the manuscript editor. Zoom scales the **page card** (width, padding, and type together), not only body `font-size` inside a fixed `34rem` box. Slice 1 persistence, Settings, keyboard shortcuts, and desktop View menu stay unchanged; no bridge or `@janus/zoom` API changes.
+Stop blocking the manuscript editor and Settings on repeated `GET /v1/models` calls. Desktop main keeps a **session-scoped in-memory catalog** (invalidate on disconnect / session clear). `getOpenAiModelSettings` and `setOpenAiModelPreference` read the cache; the editor mounts immediately and hydrates per-comment model dropdowns when options arrive.
 
 ## Architecture decisions
 
-- **Layout:** `.janus-editor` becomes a column: fixed `.editor-chrome`, scrollable `.editor-scrollport` (page only), fixed `.editor-zoom-bar`. The mount root `.janus-editor-shell` keeps `--editor-page-zoom` on the shell (existing `applyEditorPageZoom`).
-- **CSS:** Multiply the slice-1 **100%** page measure (`min(34rem, 100% − 2.5rem)`, padding, base font-size) by `var(--editor-page-zoom)`. Title and ProseMirror use `em` relative to `.editor-page` font-size so type tracks the page without duplicate multipliers.
-- **Bar sync:** Extend `createEditorZoomController` with an `onPercentChange` callback (or equivalent) invoked after every local apply, including keyboard and menu paths, so the bar label and disabled state stay in sync without duplicating step logic.
-- **Bar module:** Small colocated helper (e.g. `editor-zoom-bar.ts`) mounted from `render-editor.ts`; clicks call `controller.applyDirection("in" | "out")` only.
+| Decision | Choice | Rationale |
+|----------|--------|-----------|
+| Cache scope | In-memory in `createAiBridgeService` closure | Same lifetime as AI session; no disk persistence (spec boundary) |
+| Invalidation | `disconnectOpenAiCodex`, `clearAiSession`, connect replacing session | Session-only TTL per spec open question #1 |
+| Domain vs shell | Policy helpers in `services/ai-assist/`; mutable cache + `fetch` in `ai-service.ts` | Invariant 10 — ai-assist owns catalog rules |
+| `setOpenAiModelPreference` | Validate against cached `options`; persist settings; **no** second full `resolve` that refetches | Fixes double network on every change |
+| Write + Auto | Resolve first listed slug from **same** cache in `writeForComment` before `generateDraft` | Avoids provider’s extra `/v1/models` when settings path already warmed cache |
+| Editor UI | `createManuscriptEditor` with `["auto"]` initially; `setOpenAiModelOptions(slugs)` + chrome refresh | Spec: paint manuscript before catalog IPC returns |
+| Bridge API | Unchanged `OpenAiModelSettings` | YAGNI — cache makes existing methods fast |
 
 ## Dependency graph
 
 ```
-editor.css page scale + scrollport layout (render-editor DOM)
+openai-model-catalog-cache (domain helpers)
         │
-        ├── controller onPercentChange hook
+        ├── ai-service: cache + invalidate + slim setPreference
         │         │
-        │         └── zoom bar + i18n
+        │         └── writeForComment uses cached slugs for auto
         │
-        └── Vitest (width/label) + e2e (bar click, box width)
+        └── manuscript-editor: mutable model options
+                  │
+                  └── render-editor: async hydrate after mount
 ```
 
-Build order: layout/CSS first (visible Word-like scale), then controller hook, then bar + catalogs, then tests/e2e.
+Build order: domain helpers → desktop cache (settings path fast) → Write shares cache → non-blocking editor UI → ship gate.
 
 ## Task list
 
-### Phase 1: Page scale and scroll
+### Phase 1: Catalog cache (main)
 
-- [ ] Task 1: Scaled page layout and scrollport
-- [ ] Task 2: Controller percent-change notification
+- [x] Task 1: Domain catalog cache helpers + tests
+- [ ] Task 2: Wire cache in `ai-service` + call-count tests
 
-**Checkpoint:** At 110% in the editor, `.editor-page` border-box width is ~1.1× the 100% width; chrome and bar are 1×; `bun run test packages/ui` passes.
+**Checkpoint:** Second `getOpenAiModelSettings` and `setOpenAiModelPreference` do not call `/v1/models` when cache warm; disconnect clears cache.
 
-### Phase 2: Zoom bar
+### Phase 2: Write path
 
-- [ ] Task 3: Bottom zoom bar + catalogs
-- [ ] Task 4: Unit tests for bar and layout
+- [ ] Task 3: Auto Write uses session catalog (no redundant models fetch)
 
-**Checkpoint:** Bar shows `zoom (X%)`, `+`/`−` persist and disable at ends; shortcut updates label; `bun run test` and `bun run lint` pass.
+**Checkpoint:** `ai-service` / domain tests show Write with auto does not hit `/v1/models` when catalog already populated.
 
-### Phase 3: E2E
+### Phase 3: Non-blocking editor
 
-- [ ] Task 5: Extend zoom e2e for bar and page width
+- [ ] Task 4: Editor async model options (`manuscript-editor` + `render-editor` + tests)
 
-**Checkpoint:** `bun run e2e e2e/flows/zoom.spec.ts` passes; slice 2 acceptance criteria met.
+**Checkpoint:** Test with delayed `getOpenAiModelSettings`: editor field exists before mock resolves.
+
+### Phase 4: Ship
+
+- [ ] Task 5: Full `bun run test` + `bun run lint`; update `tasks/queue.md` row when slice ships
+
+**Checkpoint:** All spec success criteria checked; ready for PR.
 
 ## Risks and mitigations
 
 | Risk | Impact | Mitigation |
 |------|--------|------------|
-| `min(34rem, 100% − 2.5rem) * factor` interacts badly with narrow windows | Med | Keep 100% formula as spec; test 75% and 200% in Vitest + e2e at desktop width |
-| AI comment/draft UI sizes drift | Low | Use `em` on `.editor-page`; spot-check comment chrome in manual pass |
-| Bar obscures page on short viewports | Low | Scrollport gets remaining height; bar `flex-shrink: 0` |
+| Stale catalog if OpenAI adds models mid-session | Low | Accepted per spec; session-only invalidation |
+| First open after connect still one slow fetch | Med | Editor no longer waits; Settings keeps loading state on dropdown only |
+| Comment `<select>` options stale after async hydrate | Med | `setOpenAiModelOptions` rebuilds options on all comment node views |
+| Provider instance `cachedModelSlug` diverges from catalog | Low | Task 3 passes explicit `model` from shell when auto + cache hit |
 
-## Open questions
+## Open questions (resolved for build)
 
-None — assumptions in SPEC slice 2 stand unless you change them during `/build`.
+- **TTL:** Session-only (disconnect / clear session).
+- **Cold cache UI:** Loading on model row only; editor not blocked.
+- **Write auto:** Share session catalog in `writeForComment`.
