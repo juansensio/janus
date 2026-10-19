@@ -101,6 +101,51 @@ describe("createAiBridgeService writeForComment", () => {
         expect(onDisk).toBe(manuscriptHtml);
     });
 
+    it("does not refetch models on write when the catalog is warm", async () => {
+        let modelsCalls = 0;
+        const fetchImpl: FetchFn = async (url) => {
+            if (url.endsWith("/v1/models")) {
+                modelsCalls += 1;
+                return new Response(
+                    JSON.stringify({
+                        models: [{ slug: "gpt-test", visibility: "list" }],
+                    }),
+                    { status: 200 },
+                );
+            }
+            if (url.endsWith("/v1/responses")) {
+                return new Response(
+                    `data: ${JSON.stringify({
+                        type: "response.output_text.delta",
+                        delta: JSON.stringify({
+                            kind: "draft",
+                            paragraphs: ["Generated prose"],
+                        }),
+                    })}\n\n`,
+                    {
+                        status: 200,
+                        headers: { "content-type": "text/event-stream" },
+                    },
+                );
+            }
+            throw new Error(`unexpected fetch: ${url}`);
+        };
+        const settingsFs = {
+            readFile: async () => JSON.stringify({ openAiModel: "auto" }),
+            writeFile: async () => {},
+            mkdir: async () => {},
+        };
+        const ai = createAiBridgeService(root, nodeFs(), {
+            fetchImpl,
+            userDataPath: "/user",
+            settingsFs,
+        });
+        await ai.getOpenAiModelSettings();
+        expect(modelsCalls).toBe(1);
+        await ai.writeForComment(bookId, "c1", "en");
+        expect(modelsCalls).toBe(1);
+    });
+
     it("persists a draft when the provider returns draft JSON", async () => {
         const fetchImpl: FetchFn = async (url) => {
             if (url.endsWith("/v1/models")) {
