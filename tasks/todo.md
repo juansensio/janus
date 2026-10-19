@@ -1,12 +1,14 @@
 # Active todo (pointer)
 
-**Active slice:** `tasks/jobs/ai-highlight/slice-1/todo.md` — **all tasks complete** (pending merge).
+**Active slice:** `tasks/jobs/support-docs/slice-1/todo.md` — **all tasks complete** (PR #6).
 
 | # | Task | Status |
 |---|------|--------|
-| 1 | Comment attrs + beginHighlightRewrite | done |
-| 2 | Reject and delete restore rewrite source | done |
-| 3 | ai-assist rewrite prompt + write path | done |
-| 4 | Bridge + IPC | done |
-| 5 | Editor UI + i18n | done |
-| 6 | E2E | done |
+| 1 | Support-docs domain service | done |
+| 2 | Bridge contract and mock | done |
+| 3 | Desktop IPC and adapter | done |
+| 4 | Mobile native bridge | done |
+| 5 | Project nav and catalogs | done |
+| 6 | Editor doc switch and autosave | done |
+| 7 | UI unit tests | done |
+| 8 | E2E support-docs flow | done |

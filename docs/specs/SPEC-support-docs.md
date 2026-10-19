@@ -1,6 +1,6 @@
 # Spec: support-docs
 
-> Status: **Proposed — slice 1** (2026-10-19). Awaiting human approval before `/plan` or `/build`. **Book project:** manuscript plus one free-text support document type (`worldbuilding`). Create, open, switch — no templates. Proposed module id `support-docs` (to be added to [`CAPABILITY-MAP.md`](../../CAPABILITY-MAP.md) on approval). Depends on shipped **library**, **manuscript** (editor + HTML), and **languages**.
+> Status: **Slice 1 approved** (2026-10-19). **Book project:** manuscript plus one free-text support document type (`worldbuilding`). Create, open, switch — no templates. Module id `support-docs` (add to [`CAPABILITY-MAP.md`](../../CAPABILITY-MAP.md) in a follow-up PR). Depends on shipped **library**, **manuscript** (editor + HTML), and **languages**.
 
 A book is a **project**: the existing manuscript plus optional **support documents** stored as plain UTF-8 files under `support/`. Slice 1 ships exactly one kind, `worldbuilding`. The manuscript editor surface is reused; AI comment UI stays manuscript-only.
 
@@ -141,20 +141,15 @@ export function createSupportDocService(fs: SupportDocFs) {
 | Flush autosave before doc switch | Side-by-side layout | Import `services/*` from UI |
 | Localize new strings in `en.json` and `es.json` | Changing on-disk filename convention after ship | Implicit create on `list` or first open |
 
-## Open questions
-
-1. **Wire format:** Should `readSupportDoc` / `writeSupportDoc` expose editor HTML (parallel to manuscript) or plain text with conversion only inside the shell? *Proposed:* HTML on the bridge wire, plain on disk — keeps UI identical to manuscript autosave without importing `@janus/support-docs` in UI.
-2. **Paragraph mapping:** Is `migrateLegacyMarkdownToHtml` / split on `\n\n` acceptable for worldbuilding free text, or must single `\n` inside a paragraph be preserved literally without becoming a new block? *Proposed:* same rules as legacy `manuscript.md` migration (paragraph = `\n\n+`, single newlines kept inside a paragraph).
-3. **Create UX:** When worldbuilding does not exist, should the Worldbuilding tab show an inline empty state with a **Create** button, or should Create live in a menu? *Proposed:* selecting Worldbuilding when missing shows inline Create; after create, editor opens empty.
-4. **Capability map / queue:** On approval, add `support-docs — slice 1` to `CAPABILITY-MAP.md` and `tasks/queue.md` (human/orchestrator sets `spec-approved`). This PR does not edit those files.
-
-## Decisions I would take (if approved as written)
+## Decisions taken (approved 2026-10-19)
 
 | Decision | Choice | Rationale |
 |----------|--------|-----------|
-| On-disk path | `support/worldbuilding.md` | Matches ROADMAP “worldbuilding”; room for `support/characters.md` later |
-| Kind id | `worldbuilding` | Stable bridge/catalog key; display name via i18n |
-| Storage | Plain UTF-8, not HTML | Support docs are free text; manuscript HTML stays manuscript-owned |
-| Editor reuse | ProseMirror + paragraph-only HTML binding | Spec asks to reuse editor; AI chrome gated by active doc |
-| Manifest | Unchanged slice 1 | YAGNI; filesystem discovery matches “no templates” |
-| Module boundary | New `@janus/support-docs` | Invariant 10 — one owner per domain |
+| Bridge wire format | Editor HTML in / out; **plain UTF-8 on disk** | Reuse manuscript autosave path in UI without importing domain in `packages/ui` |
+| Paragraph mapping | Reuse legacy `manuscript.md` rules via `migrateLegacyMarkdownToHtml` / paragraph-only blocks | One authoritative paragraph split; single `\n` preserved inside a paragraph |
+| Create UX | Inline **Create** when user selects **Worldbuilding** and file is missing | Explicit create; no implicit create on list or first keystroke |
+| On-disk path | `support/worldbuilding.md` | Room for more kinds under `support/` later |
+| Kind id | `worldbuilding` | Stable bridge key; display name via i18n |
+| AI chrome | Manuscript only | Slice 1 scope |
+| Manifest / queue | Unchanged in this slice; **CAPABILITY-MAP** and **queue** update deferred to later PR | Orchestrator decision |
+| Module boundary | New `@janus/support-docs` | Invariant 10 |
