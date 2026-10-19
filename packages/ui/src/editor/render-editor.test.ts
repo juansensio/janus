@@ -87,6 +87,39 @@ describe("renderEditor", () => {
         });
     });
 
+    it("shows inline create for worldbuilding then opens editor", async () => {
+        const host = document.createElement("div");
+        document.body.append(host);
+        const createSupportDoc = vi.fn(async () => ({
+            kind: "worldbuilding" as const,
+            exists: true,
+        }));
+        const readSupportDoc = vi.fn(async () =>
+            '<janus-manuscript version="1"></janus-manuscript>',
+        );
+        const bridge = createMockJanusBridge({
+            listSupportDocs: async () => [
+                { kind: "worldbuilding", exists: false },
+            ],
+            createSupportDoc,
+            readSupportDoc,
+            readManuscript: async () =>
+                '<janus-manuscript version="1"><janus-p>Ms</janus-p></janus-manuscript>',
+        });
+        await renderEditor(host, bridge, sampleBook, { onBack: () => {} });
+        host.querySelector<HTMLButtonElement>('[data-doc="worldbuilding"]')?.click();
+        await vi.waitFor(() =>
+            expect(host.querySelector(".editor-support-create-button")).not.toBeNull(),
+        );
+        await host.querySelector<HTMLButtonElement>(
+            ".editor-support-create-button",
+        )?.click();
+        await vi.waitFor(() => expect(createSupportDoc).toHaveBeenCalled());
+        await vi.waitFor(() =>
+            expect(host.querySelector(".editor-prosemirror")).not.toBeNull(),
+        );
+    });
+
     it("loads html into the prosemirror field", async () => {
         const host = document.createElement("div");
         const html =
