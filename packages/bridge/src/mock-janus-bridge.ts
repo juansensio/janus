@@ -5,11 +5,8 @@ import {
     insertOrReplaceDraft as insertOrReplaceDraftHtml,
     rejectAiDraft as rejectAiDraftHtml,
 } from "@janus/manuscript";
-<<<<<<< HEAD
-import type { BeginHighlightRewriteInput } from "./index";
-=======
 import { plainTextToEditorHtml } from "@janus/support-docs";
->>>>>>> 096911b (build(support-docs): extend JanusBridge and mock (task 2))
+import type { BeginHighlightRewriteInput } from "./index";
 import type { JanusBridge } from "./index";
 import { assertSupported } from "@janus/languages";
 import {
