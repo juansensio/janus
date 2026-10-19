@@ -16,6 +16,7 @@ import {
 import { registerLibraryIpc } from "./library-ipc";
 import { registerAiIpc } from "./ai-ipc";
 import { registerManuscriptIpc } from "./manuscript-ipc";
+import { registerSupportDocsIpc } from "./support-docs-ipc";
 import {
     evaluateNavigationUrl,
     evaluateWindowOpen,
@@ -147,6 +148,11 @@ app.whenReady().then(async () => {
         rename: (from: string, to: string) => fs.rename(from, to),
     };
     registerManuscriptIpc(
+        ipcMain,
+        () => libraryContext.resolved.path,
+        manuscriptFs,
+    );
+    registerSupportDocsIpc(
         ipcMain,
         () => libraryContext.resolved.path,
         manuscriptFs,
