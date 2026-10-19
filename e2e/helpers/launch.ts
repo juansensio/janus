@@ -12,6 +12,7 @@ const require = createRequire(import.meta.url);
 export type JanusLaunchDirs = {
     userDataDir: string;
     libraryRoot: string;
+    autoPdfExportPath: string;
 };
 
 export async function makeIsolatedJanusDirs(): Promise<JanusLaunchDirs> {
@@ -19,6 +20,7 @@ export async function makeIsolatedJanusDirs(): Promise<JanusLaunchDirs> {
     return {
         userDataDir: path.join(base, "user-data"),
         libraryRoot: path.join(base, "library"),
+        autoPdfExportPath: path.join(base, "export.pdf"),
     };
 }
 
@@ -55,6 +57,7 @@ export async function launchJanusApp(
         env: {
             ...process.env,
             JANUS_LIBRARY_ROOT: dirs.libraryRoot,
+            JANUS_E2E_AUTO_PDF_PATH: dirs.autoPdfExportPath,
         },
         timeout: 60_000,
         ...(slowMo > 0 ? { slowMo } : {}),

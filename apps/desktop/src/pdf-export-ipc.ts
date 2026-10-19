@@ -17,7 +17,10 @@ import {
     createManuscriptBridgeService,
     type ManuscriptBridgeFs,
 } from "./manuscript-service";
-import { printHtmlToPdfBuffer } from "./print-html-to-pdf";
+import {
+    buildE2eStubPdfBuffer,
+    printHtmlToPdfBuffer,
+} from "./print-html-to-pdf";
 import { PDF_EXPORT_IPC_CHANNELS } from "./pdf-export-ipc-channels";
 
 export { PDF_EXPORT_IPC_CHANNELS };
@@ -79,13 +82,18 @@ export function registerPdfExportIpc(
                     title,
                     manuscriptHtml,
                 });
-                const pdf = await printHtmlToPdfBuffer(printHtml);
 
                 const autoPath = process.env.JANUS_E2E_AUTO_PDF_PATH?.trim();
                 if (autoPath) {
+                    const pdf =
+                        process.env.JANUS_E2E_USE_REAL_PDF === "1"
+                            ? await printHtmlToPdfBuffer(printHtml)
+                            : buildE2eStubPdfBuffer();
                     await fs.writeFile(autoPath, pdf);
                     return { outcome: "saved", path: autoPath };
                 }
+
+                const pdf = await printHtmlToPdfBuffer(printHtml);
 
                 const defaultName = suggestedPdfFilename(title);
                 const dialogOptions: SaveDialogOptions = {

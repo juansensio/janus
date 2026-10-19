@@ -7,9 +7,13 @@ import { createLibraryService, type LibraryFs } from "./library-service";
 import { PDF_EXPORT_IPC_CHANNELS } from "./pdf-export-ipc-channels";
 import { registerPdfExportIpc } from "./pdf-export-ipc";
 
-vi.mock("./print-html-to-pdf", () => ({
-    printHtmlToPdfBuffer: async () => Buffer.from("%PDF-mock"),
-}));
+vi.mock("./print-html-to-pdf", async (importOriginal) => {
+    const actual = await importOriginal<typeof import("./print-html-to-pdf")>();
+    return {
+        ...actual,
+        printHtmlToPdfBuffer: async () => Buffer.from("%PDF-mock"),
+    };
+});
 
 function nodeLibraryFs(): LibraryFs {
     return {

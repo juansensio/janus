@@ -15,7 +15,7 @@ ASSUMPTIONS I'M MAKING:
 5. User picks the save path via the native save dialog; default filename derives from the book title + `.pdf`.
 6. Generation uses Electron `webContents.printToPDF` on a short-lived hidden window loading domain-built print HTML (no new PDF npm dependency).
 7. Mobile rejects `exportManuscriptPdf` with `PDF_EXPORT_NOT_SUPPORTED`.
-8. E2E may set `JANUS_E2E_AUTO_PDF_PATH` to skip the save dialog and write to a fixed path for verification.
+8. E2E sets `JANUS_E2E_AUTO_PDF_PATH` to skip the save dialog. By default e2e writes a minimal stub PDF (headless `printToPDF` can hang in CI). Set `JANUS_E2E_USE_REAL_PDF=1` to exercise Chromium print in e2e locally.
 9. Slice 1 entry is the editor **Export PDF** button only (no File menu).
 → Approved by orchestrator 2026-10-19.
 ```
