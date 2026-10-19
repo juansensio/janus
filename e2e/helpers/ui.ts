@@ -77,3 +77,12 @@ export async function setEditorZoomInSettings(
 export async function focusEditor(page: Page): Promise<void> {
     await page.locator(".editor-field .ProseMirror").click();
 }
+
+export async function clickExportPdf(page: Page): Promise<void> {
+    await page.locator(".editor-export-pdf").click();
+}
+
+export async function typeInEditor(page: Page, text: string): Promise<void> {
+    await focusEditor(page);
+    await page.keyboard.type(text);
+}

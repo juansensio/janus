@@ -83,7 +83,9 @@ export type JanusBridgeErrorCode =
     | "SUPPORT_DOC_ALREADY_EXISTS"
     | "SUPPORT_DOC_READ_FAILED"
     | "SUPPORT_DOC_WRITE_FAILED"
-    | "SUPPORT_DOC_INVALID";
+    | "SUPPORT_DOC_INVALID"
+    | "PDF_EXPORT_FAILED"
+    | "PDF_EXPORT_NOT_SUPPORTED";
 
 export type { UiLanguageResult } from "./ui-language";
 export { buildUiLanguage, buildUiLanguageForCode } from "./ui-language";
@@ -110,6 +112,10 @@ export type BeginHighlightRewriteInput = {
     instruction: string;
     spans: HighlightRewriteSpan[];
 };
+
+export type PdfExportResult =
+    | { outcome: "saved"; path: string }
+    | { outcome: "cancelled" };
 
 export interface JanusBridge {
     platform(): Platform;
@@ -163,6 +169,7 @@ export interface JanusBridge {
     subscribeEditorZoomMenuAction(
         listener: (action: EditorZoomMenuAction) => void,
     ): () => void;
+    exportManuscriptPdf(bookId: string): Promise<PdfExportResult>;
 }
 
 export function createShellLabel(): string {

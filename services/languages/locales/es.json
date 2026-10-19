@@ -38,6 +38,8 @@
     "manuscript.writeAi": "Escribir",
     "manuscript.deleteAiComment": "Eliminar",
     "manuscript.deleteCommentFailed": "No se pudo eliminar el comentario de IA.",
+    "manuscript.exportPdf": "Exportar PDF",
+    "manuscript.exportPdfFailed": "No se pudo exportar el PDF.",
     "supportDocs.projectNavAria": "Documentos del libro",
     "supportDocs.manuscriptTab": "Manuscrito",
     "supportDocs.worldbuildingTab": "Worldbuilding",

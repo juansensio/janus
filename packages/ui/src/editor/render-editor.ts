@@ -73,6 +73,11 @@ export async function renderEditor(
     rewriteSelectionButton.textContent = t("ai.rewriteSelection");
     rewriteSelectionButton.hidden = true;
 
+    const exportPdfButton = document.createElement("button");
+    exportPdfButton.type = "button";
+    exportPdfButton.className = "editor-export-pdf";
+    exportPdfButton.textContent = t("manuscript.exportPdf");
+
     const desktopAiCapable = bridge.platform() === "desktop";
     header.append(backButton);
 
@@ -89,7 +94,10 @@ export async function renderEditor(
     const loadError = document.createElement("p");
     loadError.className = "editor-error";
 
-    chrome.append(status, saveError, transformError, loadError);
+    const exportError = document.createElement("p");
+    exportError.className = "editor-error";
+
+    chrome.append(status, saveError, transformError, loadError, exportError);
     host.append(chrome);
 
     let worldbuildingExists = false;
@@ -113,7 +121,11 @@ export async function renderEditor(
         },
     });
     if (desktopAiCapable) {
-        header.append(addCommentButton, rewriteSelectionButton);
+        header.append(
+            exportPdfButton,
+            addCommentButton,
+            rewriteSelectionButton,
+        );
     }
     chrome.prepend(header);
 
@@ -481,6 +493,26 @@ export async function renderEditor(
                 syncRewriteSelectionButton();
             } catch {
                 transformError.textContent = t("ai.rewriteSelectionFailed");
+            }
+        })();
+    });
+
+    exportPdfButton.addEventListener("click", () => {
+        void (async () => {
+            exportError.textContent = "";
+            exportPdfButton.disabled = true;
+            try {
+                if (autosaveRef.current?.isDirty()) {
+                    await autosaveRef.current.flush();
+                }
+                const result = await bridge.exportManuscriptPdf(book.id);
+                if (result.outcome === "cancelled") {
+                    return;
+                }
+            } catch {
+                exportError.textContent = t("manuscript.exportPdfFailed");
+            } finally {
+                exportPdfButton.disabled = false;
             }
         })();
     });

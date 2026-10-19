@@ -17,6 +17,7 @@ import { registerLibraryIpc } from "./library-ipc";
 import { registerAiIpc } from "./ai-ipc";
 import { registerManuscriptIpc } from "./manuscript-ipc";
 import { registerSupportDocsIpc } from "./support-docs-ipc";
+import { registerPdfExportIpc } from "./pdf-export-ipc";
 import {
     evaluateNavigationUrl,
     evaluateWindowOpen,
@@ -181,6 +182,12 @@ app.whenReady().then(async () => {
         userDataPath,
         fs: rootFs,
     });
+    registerPdfExportIpc(
+        ipcMain,
+        () => libraryContext.resolved.path,
+        libraryFs,
+        manuscriptFs,
+    );
     installDesktopZoomMenu();
 
     app.on("web-contents-created", (_event, contents) => {

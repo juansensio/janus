@@ -96,6 +96,13 @@
         "node-html-parser": "^9.0.4",
       },
     },
+    "services/pdf-export": {
+      "name": "@janus/pdf-export",
+      "version": "0.0.0",
+      "dependencies": {
+        "@janus/manuscript": "workspace:*",
+      },
+    },
     "services/support-docs": {
       "name": "@janus/support-docs",
       "version": "0.0.0",
@@ -216,6 +223,8 @@
     "@janus/manuscript": ["@janus/manuscript@workspace:services/manuscript"],
 
     "@janus/mobile": ["@janus/mobile@workspace:apps/mobile"],
+
+    "@janus/pdf-export": ["@janus/pdf-export@workspace:services/pdf-export"],
 
     "@janus/support-docs": ["@janus/support-docs@workspace:services/support-docs"],
 

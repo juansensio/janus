@@ -5,6 +5,7 @@ import {
     type AiWriteDraftDeltaPayload,
 } from "./ai-ipc-channels";
 import { invokeLibraryIpc } from "./library-ipc-error";
+import { PDF_EXPORT_IPC_CHANNELS } from "./pdf-export-ipc-channels";
 import { ZOOM_IPC_CHANNELS } from "./zoom-ipc";
 
 const invoke = (channel: string, ...args: unknown[]) =>
@@ -103,6 +104,8 @@ const bridge: JanusBridge = {
     getEditorZoom: () => invoke(ZOOM_IPC_CHANNELS.getEditorZoom),
     setEditorZoom: (percent: number) =>
         invoke(ZOOM_IPC_CHANNELS.setEditorZoom, percent),
+    exportManuscriptPdf: (bookId: string) =>
+        invoke(PDF_EXPORT_IPC_CHANNELS.exportManuscriptPdf, bookId),
     subscribeEditorZoomMenuAction: (listener) => {
         const handler = (
             _event: Electron.IpcRendererEvent,

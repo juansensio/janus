@@ -144,6 +144,7 @@ export function createMockJanusBridge(
             return buildEditorZoomResult(valid);
         },
         subscribeEditorZoomMenuAction: () => () => {},
+        exportManuscriptPdf: async () => ({ outcome: "cancelled" }),
         getAiProviderStatus: async () => ({ connected: false }),
         connectOpenAiCodex: async () => {
             throw Object.assign(new Error("Not supported in mock"), {
