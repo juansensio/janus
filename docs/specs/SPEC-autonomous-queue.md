@@ -78,11 +78,13 @@ A capability row is launched only when all of these are true:
 
 - It is in the capability table, not the ROADMAP ideas table.
 - Status is `idea`, `spec-draft`, or `spec-approved`.
+- Status is not `deferred`, `running`, `in-progress`, `pr-open`, `needs-decision`, or `done`.
 - Notes is not `local`.
+- Notes does not contain `no auto-spec` (case-insensitive).
 - `Needs behavior` is empty, or every named row has status `done`.
 - The named behavior row exists. If it does not, the bot stops and asks you. It does not guess.
 
-`running`, `in-progress`, `pr-open`, `needs-decision`, and `done` are never launched.
+`deferred`, `running`, `in-progress`, `pr-open`, `needs-decision`, and `done` are never launched. Rows whose Notes contain `no auto-spec` are never launched.
 
 ### Local session
 

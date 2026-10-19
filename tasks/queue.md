@@ -13,9 +13,10 @@ Autonomous agents read this file **after** `CAPABILITY-MAP.md`. The Grok orchest
 | `running` | Cloud agent working this row |
 | `pr-open` | Pull request open — waiting for human review |
 | `needs-decision` | Blocked on dangerous/important choice — see PR `Needs-Decision` |
+| `deferred` | Paused — orchestrator does not launch until status changes |
 | `done` | Pull request **merged** to default branch; slice plan stays under `tasks/jobs/` |
 
-**Notes:** `local` means a human Cursor session owns the row; the orchestrator does not launch it until `/queue release`.
+**Notes:** `local` means a human Cursor session owns the row; the orchestrator does not launch it until `/queue release`. Substring **`no auto-spec`** in Notes means the row has no concrete slice scope yet — orchestrator does not launch it.
 
 ## Needs behavior
 
@@ -31,7 +32,7 @@ Capability rows may name another row’s **Module / slice** cell. Empty means th
 
 Workflow-only specs (for example `SPEC-autonomous-queue.md`) follow the same queue row pattern but are not CAPABILITY-MAP modules.
 
-**Current queue head:** `autonomous-queue — slice 1` (`in-progress`, Notes `local`).
+**Current queue head:** none (`spec-approved` empty for local `/plan`). **First orchestrator candidate when launched:** row 19 `pdf-export — slice 1` (`idea`, not `spec-approved`).
 
 ---
 
@@ -53,15 +54,14 @@ Workflow-only specs (for example `SPEC-autonomous-queue.md`) follow the same que
 | 12 | desktop-release v1 | done | `docs/specs/SPEC-desktop-release.md`, `docs/specs/SPEC-desktop-release-command.md` | | `tasks/archive/desktop-release/` |
 | 13 | manuscript — slice 2 (HTML) | done | `docs/specs/SPEC-manuscript-slice-2.md` | | Built with row 14; `tasks/archive/html-manuscript-ai-assist/` |
 | 14 | ai-assist — slice 1 (SIWC, Write) | done | `docs/specs/SPEC-ai-assist.md` | | `tasks/archive/html-manuscript-ai-assist/`, etc. |
-| 15 | ai-assist — slice 2 (usage ledger) | spec-draft | `docs/specs/SPEC-ai-assist-slice-2.md` | | Spec **Deferred** (2026-10-18) |
+| 15 | ai-assist — slice 2 (usage ledger) | deferred | `docs/specs/SPEC-ai-assist-slice-2.md` | | Usage ledger deferred 2026-10-18 — revive via `/spec` + status change |
 | 16 | zoom — slices 1–2 | done | `docs/specs/SPEC-zoom.md` | | `tasks/jobs/zoom/` not migrated; archive `tasks/archive/zoom-slice-*` |
 | 17 | ai-assist — slice 3 (model catalog cache) | done | `docs/specs/SPEC-ai-assist-slice-3-model-catalog-cache.md` | | Shipped 2026-10-19 |
-| 18 | autonomous-queue — slice 1 | in-progress | `docs/specs/SPEC-autonomous-queue.md` | | local — slice 1 built; PR merge → `done` |
-| — | library (full Neo loop) | spec-draft | `docs/specs/SPEC-library.md` | | Further slices not approved |
-| — | languages (per-book writing language) | idea | `docs/specs/SPEC-languages.md` | | Slice 1 shipped |
-| — | manuscript (chapters, breaks, …) | idea | `docs/specs/SPEC-manuscript.md` | | Slice 1–2 shipped |
-
-Active plan: **autonomous-queue** slice 1 — `tasks/jobs/autonomous-queue/slice-1/` (root `tasks/plan.md` pointer).
+| 18 | autonomous-queue — slice 1 | done | `docs/specs/SPEC-autonomous-queue.md` | | Shipped 2026-10-19; `tasks/jobs/autonomous-queue/slice-1/` |
+| 19 | pdf-export — slice 1 | idea | — | | First overnight candidate — agent `/spec` at launch; Juan approves before `spec-approved` |
+| — | library (full Neo loop) | deferred | `docs/specs/SPEC-library.md` | | no auto-spec — Neo loop not sliced |
+| — | languages (per-book writing language) | idea | `docs/specs/SPEC-languages.md` | | no auto-spec — slice TBD |
+| — | manuscript (chapters, breaks, …) | idea | `docs/specs/SPEC-manuscript.md` | | no auto-spec — slice TBD |
 
 ---
 
@@ -76,6 +76,6 @@ Informal items from `ROADMAP.md` — status **`idea`** until a spec is drafted. 
 | UI | Reference documents side-by-side | idea |
 | AI | Text highlight rewrite | idea |
 | AI | Per-comment model override (beyond shipped settings) | idea |
-| Features | PDF export | idea |
+| Features | PDF export | promoted → capability row 19 |
 | Features | Reference documents (worldbuilding, characters, …) | idea |
 | Features | Agents (reviewer, canon, …) | idea |

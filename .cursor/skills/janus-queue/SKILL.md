@@ -38,8 +38,9 @@ A capability row is **launchable** when **all** are true:
 
 - Row is in the **capability** table (not ROADMAP ideas).
 - Status is `idea`, `spec-draft`, or `spec-approved`.
+- Status is **not** `deferred`, `running`, `in-progress`, `pr-open`, `needs-decision`, or `done`.
 - Notes is **not** `local`.
-- Status is **not** `running`, `in-progress`, `pr-open`, `needs-decision`, or `done`.
+- Notes does **not** contain `no auto-spec` (case-insensitive).
 - **Needs behavior** is empty, or every named row has status `done` (merged).
 - Every name in **Needs behavior** matches some capability row’s Module / slice cell. If not, **stop and ask the human** — do not launch.
 
@@ -53,8 +54,11 @@ Return launchable rows in **table order** (ascending Order). Launch **all** of t
 | `comments panel` needs `side panels`; `side panels` is `pr-open` | Neither of those two |
 | Independent third row `idea`, empty Needs behavior | Third row only |
 | `comments panel` needs `side panels`; `side panels` is `done` | `comments panel` |
+| Row `deferred` | No |
 | Row `running`, `in-progress`, `pr-open`, `needs-decision`, or `done` | No |
+| Row `idea`, Notes contains `no auto-spec` | No |
 | Row `spec-draft`, Notes `local` | No |
+| `pdf-export — slice 1`, `idea`, empty Needs behavior, not `local` | Yes (table order when no higher launchable row) |
 | Same row after `/queue release` (no `local`), dependencies met | Yes |
 | Needs behavior names a missing row | Stop; ask human |
 | ROADMAP ideas table row | Never |
