@@ -191,16 +191,7 @@ export async function renderEditor(
         statusMessage: null,
     };
 
-    let openAiModelOptions: string[] = ["auto"];
-    if (desktopAiCapable) {
-        try {
-            openAiModelOptions = (
-                await bridge.getOpenAiModelSettings()
-            ).options;
-        } catch {
-            openAiModelOptions = ["auto"];
-        }
-    }
+    const openAiModelOptions: string[] = ["auto"];
 
     const locale = getUiLocale();
     document.documentElement.lang = locale;
