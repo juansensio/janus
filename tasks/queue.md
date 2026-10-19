@@ -20,7 +20,7 @@ Autonomous agents read this file **after** `CAPABILITY-MAP.md`. Status drives wh
 4. Set the matching row below to **`spec-approved`** (or `in-progress` once `/plan` has written root `tasks/plan.md`).
 5. Agents do **not** treat CAPABILITY-MAP prose alone as approval — this queue row must be `spec-approved`.
 
-**Current queue head:** none (`spec-approved` empty). Run `/plan` after the next approval.
+**Current queue head:** zoom slice 1 (`in-progress`, PR open).
 
 ---
 
@@ -43,11 +43,12 @@ Autonomous agents read this file **after** `CAPABILITY-MAP.md`. Status drives wh
 | 13 | manuscript — slice 2 (HTML) | done | `docs/specs/SPEC-manuscript-slice-2.md` | Built with row 14; `tasks/archive/html-manuscript-ai-assist/` |
 | 14 | ai-assist — slice 1 (SIWC, Write) | done | `docs/specs/SPEC-ai-assist.md` | `tasks/archive/html-manuscript-ai-assist/`, `ai-assist-siwc/`, `ai-assist-write-instruction/` |
 | 15 | ai-assist — slice 2 (usage ledger) | spec-draft | `docs/specs/SPEC-ai-assist-slice-2.md` | Spec status **Deferred** (2026-10-18) — not queued for build |
+| 16 | zoom — slice 1 | in-progress | `docs/specs/SPEC-zoom.md` | **spec-approved** 2026-10-18; PR #2 |
 | — | library (full Neo loop) | spec-draft | `docs/specs/SPEC-library.md` | Further slices not approved beyond archived work |
 | — | languages (per-book writing language) | idea | `docs/specs/SPEC-languages.md` | Slice 1 shipped; later slices not specified |
 | — | manuscript (chapters, breaks, …) | idea | `docs/specs/SPEC-manuscript.md` | Slice 1–2 shipped; map “full loop” not spec’d |
 
-Active plan: **none** (`tasks/plan.md` idle). Nothing marked `in-progress`.
+Active plan: **zoom** (`tasks/plan.md`, all tasks complete pending merge).
 
 ---
 
@@ -57,7 +58,7 @@ Informal items from `ROADMAP.md` — status **`idea`** until a spec is drafted a
 
 | Area | Idea | Status |
 |------|------|--------|
-| UI | Zoom page | idea |
+| UI | Zoom page | in-progress (`SPEC-zoom.md`, PR #2) |
 | UI | Side panels (nav left, comments right) | idea |
 | UI | Reference documents side-by-side | idea |
 | AI | Text highlight rewrite | idea |

@@ -25,3 +25,4 @@ When `/plan` starts a new `docs/specs/SPEC-<module-id>.md`, move the previous pa
 | `html-manuscript-ai-assist/` | `SPEC-manuscript-slice-2` + `SPEC-ai-assist` | Build phase Tasks 1–13 (2026-10-18; SIWC Connect deferred) |
 | `ai-assist-siwc/` | `SPEC-ai-assist` + ADR SIWC | Sign in with ChatGPT Connect, refresh, revoke (2026-10-18; manual sign-off) |
 | `ai-assist-write-instruction/` | `SPEC-ai-assist` | Write: prose context, JSON draft/refusal, comment status (2026-10-18; manual sign-off) |
+| `idle-pre-zoom/` | — | Idle root plan before zoom slice (2026-10-18) |

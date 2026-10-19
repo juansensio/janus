@@ -63,6 +63,29 @@ describe("renderSettings", () => {
         expect(labels).toContain("GPT-4o");
     });
 
+    it("lists editor zoom levels from bridge", async () => {
+        initTestI18n("en");
+        const host = document.createElement("div");
+        const bridge = createMockJanusBridge({
+            getLibraryRoot: async () => ({
+                path: "/data/library",
+                source: "user-data",
+            }),
+            getEditorZoom: async () => ({
+                percent: 125,
+                levels: [75, 100, 125, 150],
+            }),
+        });
+        await renderSettings(host, bridge, { onBack: () => {} });
+        const zoomSelect = host.querySelector(
+            ".settings-editor-zoom",
+        ) as HTMLSelectElement;
+        expect(zoomSelect).not.toBeNull();
+        expect(zoomSelect.value).toBe("125");
+        const labels = [...zoomSelect.options].map((o) => o.textContent);
+        expect(labels).toContain("125%");
+    });
+
     it("lists English and Español in the language select", async () => {
         initTestI18n("en");
         const host = document.createElement("div");

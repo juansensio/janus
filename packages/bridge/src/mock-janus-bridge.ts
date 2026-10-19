@@ -10,6 +10,8 @@ import {
     buildUiLanguage,
     buildUiLanguageForCode,
 } from "./ui-language";
+import { assertEditorZoomPercent } from "@janus/zoom";
+import { buildEditorZoomResult } from "./editor-zoom";
 
 const EMPTY_BOOKS: import("./index").BookSummary[] = [];
 
@@ -29,6 +31,7 @@ export function createMockJanusBridge(
 ): JanusBridge {
     const manuscripts = createMockManuscriptStore();
     let mockSavedLocale: string | null = null;
+    let mockEditorZoomPercent: number | undefined;
     let mockOpenAiModel = "auto";
     const mockOpenAiModelOptions = ["auto", "gpt-4o", "gpt-4.1", "o4-mini"];
     const emptyHtml = createEmptyManuscriptHtml();
@@ -87,6 +90,14 @@ export function createMockJanusBridge(
             mockSavedLocale = code;
             return buildUiLanguageForCode(code);
         },
+        getEditorZoom: async () =>
+            buildEditorZoomResult(mockEditorZoomPercent),
+        setEditorZoom: async (percent: number) => {
+            const valid = assertEditorZoomPercent(percent);
+            mockEditorZoomPercent = valid;
+            return buildEditorZoomResult(valid);
+        },
+        subscribeEditorZoomMenuAction: () => () => {},
         getAiProviderStatus: async () => ({ connected: false }),
         connectOpenAiCodex: async () => {
             throw Object.assign(new Error("Not supported in mock"), {

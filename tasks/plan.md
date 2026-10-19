@@ -1,12 +1,27 @@
-# Active plan
+# Active plan: zoom slice 1
 
-**No module plan in progress.**
+**Source spec:** [`docs/specs/SPEC-zoom.md`](../docs/specs/SPEC-zoom.md)
 
-| Last completed | Location |
-|----------------|----------|
-| AI Write — instruction, prose context, refusal | `tasks/archive/ai-assist-write-instruction/` |
-| AI assist SIWC Connect | `tasks/archive/ai-assist-siwc/` |
+**Archived:** previous idle root plan (no module) → `tasks/archive/idle-pre-zoom/`
 
-**Next:** run `/plan` when the next approved spec slice is ready (see `CAPABILITY-MAP.md`).
+## Goal
 
-**Archived:** `tasks/archive/ai-assist-write-instruction/` (previous root plan).
+Persisted manuscript page zoom with domain module, bridge IPC, Settings control, editor shortcuts, and desktop View menu.
+
+## Task order
+
+```
+1 domain + settings shape
+2 bridge + mock
+3 desktop IPC
+4 mobile bridge
+5 UI apply + editor load
+6 settings control + i18n
+7 editor keyboard shortcuts
+8 desktop View menu + renderer listener
+```
+
+## Notes
+
+- Rebuild CAPABILITY-MAP row for `zoom` in Task 1 commit.
+- One commit per task in `tasks/todo.md`.

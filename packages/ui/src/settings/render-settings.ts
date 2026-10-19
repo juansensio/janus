@@ -109,6 +109,40 @@ export async function renderSettings(
     });
     host.append(languageLabel, languageSelect);
 
+    const editorZoom = await bridge.getEditorZoom();
+    if (!isSettingsSession(host, session)) {
+        return;
+    }
+
+    const zoomLabel = document.createElement("p");
+    zoomLabel.className = "settings-label";
+    zoomLabel.textContent = t("settings.editorZoom");
+
+    const zoomSelect = document.createElement("select");
+    zoomSelect.className = "settings-editor-zoom";
+    zoomSelect.setAttribute("aria-label", t("settings.editorZoom"));
+    for (const level of editorZoom.levels) {
+        const option = document.createElement("option");
+        option.value = String(level);
+        option.textContent = t("settings.editorZoomPercent", {
+            percent: String(level),
+        });
+        zoomSelect.append(option);
+    }
+    zoomSelect.value = String(editorZoom.percent);
+    zoomSelect.addEventListener("change", () => {
+        void (async () => {
+            const previous = String(editorZoom.percent);
+            try {
+                await bridge.setEditorZoom(Number(zoomSelect.value));
+            } catch {
+                zoomSelect.value = previous;
+                error.textContent = t("settings.editorZoomSaveFailed");
+            }
+        })();
+    });
+    host.append(zoomLabel, zoomSelect);
+
     const isDesktop = bridge.platform() === "desktop";
 
     let aiConnected = false;

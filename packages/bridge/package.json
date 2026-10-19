@@ -8,6 +8,7 @@
     },
     "dependencies": {
         "@janus/languages": "workspace:*",
-        "@janus/manuscript": "workspace:*"
+        "@janus/manuscript": "workspace:*",
+        "@janus/zoom": "workspace:*"
     }
 }

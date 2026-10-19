@@ -7,6 +7,8 @@ import {
     type DesktopLibraryContext,
 } from "./desktop-library-context";
 import { registerLanguageIpc } from "./language-ipc";
+import { registerZoomIpc } from "./zoom-ipc";
+import { installDesktopZoomMenu } from "./zoom-menu";
 import {
     createElectronDirectoryPicker,
     registerSettingsIpc,
@@ -169,6 +171,11 @@ app.whenReady().then(async () => {
         fs: rootFs,
         getSystemLocale: () => app.getLocale(),
     });
+    registerZoomIpc(ipcMain, {
+        userDataPath,
+        fs: rootFs,
+    });
+    installDesktopZoomMenu();
 
     app.on("web-contents-created", (_event, contents) => {
         attachSecureNavigationPolicy(contents);

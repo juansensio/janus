@@ -3,6 +3,11 @@ import { getUiLocale, t } from "../i18n";
 import { createAutosaveController, type EditorSaveStatus } from "./autosave";
 import { aiWriteErrorMessage } from "./ai-write-error";
 import type { AiWriteFlight } from "./manuscript-editor";
+import {
+    attachEditorZoomShortcuts,
+    createEditorZoomController,
+    loadInitialEditorZoom,
+} from "./editor-zoom";
 import { createManuscriptEditor } from "./manuscript-editor";
 
 const AUTOSAVE_INTERVAL_MS = 1000;
@@ -103,6 +108,35 @@ export async function renderEditor(
 
     page.append(title, field);
     host.append(page);
+
+    const initialZoomPercent = await loadInitialEditorZoom(host, bridge);
+    const zoomController = createEditorZoomController(
+        host,
+        bridge,
+        initialZoomPercent,
+        {
+            onPersistError: () => {
+                saveError.textContent = t("manuscript.zoomSaveFailed");
+            },
+        },
+    );
+    const detachEditorZoomShortcuts = attachEditorZoomShortcuts({
+        controller: zoomController,
+        isActive: () => host.isConnected,
+    });
+    const detachEditorZoomMenu = bridge.subscribeEditorZoomMenuAction(
+        (action) => {
+            if (!host.isConnected) {
+                return;
+            }
+            zoomController.applyDirection(action);
+        },
+    );
+
+    const disposeEditorZoom = (): void => {
+        detachEditorZoomShortcuts();
+        detachEditorZoomMenu();
+    };
 
     const autosaveRef: {
         current: ReturnType<typeof createAutosaveController> | null;
@@ -227,6 +261,7 @@ export async function renderEditor(
     backButton.addEventListener("click", () => {
         void (async () => {
             if (!autosave.isDirty()) {
+                disposeEditorZoom();
                 editor.destroy();
                 autosave.dispose();
                 options.onBack();
@@ -234,6 +269,7 @@ export async function renderEditor(
             }
             try {
                 await autosave.flush();
+                disposeEditorZoom();
                 editor.destroy();
                 autosave.dispose();
                 options.onBack();

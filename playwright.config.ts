@@ -1,0 +1,17 @@
+import { defineConfig } from "@playwright/test";
+
+export default defineConfig({
+    testDir: "e2e/flows",
+    timeout: 90_000,
+    expect: { timeout: 15_000 },
+    fullyParallel: false,
+    workers: 1,
+    retries: process.env.CI ? 1 : 0,
+    reporter: process.env.CI ? [["list"], ["github"]] : [["list"]],
+    use: {
+        trace: "retain-on-failure",
+        video: "off",
+        screenshot: "off",
+    },
+    outputDir: "e2e/test-results",
+});

@@ -36,6 +36,7 @@ Do not disable CI checks, skip tests, or weaken lint rules to greenwash a run.
 ## Verification before PR
 
 - `bun run test` and `bun run lint` (same as CI).
+- Desktop UI changes: run `bun run e2e` (or the affected flow under `e2e/flows/`). New features should add or extend an e2e flow and attach screenshots from `e2e/artifacts/` in the PR.
 - Commits: one per `/build` task when using autonomous build; messages state intent.
 - Update `tasks/queue.md` status (`in-progress` → `done`) only when the spec slice acceptance criteria are met and archived per `janus-planning.mdc`.
 

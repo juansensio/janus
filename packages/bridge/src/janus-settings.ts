@@ -1,8 +1,12 @@
+import { normalizeEditorZoomPercent } from "@janus/zoom";
+
 export type JanusSettings = {
     libraryRoot?: string;
     uiLocale?: string;
     /** `"auto"` or an OpenAI model slug from the account catalog */
     openAiModel?: string;
+    /** Manuscript page zoom percent (discrete levels only). */
+    editorZoomPercent?: number;
 };
 
 export function normalizeJanusSettings(raw: unknown): JanusSettings {
@@ -19,6 +23,11 @@ export function normalizeJanusSettings(raw: unknown): JanusSettings {
     }
     if (typeof record.openAiModel === "string") {
         settings.openAiModel = record.openAiModel;
+    }
+    if (record.editorZoomPercent !== undefined) {
+        settings.editorZoomPercent = normalizeEditorZoomPercent(
+            record.editorZoomPercent,
+        );
     }
     return settings;
 }

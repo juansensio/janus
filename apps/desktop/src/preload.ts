@@ -5,6 +5,7 @@ import {
     type AiWriteDraftDeltaPayload,
 } from "./ai-ipc-channels";
 import { invokeLibraryIpc } from "./library-ipc-error";
+import { ZOOM_IPC_CHANNELS } from "./zoom-ipc";
 
 const invoke = (channel: string, ...args: unknown[]) =>
     invokeLibraryIpc(ipcRenderer.invoke.bind(ipcRenderer), channel, ...args);
@@ -89,6 +90,23 @@ const bridge: JanusBridge = {
     getUiLanguage: () => invoke("janus:language:getUiLanguage"),
     setUiLanguage: (code: string) =>
         invoke("janus:language:setUiLanguage", code),
+    getEditorZoom: () => invoke(ZOOM_IPC_CHANNELS.getEditorZoom),
+    setEditorZoom: (percent: number) =>
+        invoke(ZOOM_IPC_CHANNELS.setEditorZoom, percent),
+    subscribeEditorZoomMenuAction: (listener) => {
+        const handler = (
+            _event: Electron.IpcRendererEvent,
+            action: unknown,
+        ) => {
+            if (action === "in" || action === "out" || action === "reset") {
+                listener(action);
+            }
+        };
+        ipcRenderer.on(ZOOM_IPC_CHANNELS.menuAction, handler);
+        return () => {
+            ipcRenderer.removeListener(ZOOM_IPC_CHANNELS.menuAction, handler);
+        };
+    },
 };
 
 contextBridge.exposeInMainWorld("janus", bridge);
