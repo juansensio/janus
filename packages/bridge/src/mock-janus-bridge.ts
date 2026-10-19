@@ -1,9 +1,11 @@
 import {
     acceptAiDraft as acceptAiDraftHtml,
+    beginHighlightRewrite as beginHighlightRewriteHtml,
     createEmptyManuscriptHtml,
     insertOrReplaceDraft as insertOrReplaceDraftHtml,
     rejectAiDraft as rejectAiDraftHtml,
 } from "@janus/manuscript";
+import type { BeginHighlightRewriteInput } from "./index";
 import type { JanusBridge } from "./index";
 import { assertSupported } from "@janus/languages";
 import {
@@ -72,6 +74,12 @@ export function createMockJanusBridge(
                 draftHtml,
                 draftId,
             );
+            manuscripts.set(id, next);
+            return next;
+        },
+        beginHighlightRewrite: async (id, input: BeginHighlightRewriteInput) => {
+            const html = manuscripts.get(id) ?? emptyHtml;
+            const next = beginHighlightRewriteHtml(html, input);
             manuscripts.set(id, next);
             return next;
         },

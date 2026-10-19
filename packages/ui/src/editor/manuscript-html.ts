@@ -23,7 +23,11 @@ function serializeBlock(node: PmNode): string {
         const id = String(node.attrs.id ?? "");
         const model = String(node.attrs.model ?? "").trim();
         const modelAttr = model ? ` model="${escapeAttr(model)}"` : "";
-        return `<janus-ai-comment id="${escapeAttr(id)}"${modelAttr}>${escapeText(node.textContent)}</janus-ai-comment>`;
+        const variant = String(node.attrs.variant ?? "").trim();
+        const variantAttr = variant ? ` variant="${escapeAttr(variant)}"` : "";
+        const source = String(node.attrs.source ?? "").trim();
+        const sourceAttr = source ? ` source="${escapeAttr(source)}"` : "";
+        return `<janus-ai-comment id="${escapeAttr(id)}"${modelAttr}${variantAttr}${sourceAttr}>${escapeText(node.textContent)}</janus-ai-comment>`;
     }
     if (node.type.name === "janus_ai_draft") {
         const id = String(node.attrs.id ?? "");
@@ -75,10 +79,12 @@ export function parseManuscriptHtml(html: string): PmNode {
         if (tag === "janus-ai-comment") {
             const id = child.getAttribute("id") ?? "";
             const model = child.getAttribute("model") ?? "";
+            const variant = child.getAttribute("variant") ?? "";
+            const source = child.getAttribute("source") ?? "";
             blocks.push(
                 manuscriptSchema.node(
                     "janus_ai_comment",
-                    { id, model },
+                    { id, model, variant, source },
                     child.textContent
                         ? [manuscriptSchema.text(child.textContent)]
                         : undefined,

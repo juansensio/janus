@@ -32,6 +32,8 @@ Build order (full Neo loop): shell → languages → manuscript → library, ai-
 
 **AI-assist slice 3** (`docs/specs/SPEC-ai-assist-slice-3-model-catalog-cache.md`, approved 2026-10-19): session-cached OpenAI model catalog in desktop main; non-blocking editor model options.
 
+**AI-highlight slice 1** (`docs/specs/SPEC-ai-highlight.md`, approved 2026-10-19): desktop selection → rewrite via existing `janus-ai-comment` / `janus-ai-draft` and `writeForComment`; comment `variant="rewrite"` + `source`; partial `janus-p` selection; delete comment before Write restores source.
+
 **Zoom slice 1** (`docs/specs/SPEC-zoom.md`, approved 2026-10-18): discrete manuscript page zoom in the editor; persisted `editorZoomPercent`; Settings control; desktop View menu and keyboard shortcuts.
 
 **Zoom slice 2** (`docs/specs/SPEC-zoom.md`, approved 2026-10-19): pinned editor bar `+ zoom (X%) −`; the page card scales with the level (paper and type together).

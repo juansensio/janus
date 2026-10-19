@@ -8,6 +8,10 @@ import { aiWriteErrorMessage } from "./ai-write-error";
 import { t } from "../i18n";
 import { manuscriptSchema } from "./manuscript-schema";
 import { openAiModelOptionLabel } from "../settings/open-ai-model-label";
+import {
+    selectionToHighlightSpans,
+    type HighlightRewriteSpan,
+} from "./highlight-selection";
 import { parseManuscriptHtml, serializeManuscriptHtml } from "./manuscript-html";
 
 export type AiWriteFlight = {
@@ -22,6 +26,7 @@ export type ManuscriptEditorOptions = {
     showAiChrome: boolean;
     getWriteFlight: () => AiWriteFlight;
     onDocChange: () => void;
+    onSelectionChange?: () => void;
     onWriteComment: (commentId: string) => Promise<void>;
     onAcceptDraft: (draftId: string) => Promise<void>;
     onRejectDraft: (draftId: string) => Promise<void>;
@@ -35,6 +40,7 @@ export type ManuscriptEditor = {
     focus(): void;
     destroy(): void;
     insertAiComment(): string;
+    getHighlightRewriteSpans(): HighlightRewriteSpan[] | null;
     refreshAiCommentChrome(): void;
     setOpenAiModelOptions(options: string[]): void;
     applyStreamingDraft(
@@ -77,6 +83,9 @@ export function createManuscriptEditor(
         view() {
             return {
                 update(view, prevState) {
+                    if (!view.state.selection.eq(prevState.selection)) {
+                        options.onSelectionChange?.();
+                    }
                     if (
                         !suppressDocChange &&
                         !view.state.doc.eq(prevState.doc)
@@ -161,6 +170,10 @@ export function createManuscriptEditor(
                 dom.className = "editor-ai-comment";
                 const commentId = String(node.attrs.id);
                 dom.setAttribute("data-comment-id", commentId);
+                const variant = String(node.attrs.variant ?? "").trim();
+                if (variant) {
+                    dom.setAttribute("data-variant", variant);
+                }
                 const contentDOM = document.createElement("div");
                 contentDOM.className = "editor-ai-comment-body";
                 let write: HTMLButtonElement | null = null;
@@ -284,6 +297,14 @@ export function createManuscriptEditor(
                         if (updatedNode.type !== node.type) {
                             return false;
                         }
+                        const nextVariant = String(
+                            updatedNode.attrs.variant ?? "",
+                        ).trim();
+                        if (nextVariant) {
+                            dom.setAttribute("data-variant", nextVariant);
+                        } else {
+                            dom.removeAttribute("data-variant");
+                        }
                         if (modelSelect) {
                             const nextModel = String(
                                 updatedNode.attrs.model ?? "",
@@ -370,11 +391,16 @@ export function createManuscriptEditor(
             const comment = manuscriptSchema.node("janus_ai_comment", {
                 id,
                 model: "",
+                variant: "",
+                source: "",
             });
             const { state } = view;
             const tr = state.tr.insert(state.doc.content.size, comment);
             view.dispatch(tr);
             return id;
+        },
+        getHighlightRewriteSpans() {
+            return selectionToHighlightSpans(view.state);
         },
         refreshAiCommentChrome,
         setOpenAiModelOptions(nextOptions: string[]) {

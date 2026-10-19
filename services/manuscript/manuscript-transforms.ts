@@ -1,3 +1,4 @@
+import { replaceRewriteCommentWithSource } from "./rewrite-restore";
 import {
     parseManuscriptBlocks,
     serializeManuscriptBlocks,
@@ -64,11 +65,21 @@ export function acceptAiDraft(html: string, draftId: string): string {
 
 export function deleteAiComment(html: string, commentId: string): string {
     const blocks = parseManuscriptBlocks(html);
-    const hasComment = blocks.some(
+    const comment = blocks.find(
         (block) => block.kind === "comment" && block.id === commentId,
     );
-    if (!hasComment) {
+    if (!comment) {
         commentNotFound();
+    }
+    if (
+        comment.kind === "comment" &&
+        comment.variant === "rewrite" &&
+        comment.source?.trim()
+    ) {
+        const next = replaceRewriteCommentWithSource(blocks, commentId, {
+            dropDraftForComment: true,
+        });
+        return serializeManuscriptBlocks(next);
     }
     const next = blocks.filter(
         (block) =>
@@ -80,13 +91,29 @@ export function deleteAiComment(html: string, commentId: string): string {
 
 export function rejectAiDraft(html: string, draftId: string): string {
     const blocks = parseManuscriptBlocks(html);
-    const draftIndex = blocks.findIndex(
+    const draft = blocks.find(
         (block) => block.kind === "draft" && block.id === draftId,
     );
-    if (draftIndex < 0) {
+    if (!draft || draft.kind !== "draft") {
         return serializeManuscriptBlocks(blocks);
     }
-    const next = blocks.filter((_, index) => index !== draftIndex);
+    const comment = blocks.find(
+        (block) =>
+            block.kind === "comment" && block.id === draft.commentId,
+    );
+    if (
+        comment?.kind === "comment" &&
+        comment.variant === "rewrite" &&
+        comment.source?.trim()
+    ) {
+        const next = replaceRewriteCommentWithSource(blocks, draft.commentId, {
+            dropDraftForComment: true,
+        });
+        return serializeManuscriptBlocks(next);
+    }
+    const next = blocks.filter(
+        (block) => !(block.kind === "draft" && block.id === draftId),
+    );
     return serializeManuscriptBlocks(next);
 }
 

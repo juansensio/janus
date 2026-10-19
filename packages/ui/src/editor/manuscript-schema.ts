@@ -13,7 +13,12 @@ export const manuscriptSchema = new Schema({
         },
         janus_ai_comment: {
             group: "block",
-            attrs: { id: {}, model: { default: "" } },
+            attrs: {
+                id: {},
+                model: { default: "" },
+                variant: { default: "" },
+                source: { default: "" },
+            },
             content: "text*",
             parseDOM: [
                 {
@@ -23,6 +28,8 @@ export const manuscriptSchema = new Schema({
                         return {
                             id: el.getAttribute("id"),
                             model: el.getAttribute("model") ?? "",
+                            variant: el.getAttribute("variant") ?? "",
+                            source: el.getAttribute("source") ?? "",
                         };
                     },
                 },
@@ -34,6 +41,14 @@ export const manuscriptSchema = new Schema({
                 const model = String(node.attrs.model ?? "").trim();
                 if (model) {
                     attrs.model = model;
+                }
+                const variant = String(node.attrs.variant ?? "").trim();
+                if (variant) {
+                    attrs.variant = variant;
+                }
+                const source = String(node.attrs.source ?? "").trim();
+                if (source) {
+                    attrs.source = source;
                 }
                 return ["janus-ai-comment", attrs, 0];
             },

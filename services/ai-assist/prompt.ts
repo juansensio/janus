@@ -10,6 +10,7 @@ export function buildGenerateDraftMessages(input: GenerateDraftInput): {
         system: [
             "You help the author write book prose.",
             "The user message contains the book as plain prose with a <<<WRITE>>> mark where new or changed prose should go.",
+            "When an original passage is provided, rewrite that passage according to the instruction.",
             "The instruction is separate from the prose.",
             "Respond with JSON only, no markdown fences.",
             'Draft: {"kind":"draft","paragraphs":["plain text paragraph",...]} — paragraphs in the manuscript language.',
@@ -21,6 +22,13 @@ export function buildGenerateDraftMessages(input: GenerateDraftInput): {
             "Book prose:",
             prose,
             "",
+            ...(input.rewriteSourceText?.trim()
+                ? [
+                      "Original passage to rewrite:",
+                      input.rewriteSourceText.trim(),
+                      "",
+                  ]
+                : []),
             `Instruction (at ${WRITE_CONTEXT_MARK}):`,
             input.commentText,
         ].join("\n"),

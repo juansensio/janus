@@ -59,10 +59,16 @@ export async function renderEditor(
     addCommentButton.className = "editor-add-comment";
     addCommentButton.textContent = t("manuscript.addAiComment");
 
+    const rewriteSelectionButton = document.createElement("button");
+    rewriteSelectionButton.type = "button";
+    rewriteSelectionButton.className = "editor-rewrite-selection";
+    rewriteSelectionButton.textContent = t("ai.rewriteSelection");
+    rewriteSelectionButton.hidden = true;
+
     const showAiChrome = bridge.platform() === "desktop";
     header.append(backButton);
     if (showAiChrome) {
-        header.append(addCommentButton);
+        header.append(addCommentButton, rewriteSelectionButton);
     }
     chrome.append(header);
 
@@ -160,6 +166,8 @@ export async function renderEditor(
         statusMessage: null,
     };
 
+    let syncRewriteSelectionButton: () => void = () => {};
+
     const editor = createManuscriptEditor(field, loadedHtml, {
         lang: locale,
         showAiChrome,
@@ -167,12 +175,17 @@ export async function renderEditor(
         getWriteFlight: () => writeFlight,
         onDocChange: () => {
             autosaveRef.current?.onInput(editor.getHtml());
+            syncRewriteSelectionButton();
+        },
+        onSelectionChange: () => {
+            syncRewriteSelectionButton();
         },
         onWriteComment: async (commentId) => {
             writeFlight.statusMessage = null;
             writeFlight.inFlight = true;
             writeFlight.commentId = commentId;
             addCommentButton.disabled = true;
+            rewriteSelectionButton.disabled = true;
             editor.refreshAiCommentChrome();
             const streamingDraftId = crypto.randomUUID();
             let writeError: unknown;
@@ -207,6 +220,8 @@ export async function renderEditor(
                 writeFlight.inFlight = false;
                 writeFlight.commentId = null;
                 addCommentButton.disabled = false;
+                rewriteSelectionButton.disabled = false;
+                syncRewriteSelectionButton();
                 editor.refreshAiCommentChrome();
             }
             if (writeError) {
@@ -237,6 +252,15 @@ export async function renderEditor(
             transformError.textContent = message;
         },
     });
+
+    syncRewriteSelectionButton = (): void => {
+        if (!showAiChrome) {
+            return;
+        }
+        const spans = editor.getHighlightRewriteSpans();
+        rewriteSelectionButton.hidden = spans === null;
+        rewriteSelectionButton.disabled = writeFlight.inFlight;
+    };
 
     if (showAiChrome) {
         void (async () => {
@@ -270,7 +294,38 @@ export async function renderEditor(
         autosave.onInput(editor.getHtml());
     });
 
+    rewriteSelectionButton.addEventListener("click", () => {
+        void (async () => {
+            if (writeFlight.inFlight) {
+                return;
+            }
+            transformError.textContent = "";
+            const spans = editor.getHighlightRewriteSpans();
+            if (!spans) {
+                transformError.textContent = t("ai.rewriteSelectionInvalid");
+                return;
+            }
+            const commentId = crypto.randomUUID();
+            try {
+                if (autosave.isDirty()) {
+                    await autosave.flush();
+                }
+                const html = await bridge.beginHighlightRewrite(book.id, {
+                    commentId,
+                    instruction: t("ai.rewriteDefaultInstruction"),
+                    spans,
+                });
+                editor.setHtml(html);
+                autosave.markLoaded(html);
+                syncRewriteSelectionButton();
+            } catch {
+                transformError.textContent = t("ai.rewriteSelectionFailed");
+            }
+        })();
+    });
+
     editor.focus();
+    syncRewriteSelectionButton();
 
     backButton.addEventListener("click", () => {
         void (async () => {

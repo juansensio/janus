@@ -111,6 +111,29 @@ describe("createManuscriptBridgeService", () => {
         await fs.rm(root, { recursive: true });
     });
 
+    it("beginHighlightRewrite persists rewrite comment", async () => {
+        const root = await fs.mkdtemp(path.join(os.tmpdir(), "janus-ms-"));
+        const library = createLibraryService(
+            root,
+            nodeFs(),
+            () => "550e8400-e29b-41d4-a716-446655440000",
+        );
+        const created = await library.createBook("Draft");
+        const manuscript = createManuscriptBridgeService(root, nodeFs());
+        const html =
+            '<janus-manuscript version="1"><janus-p>Hello world</janus-p></janus-manuscript>';
+        await manuscript.writeManuscript(created.id, html);
+        const next = await manuscript.beginHighlightRewrite(created.id, {
+            commentId: "c1",
+            instruction: "Rewrite",
+            spans: [{ blockIndex: 0, start: 6, end: 11 }],
+        });
+        expect(next).toContain('variant="rewrite"');
+        expect(next).toContain('source="world"');
+        await expect(manuscript.readManuscript(created.id)).resolves.toBe(next);
+        await fs.rm(root, { recursive: true });
+    });
+
     it("rejects invalid and missing book ids", async () => {
         const root = await fs.mkdtemp(path.join(os.tmpdir(), "janus-ms-"));
         const manuscript = createManuscriptBridgeService(root, nodeFs());

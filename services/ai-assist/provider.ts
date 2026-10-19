@@ -10,6 +10,7 @@ export type GenerateDraftInput = {
     commentId: string;
     commentText: string;
     locale: string;
+    rewriteSourceText?: string;
 };
 
 export type GenerateDraftResult = {

@@ -85,6 +85,18 @@ export {
 
 export type EditorZoomMenuAction = "in" | "out" | "reset";
 
+export type HighlightRewriteSpan = {
+    blockIndex: number;
+    start: number;
+    end: number;
+};
+
+export type BeginHighlightRewriteInput = {
+    commentId: string;
+    instruction: string;
+    spans: HighlightRewriteSpan[];
+};
+
 export interface JanusBridge {
     platform(): Platform;
     listBooks(): Promise<BookSummary[]>;
@@ -101,6 +113,10 @@ export interface JanusBridge {
         commentId: string,
         draftHtml: string,
         draftId: string,
+    ): Promise<string>;
+    beginHighlightRewrite(
+        id: string,
+        input: BeginHighlightRewriteInput,
     ): Promise<string>;
     getAiProviderStatus(): Promise<AiProviderStatus>;
     connectOpenAiCodex(): Promise<void>;

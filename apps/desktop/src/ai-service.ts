@@ -48,7 +48,11 @@ import {
 function findComment(
     html: string,
     commentId: string,
-): { text: string; model?: string } | null {
+): {
+    text: string;
+    model?: string;
+    rewriteSourceText?: string;
+} | null {
     const blocks = parseManuscriptBlocks(html);
     const comment = blocks.find(
         (block) => block.kind === "comment" && block.id === commentId,
@@ -56,7 +60,13 @@ function findComment(
     if (comment?.kind !== "comment") {
         return null;
     }
-    return { text: comment.text, model: comment.model };
+    return {
+        text: comment.text,
+        model: comment.model,
+        ...(comment.variant === "rewrite" && comment.source?.trim()
+            ? { rewriteSourceText: comment.source.trim() }
+            : {}),
+    };
 }
 
 export type AiBridgeServiceDeps = {
@@ -303,6 +313,7 @@ export function createAiBridgeService(
                             commentId,
                             commentText,
                             locale,
+                            rewriteSourceText: comment.rewriteSourceText,
                         },
                         {
                             onDraftHtmlDelta: options?.onDraftDelta,
