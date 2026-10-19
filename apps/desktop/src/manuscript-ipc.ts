@@ -17,6 +17,7 @@ export const MANUSCRIPT_IPC_CHANNELS = {
     acceptAiDraft: "janus:manuscript:acceptAiDraft",
     rejectAiDraft: "janus:manuscript:rejectAiDraft",
     insertOrReplaceDraft: "janus:manuscript:insertOrReplaceDraft",
+    beginHighlightRewrite: "janus:manuscript:beginHighlightRewrite",
 } as const;
 
 function rejectForBridge(error: unknown): LibraryIpcReject {
@@ -142,6 +143,43 @@ export function registerManuscriptIpc(
                     getLibraryRoot(),
                     fs,
                 ).insertOrReplaceDraft(id, commentId, draftHtml, draftId);
+            } catch (error) {
+                throw rejectForBridge(error);
+            }
+        },
+    );
+
+    ipcMain.handle(
+        MANUSCRIPT_IPC_CHANNELS.beginHighlightRewrite,
+        async (_event, id: unknown, input: unknown) => {
+            if (typeof id !== "string" || input === null || typeof input !== "object") {
+                throw rejectForBridge(
+                    new LibraryBridgeError("INVALID_BOOK_ID", "Invalid book id"),
+                );
+            }
+            const payload = input as {
+                commentId?: unknown;
+                instruction?: unknown;
+                spans?: unknown;
+            };
+            if (
+                typeof payload.commentId !== "string" ||
+                typeof payload.instruction !== "string" ||
+                !Array.isArray(payload.spans)
+            ) {
+                throw rejectForBridge(
+                    new LibraryBridgeError("MANUSCRIPT_INVALID", "Invalid rewrite input"),
+                );
+            }
+            try {
+                return await createManuscriptBridgeService(
+                    getLibraryRoot(),
+                    fs,
+                ).beginHighlightRewrite(id, {
+                    commentId: payload.commentId,
+                    instruction: payload.instruction,
+                    spans: payload.spans as import("@janus/manuscript").HighlightRewriteSpan[],
+                });
             } catch (error) {
                 throw rejectForBridge(error);
             }

@@ -38,6 +38,8 @@ const bridge: JanusBridge = {
             draftHtml,
             draftId,
         ),
+    beginHighlightRewrite: (id: string, input: import("@janus/bridge").BeginHighlightRewriteInput) =>
+        invoke("janus:manuscript:beginHighlightRewrite", id, input),
     getAiProviderStatus: () => invoke("janus:ai:getAiProviderStatus"),
     connectOpenAiCodex: () => invoke("janus:ai:connectOpenAiCodex"),
     disconnectOpenAiCodex: () => invoke("janus:ai:disconnectOpenAiCodex"),

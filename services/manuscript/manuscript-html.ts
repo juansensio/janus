@@ -16,7 +16,14 @@ export type ManuscriptDocument = {
 
 export type ManuscriptBlock =
     | { kind: "p"; text: string }
-    | { kind: "comment"; id: string; text: string; model?: string }
+    | {
+          kind: "comment";
+          id: string;
+          text: string;
+          model?: string;
+          variant?: "rewrite";
+          source?: string;
+      }
     | {
           kind: "draft";
           id: string;
@@ -93,11 +100,15 @@ function parseComment(el: HTMLElement): ManuscriptBlock {
         invalid(`${TAG_COMMENT} must contain plain text only`);
     }
     const model = el.getAttribute("model")?.trim();
+    const variant = el.getAttribute("variant")?.trim();
+    const source = el.getAttribute("source")?.trim();
     return {
         kind: "comment",
         id,
         text: elementTextContent(el),
         ...(model ? { model } : {}),
+        ...(variant === "rewrite" ? { variant: "rewrite" as const } : {}),
+        ...(source ? { source } : {}),
     };
 }
 
@@ -154,7 +165,15 @@ function serializeBlock(block: ManuscriptBlock): string {
             block.model?.trim()
                 ? ` model="${escapeAttr(block.model.trim())}"`
                 : "";
-        return `<${TAG_COMMENT} id="${escapeAttr(block.id)}"${modelAttr}>${escapeText(block.text)}</${TAG_COMMENT}>`;
+        const variantAttr =
+            block.variant === "rewrite"
+                ? ` variant="${escapeAttr(block.variant)}"`
+                : "";
+        const sourceAttr =
+            block.source?.trim()
+                ? ` source="${escapeAttr(block.source.trim())}"`
+                : "";
+        return `<${TAG_COMMENT} id="${escapeAttr(block.id)}"${modelAttr}${variantAttr}${sourceAttr}>${escapeText(block.text)}</${TAG_COMMENT}>`;
     }
     const inner = block.paragraphs
         .map((text) => `<${TAG_P}>${escapeText(text)}</${TAG_P}>`)

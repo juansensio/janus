@@ -22,3 +22,8 @@ export {
     insertOrReplaceDraft,
     rejectAiDraft,
 } from "./manuscript-transforms";
+export {
+    beginHighlightRewrite,
+    type BeginHighlightRewriteInput,
+    type HighlightRewriteSpan,
+} from "./highlight-rewrite";

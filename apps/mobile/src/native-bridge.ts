@@ -76,6 +76,11 @@ export function installMobileBridge(): void {
                 code: "AI_NOT_SUPPORTED",
             });
         },
+        beginHighlightRewrite: async () => {
+            throw Object.assign(new Error("AI is not supported on mobile"), {
+                code: "AI_NOT_SUPPORTED",
+            });
+        },
         getLibraryRoot: async () => ({
             path: MOBILE_LIBRARY_ROOT,
             source: "user-data",

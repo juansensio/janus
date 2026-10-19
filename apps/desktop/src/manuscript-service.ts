@@ -1,9 +1,11 @@
 import path from "node:path";
 import {
     acceptAiDraft,
+    beginHighlightRewrite,
     createManuscriptService,
     insertOrReplaceDraft,
     rejectAiDraft,
+    type BeginHighlightRewriteInput,
     type ManuscriptFs,
 } from "@janus/manuscript";
 import {
@@ -109,6 +111,17 @@ export function createManuscriptBridgeService(
                 draftHtml,
                 draftId,
             );
+            await manuscript.write(bookDir, next);
+            return next;
+        },
+
+        async beginHighlightRewrite(
+            id: string,
+            input: BeginHighlightRewriteInput,
+        ): Promise<string> {
+            const bookDir = await resolveContainedBookDir(id);
+            const html = await manuscript.read(bookDir);
+            const next = beginHighlightRewrite(html, input);
             await manuscript.write(bookDir, next);
             return next;
         },

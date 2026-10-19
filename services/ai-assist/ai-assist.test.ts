@@ -43,6 +43,18 @@ describe("buildGenerateDraftMessages", () => {
         expect(messages.user).not.toContain("janus-p");
     });
 
+    it("includes original passage when rewriting a highlight", () => {
+        const messages = buildGenerateDraftMessages({
+            manuscriptHtml,
+            commentId: "c1",
+            commentText: "Make it shorter",
+            locale: "en",
+            rewriteSourceText: "Opening",
+        });
+        expect(messages.user).toContain("Original passage to rewrite:");
+        expect(messages.user).toContain("Opening");
+    });
+
     it("asks for draft prose in the manuscript language and refusal in locale", () => {
         const messages = buildGenerateDraftMessages({
             manuscriptHtml,
