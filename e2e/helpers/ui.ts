@@ -37,6 +37,23 @@ export async function closeSettings(page: Page): Promise<void> {
     await waitForShelf(page);
 }
 
+export async function readEditorZoomBarLabel(page: Page): Promise<string> {
+    const label = page.locator(".editor-zoom-label");
+    await expect(label).toBeVisible();
+    return (await label.textContent()) ?? "";
+}
+
+export async function readEditorPageWidth(page: Page): Promise<number> {
+    return page.locator(".editor-page").evaluate((el) => {
+        const rect = el.getBoundingClientRect();
+        return rect.width;
+    });
+}
+
+export async function clickEditorZoomIn(page: Page): Promise<void> {
+    await page.locator(".editor-zoom-in").click();
+}
+
 export async function readEditorZoomPercent(page: Page): Promise<number> {
     const factor = await page.locator(".janus-editor-shell").evaluate((shell) =>
         shell.style.getPropertyValue("--editor-page-zoom").trim(),

@@ -26,3 +26,4 @@ When `/plan` starts a new `docs/specs/SPEC-<module-id>.md`, move the previous pa
 | `ai-assist-siwc/` | `SPEC-ai-assist` + ADR SIWC | Sign in with ChatGPT Connect, refresh, revoke (2026-10-18; manual sign-off) |
 | `ai-assist-write-instruction/` | `SPEC-ai-assist` | Write: prose context, JSON draft/refusal, comment status (2026-10-18; manual sign-off) |
 | `idle-pre-zoom/` | — | Idle root plan before zoom slice (2026-10-18) |
+| `zoom-slice-1/` | `docs/specs/SPEC-zoom.md` | Slice 1 — persisted zoom, Settings, shortcuts, View menu (2026-10-18) |

@@ -3,6 +3,7 @@ import { getUiLocale, t } from "../i18n";
 import { createAutosaveController, type EditorSaveStatus } from "./autosave";
 import { aiWriteErrorMessage } from "./ai-write-error";
 import type { AiWriteFlight } from "./manuscript-editor";
+import { mountEditorZoomBar } from "./editor-zoom-bar";
 import {
     attachEditorZoomShortcuts,
     createEditorZoomController,
@@ -107,9 +108,14 @@ export async function renderEditor(
     field.setAttribute("aria-label", book.title);
 
     page.append(title, field);
-    host.append(page);
+
+    const scrollport = document.createElement("div");
+    scrollport.className = "editor-scrollport";
+    scrollport.append(page);
+    host.append(scrollport);
 
     const initialZoomPercent = await loadInitialEditorZoom(host, bridge);
+    let syncZoomBar: (percent: number) => void = () => {};
     const zoomController = createEditorZoomController(
         host,
         bridge,
@@ -118,8 +124,13 @@ export async function renderEditor(
             onPersistError: () => {
                 saveError.textContent = t("manuscript.zoomSaveFailed");
             },
+            onPercentChange: (percent) => {
+                syncZoomBar(percent);
+            },
         },
     );
+    const zoomBar = mountEditorZoomBar(host, zoomController);
+    syncZoomBar = zoomBar.sync;
     const detachEditorZoomShortcuts = attachEditorZoomShortcuts({
         controller: zoomController,
         isActive: () => host.isConnected,
@@ -136,6 +147,7 @@ export async function renderEditor(
     const disposeEditorZoom = (): void => {
         detachEditorZoomShortcuts();
         detachEditorZoomMenu();
+        zoomBar.dispose();
     };
 
     const autosaveRef: {

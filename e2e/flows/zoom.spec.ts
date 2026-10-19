@@ -2,11 +2,14 @@ import { saveFlowScreenshot } from "../helpers/artifacts";
 import { zoomShortcut } from "../helpers/keyboard";
 import {
     backToShelf,
+    clickEditorZoomIn,
     closeSettings,
     createBook,
     focusEditor,
     openFirstBook,
     openSettingsFromShelf,
+    readEditorPageWidth,
+    readEditorZoomBarLabel,
     readEditorZoomPercent,
     setEditorZoomInSettings,
     waitForShelf,
@@ -35,6 +38,16 @@ test.describe("editor zoom", () => {
 
         await expect.poll(() => readEditorZoomPercent(page)).toBe(100);
         await saveFlowScreenshot(page, testInfo, "zoom-100-percent-baseline");
+
+        const widthAt100 = await readEditorPageWidth(page);
+        await clickEditorZoomIn(page);
+        await expect.poll(() => readEditorZoomPercent(page)).toBe(110);
+        expect(await readEditorZoomBarLabel(page)).toMatch(/110\s*%/);
+        const widthAt110 = await readEditorPageWidth(page);
+        expect(widthAt110).toBeGreaterThan(widthAt100 * 1.05);
+
+        await page.keyboard.press(zoomShortcut("out"));
+        await expect.poll(() => readEditorZoomPercent(page)).toBe(100);
 
         while ((await readEditorZoomPercent(page)) > 75) {
             await page.keyboard.press(zoomShortcut("out"));

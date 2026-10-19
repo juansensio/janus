@@ -31,6 +31,7 @@ export type EditorZoomController = {
 
 export type CreateEditorZoomControllerOptions = {
     onPersistError?: () => void;
+    onPercentChange?: (percent: number) => void;
 };
 
 export function createEditorZoomController(
@@ -45,6 +46,7 @@ export function createEditorZoomController(
     const applyLocal = (next: number): void => {
         percent = next;
         applyEditorPageZoom(findEditorShell(host), percent);
+        options.onPercentChange?.(percent);
     };
 
     applyLocal(initialPercent);

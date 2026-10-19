@@ -33,6 +33,30 @@ describe("editor-zoom", () => {
         shell.remove();
     });
 
+    it("notifies onPercentChange when zoom steps", async () => {
+        const onPercentChange = vi.fn();
+        const setEditorZoom = vi.fn(async (percent: number) => ({
+            percent,
+            levels: [75, 100, 110],
+        }));
+        const bridge = createMockJanusBridge({
+            getEditorZoom: async () => ({ percent: 100, levels: [75, 100, 110] }),
+            setEditorZoom,
+        });
+        const shell = document.createElement("div");
+        shell.className = "janus-editor-shell";
+        const host = document.createElement("div");
+        shell.append(host);
+        document.body.append(shell);
+        const controller = createEditorZoomController(host, bridge, 100, {
+            onPercentChange,
+        });
+        controller.applyDirection("in");
+        await vi.waitFor(() => expect(setEditorZoom).toHaveBeenCalledWith(110));
+        expect(onPercentChange).toHaveBeenCalledWith(110);
+        shell.remove();
+    });
+
     it("steps zoom on keyboard shortcut", async () => {
         const setEditorZoom = vi.fn(async (percent: number) => ({
             percent,

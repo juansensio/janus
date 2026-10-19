@@ -32,6 +32,8 @@ Build order (full Neo loop): shell → languages → manuscript → library, ai-
 
 **Zoom slice 1** (`docs/specs/SPEC-zoom.md`, approved 2026-10-18): discrete manuscript page zoom in the editor; persisted `editorZoomPercent`; Settings control; desktop View menu and keyboard shortcuts.
 
+**Zoom slice 2** (`docs/specs/SPEC-zoom.md`, approved 2026-10-19): pinned editor bar `+ zoom (X%) −`; the page card scales with the level (paper and type together).
+
 `library` (full) and `ai-assist` can be specified in parallel after `manuscript` slice 1; **implementation order** for the HTML+AI MVP is manuscript slice 2 → ai-assist slice 1.
 
 **Module specs** live in `docs/specs/SPEC-<module-id>.md` (for example `docs/specs/SPEC-shell.md`). This map is the index; do not add module specs at the repo root.

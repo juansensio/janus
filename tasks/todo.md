@@ -1,51 +1,55 @@
-# Active tasks: zoom slice 1
+# Active tasks: zoom slice 2
 
-**Spec:** [`docs/specs/SPEC-zoom.md`](../docs/specs/SPEC-zoom.md)
+**Spec:** [`docs/specs/SPEC-zoom.md`](../docs/specs/SPEC-zoom.md) (Slice 2)
 
-## Task 1: Domain `@janus/zoom` and settings normalization
+**Archived:** slice 1 → [`tasks/archive/zoom-slice-1/`](archive/zoom-slice-1/)
 
-- [x] Add `services/zoom` with levels, normalize, step in/out/reset
-- [x] Extend `JanusSettings` / `normalizeJanusSettings` with `editorZoomPercent`
-- [x] Update `CAPABILITY-MAP.md` with `zoom` module row
-- [x] Vitest for domain + normalize
+## Task 1: Scaled page layout and scrollport
 
-## Task 2: Bridge contract and mock
+- [x] Wrap `.editor-page` in `.editor-scrollport` in `render-editor.ts`; keep `.editor-chrome` outside scrollport
+- [x] `editor.css`: scale page width, padding, and base `font-size` with `--editor-page-zoom`; drop per-element `calc(* var(--editor-page-zoom))` on title/body in favor of `em`
+- [x] Editor column fills viewport; scrollport `overflow: auto`; page stays centered when it fits
+- [x] Acceptance: at 100% wide window, 100% page width matches pre-slice-2 behavior; at 200% page width ≈ 2× 100% width
+- [x] Verify: `bun run test packages/ui/src/editor`
 
-- [x] `getEditorZoom` / `setEditorZoom` on `JanusBridge` + `INVALID_EDITOR_ZOOM`
-- [x] Mock bridge defaults and set/get behavior
-- [x] Vitest
+**Files:** `packages/ui/src/editor/render-editor.ts`, `packages/ui/src/styles/editor.css`
 
-## Task 3: Desktop zoom IPC
+## Task 2: Controller percent-change notification
 
-- [x] `zoom-ipc.ts` load/save `editorZoomPercent`
-- [x] Register in `main.ts`, expose in `preload.ts`
-- [x] Vitest with temp userData
+- [x] Add `onPercentChange?: (percent: number) => void` (or subscribe API) to `createEditorZoomController`; fire after `applyLocal` and after successful persist
+- [x] Acceptance: keyboard step and `applyDirection` both notify with the displayed percent
+- [x] Verify: extend `editor-zoom.test.ts`; `bun run test packages/ui/src/editor/editor-zoom.test.ts`
 
-## Task 4: Mobile bridge persistence
+**Files:** `packages/ui/src/editor/editor-zoom.ts`, `packages/ui/src/editor/editor-zoom.test.ts`
 
-- [x] `native-bridge.ts` get/set using `janus-settings`
-- [x] Vitest merge behavior
+## Task 3: Bottom zoom bar + catalogs
 
-## Task 5: Apply zoom in editor UI
+- [x] Add `editor-zoom-bar.ts`: `+`, label `zoom (X%)` via `t("manuscript.editorZoomBar", { percent })`, `−`; disable minus at 75%, plus at 200%
+- [x] Mount bar in `render-editor.ts`; wire to controller; dispose on teardown
+- [x] Keys in `en.json` / `es.json` for bar label and accessible names for `+` / `−`
+- [x] Acceptance: bar visible in editor; clicks persist; label matches CSS variable percent
+- [x] Verify: manual or Task 4 tests
 
-- [x] `editor-zoom.ts` apply CSS variable on shell
-- [x] Load zoom in `render-editor.ts`
-- [x] `editor.css` use `--editor-page-zoom`
-- [x] Vitest
+**Files:** `packages/ui/src/editor/editor-zoom-bar.ts`, `packages/ui/src/editor/render-editor.ts`, `services/languages/locales/en.json`, `services/languages/locales/es.json`
 
-## Task 6: Settings control + catalogs
+## Task 4: Unit tests for bar and layout
 
-- [x] Zoom `<select>` in `render-settings.ts`
-- [x] `settings.editorZoom` keys in `en` + `es`
-- [x] Vitest
+- [x] Vitest: bar label updates on `onPercentChange`; plus/minus call `applyDirection`; disabled at min/max
+- [x] Vitest: `.editor-page` computed width ratio ~1.1 when `--editor-page-zoom` is 1.1 (happy-dom)
+- [x] Verify: `bun run test packages/ui`; `bun run lint`
 
-## Task 7: Editor keyboard shortcuts
+**Files:** `packages/ui/src/editor/editor-zoom-bar.test.ts`, `editor-zoom.test.ts` (if needed)
 
-- [x] Document keydown handler (in/out/reset, skip `<select>`)
-- [x] Vitest
+## Task 5: E2E bar step and page width
 
-## Task 8: Desktop View menu
+- [x] Helper(s) to read bar label and `.editor-page` width in `e2e/helpers/ui.ts`
+- [x] From 100%, click bar `+` once → 110% label and wider page box than baseline
+- [x] Verify: `bun run e2e e2e/flows/zoom.spec.ts`
 
-- [x] `zoom-menu.ts` Application menu + `webContents.send`
-- [x] Preload forwards to callback; editor subscribes
-- [x] Vitest smoke for menu template / channel
+**Files:** `e2e/flows/zoom.spec.ts`, `e2e/helpers/ui.ts`
+
+## Checkpoint (after Task 5)
+
+- [x] All slice 2 acceptance criteria in SPEC-zoom.md
+- [x] `bun run test` and `bun run lint` green
+- [x] Ready for `/build` completion / PR review

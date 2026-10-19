@@ -58,6 +58,8 @@ describe("renderEditor", () => {
             "Hello",
         );
         expect(host.querySelector(".editor-title")?.textContent).toBe("Draft");
+        expect(host.querySelector(".editor-scrollport")).not.toBeNull();
+        expect(host.querySelector(".editor-scrollport .editor-page")).not.toBeNull();
     });
 
     it("shows inline error when Write fails", async () => {
