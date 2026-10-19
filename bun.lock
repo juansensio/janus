@@ -93,6 +93,13 @@
         "node-html-parser": "^9.0.4",
       },
     },
+    "services/support-docs": {
+      "name": "@janus/support-docs",
+      "version": "0.0.0",
+      "dependencies": {
+        "@janus/manuscript": "workspace:*",
+      },
+    },
     "services/zoom": {
       "name": "@janus/zoom",
       "version": "0.0.0",
@@ -206,6 +213,8 @@
     "@janus/manuscript": ["@janus/manuscript@workspace:services/manuscript"],
 
     "@janus/mobile": ["@janus/mobile@workspace:apps/mobile"],
+
+    "@janus/support-docs": ["@janus/support-docs@workspace:services/support-docs"],
 
     "@janus/ui": ["@janus/ui@workspace:packages/ui"],
 
