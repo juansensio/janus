@@ -46,6 +46,47 @@ describe("renderEditor", () => {
         expect(write).not.toHaveBeenCalled();
     });
 
+    it("renders manuscript before OpenAI model settings resolve", async () => {
+        const host = document.createElement("div");
+        document.body.append(host);
+        const html =
+            '<janus-manuscript version="1"><janus-ai-comment id="c1">Prompt</janus-ai-comment></janus-manuscript>';
+        let resolveModels:
+            | ((value: { preference: string; options: string[] }) => void)
+            | undefined;
+        const modelsPromise = new Promise<{
+            preference: string;
+            options: string[];
+        }>((resolve) => {
+            resolveModels = resolve;
+        });
+        const bridge = createMockJanusBridge({
+            readManuscript: async () => html,
+            getOpenAiModelSettings: () => modelsPromise,
+        });
+        const renderPromise = renderEditor(host, bridge, sampleBook, {
+            onBack: () => {},
+        });
+        await vi.waitFor(() =>
+            expect(host.querySelector(".editor-prosemirror")?.textContent).toContain(
+                "Prompt",
+            ),
+        );
+        resolveModels?.({
+            preference: "auto",
+            options: ["auto", "gpt-4o"],
+        });
+        await renderPromise;
+        await vi.waitFor(() => {
+            const select = host.querySelector<HTMLSelectElement>(
+                ".editor-ai-comment-model",
+            );
+            expect(
+                [...(select?.options ?? [])].map((o) => o.value),
+            ).toContain("gpt-4o");
+        });
+    });
+
     it("loads html into the prosemirror field", async () => {
         const host = document.createElement("div");
         const html =

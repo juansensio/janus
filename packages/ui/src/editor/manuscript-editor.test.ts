@@ -279,4 +279,33 @@ describe("manuscript editor AI comments", () => {
         });
         editor.destroy();
     });
+
+    it("updates comment model selects when options arrive later", () => {
+        const mount = document.createElement("div");
+        document.body.append(mount);
+        const html =
+            '<janus-manuscript version="1"><janus-ai-comment id="c1">Go</janus-ai-comment></janus-manuscript>';
+        const editor = createManuscriptEditor(mount, html, {
+            lang: "en",
+            showAiChrome: true,
+            getWriteFlight: idleFlight,
+            openAiModelOptions: ["auto"],
+            onDocChange: () => {},
+            onWriteComment: async () => {},
+            onAcceptDraft: async () => {},
+            onRejectDraft: async () => {},
+            onTransformError: () => {},
+        });
+        const select = mount.querySelector<HTMLSelectElement>(
+            ".editor-ai-comment-model",
+        );
+        expect(
+            [...(select?.options ?? [])].map((o) => o.value),
+        ).toEqual(["", "auto"]);
+        editor.setOpenAiModelOptions(["auto", "gpt-4o"]);
+        expect(
+            [...(select?.options ?? [])].map((o) => o.value),
+        ).toEqual(["", "auto", "gpt-4o"]);
+        editor.destroy();
+    });
 });

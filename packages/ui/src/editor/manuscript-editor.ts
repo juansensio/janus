@@ -36,6 +36,7 @@ export type ManuscriptEditor = {
     destroy(): void;
     insertAiComment(): string;
     refreshAiCommentChrome(): void;
+    setOpenAiModelOptions(options: string[]): void;
     applyStreamingDraft(
         commentId: string,
         draftId: string,
@@ -50,7 +51,27 @@ export function createManuscriptEditor(
 ): ManuscriptEditor {
     const doc = parseManuscriptHtml(initialHtml);
     const chromeRefreshers = new Set<() => void>();
+    const modelSelectRegistry = new Set<HTMLSelectElement>();
+    let openAiModelOptions = [...options.openAiModelOptions];
     let suppressDocChange = false;
+
+    function fillModelSelect(
+        select: HTMLSelectElement,
+        currentValue: string,
+    ): void {
+        select.replaceChildren();
+        const defaultOption = document.createElement("option");
+        defaultOption.value = "";
+        defaultOption.textContent = t("ai.modelUseDefault");
+        select.append(defaultOption);
+        for (const value of openAiModelOptions) {
+            const option = document.createElement("option");
+            option.value = value;
+            option.textContent = openAiModelOptionLabel(value);
+            select.append(option);
+        }
+        select.value = currentValue;
+    }
 
     const changePlugin = new Plugin({
         view() {
@@ -191,17 +212,11 @@ export function createManuscriptEditor(
                     modelLabel.textContent = t("ai.modelLabel");
                     modelSelect = document.createElement("select");
                     modelSelect.className = "editor-ai-comment-model";
-                    const defaultOption = document.createElement("option");
-                    defaultOption.value = "";
-                    defaultOption.textContent = t("ai.modelUseDefault");
-                    modelSelect.append(defaultOption);
-                    for (const value of options.openAiModelOptions) {
-                        const option = document.createElement("option");
-                        option.value = value;
-                        option.textContent = openAiModelOptionLabel(value);
-                        modelSelect.append(option);
-                    }
-                    modelSelect.value = String(node.attrs.model ?? "");
+                    fillModelSelect(
+                        modelSelect,
+                        String(node.attrs.model ?? ""),
+                    );
+                    modelSelectRegistry.add(modelSelect);
                     modelSelect.addEventListener("change", () => {
                         updateCommentModel(commentId, modelSelect?.value ?? "");
                     });
@@ -281,6 +296,9 @@ export function createManuscriptEditor(
                     },
                     destroy() {
                         chromeRefreshers.delete(applyChromeState);
+                        if (modelSelect) {
+                            modelSelectRegistry.delete(modelSelect);
+                        }
                     },
                 };
             },
@@ -359,6 +377,12 @@ export function createManuscriptEditor(
             return id;
         },
         refreshAiCommentChrome,
+        setOpenAiModelOptions(nextOptions: string[]) {
+            openAiModelOptions = [...nextOptions];
+            for (const select of modelSelectRegistry) {
+                fillModelSelect(select, select.value);
+            }
+        },
         applyStreamingDraft(
             commentId: string,
             draftId: string,

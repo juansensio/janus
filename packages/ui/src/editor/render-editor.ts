@@ -160,21 +160,10 @@ export async function renderEditor(
         statusMessage: null,
     };
 
-    let openAiModelOptions: string[] = ["auto"];
-    if (showAiChrome) {
-        try {
-            openAiModelOptions = (
-                await bridge.getOpenAiModelSettings()
-            ).options;
-        } catch {
-            openAiModelOptions = ["auto"];
-        }
-    }
-
     const editor = createManuscriptEditor(field, loadedHtml, {
         lang: locale,
         showAiChrome,
-        openAiModelOptions,
+        openAiModelOptions: ["auto"],
         getWriteFlight: () => writeFlight,
         onDocChange: () => {
             autosaveRef.current?.onInput(editor.getHtml());
@@ -248,6 +237,19 @@ export async function renderEditor(
             transformError.textContent = message;
         },
     });
+
+    if (showAiChrome) {
+        void (async () => {
+            try {
+                const modelSettings = await bridge.getOpenAiModelSettings();
+                if (host.isConnected) {
+                    editor.setOpenAiModelOptions(modelSettings.options);
+                }
+            } catch {
+                // keep default auto-only options
+            }
+        })();
+    }
 
     const autosave = createAutosaveController({
         intervalMs: AUTOSAVE_INTERVAL_MS,
