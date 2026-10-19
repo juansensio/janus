@@ -1,24 +1,29 @@
 ---
-description: Janus plan/todo lifecycle — one active module, archive on spec change
+description: Janus plan/todo lifecycle — jobs, slices, local pointer, archive is history only
 alwaysApply: true
 ---
 
 # Planning artifacts (`/plan`, `/build`)
 
-Module specs: `docs/specs/SPEC-<module-id>.md` per `CAPABILITY-MAP.md`.
+Module specs: `docs/specs/SPEC-<module-id>.md` per `CAPABILITY-MAP.md`. Slice plans: `tasks/jobs/<job>/slice-N/` per `docs/specs/SPEC-autonomous-queue.md`.
 
-## One active plan
+## Jobs and slices
 
-`tasks/plan.md` and `tasks/todo.md` are the **active** plan for **one** capability at a time. `/build` reads only these files.
+- **Job** — `tasks/jobs/<job>/` (module id). Keeps every slice plan after merge.
+- **Slice** — `tasks/jobs/<job>/slice-N/plan.md` and `todo.md`. One queue row per slice.
+- **Root pointer** — `tasks/plan.md` contains `Active slice: tasks/jobs/<job>/slice-N/`. `/build` reads that folder’s `plan.md` and `todo.md`.
+- **Do not** copy new slice plans into `tasks/archive/` on ship. `tasks/archive/` is historical only (`tasks/archive/README.md`).
 
-When `/plan` targets a **new** approved module spec and the root pair describes **finished or different** work:
+When `/plan` adds another slice for the **same** job, create `slice-N+1` (N = highest existing slice number). Do not edit older slice folders.
 
-1. **Archive** the current pair to `tasks/archive/<module-id>/plan.md` and `tasks/archive/<module-id>/todo.md` (use the previous module id, e.g. `shell`, `library`).
-2. **Replace** `tasks/plan.md` and `tasks/todo.md` with a fresh plan and task list for the new spec only. **Renumber tasks from 1** — do not append tasks from a closed module.
-3. At the top of the new files, note the source spec path and `Archived: tasks/archive/<module-id>/`.
+## Switching local work to another module
 
-Do not grow a single `todo.md` across modules. History lives in git and under `tasks/archive/` (see `tasks/archive/README.md`).
+When `/plan` targets a **different** module than the current pointer:
 
-**Same module, replan:** Edit the root pair in place; do not archive.
+1. If the previous root pair was only a legacy root plan (no jobs pointer), **archive** it to `tasks/archive/<name>/`.
+2. Write the new slice under `tasks/jobs/<job>/slice-N/` and set the root pointer.
+3. Renumber tasks from 1 in the new slice `todo.md`.
 
-**In progress:** If `tasks/todo.md` still has unchecked acceptance criteria for the **current** module, stop and ask before archiving — unless the user explicitly discards or archives anyway.
+**Same slice, replan:** Edit that slice’s `plan.md` / `todo.md` in place.
+
+**In progress:** If the active slice `todo.md` has unchecked tasks, stop and ask before replacing the pointer — unless the user explicitly discards or archives.

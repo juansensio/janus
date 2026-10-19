@@ -1,44 +1,49 @@
 ---
-description: Cloud agent autonomy — branch/PR only, queue-driven spec/plan/build, stop conditions
+description: Cloud agent autonomy — orchestrator launches slices; slice jobs branch/PR only
 alwaysApply: true
 ---
 
 # Autonomous agent loop
 
-When running **unattended** (Cloud Agent or `/build auto` without a human in the loop), follow this workflow. Humans **approve specs and plans** and **merge PRs**; agents do the rest on a branch.
+Two roles. Read `.cursor/skills/janus-queue/SKILL.md` for the launch checklist (do not duplicate it here).
 
-## Git and PRs
+## Grok orchestrator (outside repo)
 
-1. Work only on a feature branch (`cursor/<descriptive-name>-<suffix>` per cloud task instructions).
-2. **Never** push to `main`, **never** merge PRs, **never** tag releases unless a human explicitly requests it in the current message.
-3. Open **one PR per branch** when the slice is ready for human review.
-4. Before opening the PR, run **`/review`** (five-axis) and **`/ship`** (go/no-go with rollback plan). Fix **Critical** blockers; document accepted risks in the PR body.
+Before each wave: refresh `tasks/queue.md` status from PRs and running agents (queue-only PR), then apply the **launch checklist** in `janus-queue`. Launch one cloud agent per returned row with the `Orchestrator-Job` brief from `docs/specs/SPEC-autonomous-queue.md`.
 
-## Work selection
+## Slice job (Cloud Agent prompt with `Orchestrator-Job:`)
 
-1. Read `tasks/queue.md` for module status and spec paths.
-2. Pick the **first** row in build order with status **`spec-approved`** (see queue file for how humans set that).
-3. If nothing is `spec-approved`, stop and report — do not invent scope from `ROADMAP.md` alone.
-4. Run **`/plan`** for that spec → human approval of `tasks/plan.md` / `tasks/todo.md` when required by harness; in unattended mode, proceed only when the queue already marks the spec approved and the plan artifacts exist or `/plan` was run in the same session after approval.
-5. Run **`/build auto`** (or sequential `/build`) until `tasks/todo.md` is complete or a stop condition fires.
+When the prompt includes `Orchestrator-Job: <row>`:
 
-## Stop conditions (report, do not spin)
+1. Work only on that queue row’s slice. Do **not** pick another row or launch other agents.
+2. Write the plan under `tasks/jobs/<job>/slice-N/` on this branch. Do **not** edit `tasks/queue.md`, root `tasks/plan.md`, or other slice folders.
+3. Run spec → plan → build → review → ship for that slice. **Plan approval:** proceed when the spec and plan are solid; do **not** wait for human plan approval.
+4. **Uncertainty:** record ordinary gaps in the plan and PR `Uncertainty:` field; continue. **Stop and ask the human** only for dangerous/important items in `SPEC-autonomous-queue.md` Boundaries — set PR `Needs-Decision:` and open a draft PR.
+5. **Never** merge, never push to default branch, never tag releases unless the human explicitly requests in the message.
+6. Open **one PR** per branch. PR body must start with: `Queue-Row:`, `Job-Status:` (`pr-open` or `needs-decision`), `Uncertainty:`, `Needs-Decision:`.
+7. Before opening the PR, run **`/review`** and **`/ship`**. Fix Critical blockers; document accepted risks in the PR body.
+8. Do **not** update `tasks/queue.md` from a slice job. The orchestrator refreshes status.
 
-Stop and leave a clear report (branch state, failing command, open questions) when:
+## Local unattended `/build auto` (no `Orchestrator-Job:`)
 
-- **Tests or build fail** without an obvious fix after at most **2 retries per failure** (same command, same root cause).
-- The **spec is ambiguous** or conflicts with code or `CAPABILITY-MAP.md` — name the conflict; do not guess.
-- A **product decision** is not covered by the approved spec or plan.
-- The change would **touch release automation**, **secrets/credentials**, **dependency major upgrades**, or **irreversible data migrations** without explicit human approval in the message.
+Humans may still approve plans. Follow `.cursor/commands/build.md` (plan approval gate stays). Work from root pointer or root `tasks/todo.md`.
 
-Do not disable CI checks, skip tests, or weaken lint rules to greenwash a run.
+## Stop conditions (slice jobs — report, do not spin)
+
+Stop when:
+
+- **Tests or build fail** after at most **2 retries** per failure (same command, same root cause).
+- **Dangerous/important** boundary hit (see spec) — draft PR with `needs-decision`.
+- **Needs behavior** names a missing queue row — stop and ask.
+- **Release automation**, **secrets**, **dependency major upgrades**, or **irreversible data migrations** without explicit human approval in the message.
+
+Do not disable CI, skip tests, or weaken lint.
 
 ## Verification before PR
 
-- `bun run test` and `bun run lint` (same as CI).
-- Desktop UI changes: run `bun run e2e` (or the affected flow under `e2e/flows/`). New features should add or extend an e2e flow and attach screenshots from `e2e/artifacts/` in the PR.
-- Commits: one per `/build` task when using autonomous build; messages state intent.
-- Update `tasks/queue.md` status (`in-progress` → `done`) only when the spec slice acceptance criteria are met and archived per `janus-planning.mdc`.
+- `bun run test` and `bun run lint` when the slice touches product code.
+- Desktop UI: `bun run e2e` when applicable.
+- **`done` on a queue row** means the slice PR is **merged**, not merely archived. Slice plans remain under `tasks/jobs/`.
 
 ## Constraints
 

@@ -1,116 +1,163 @@
 ---
 name: janus-queue
-description: Guides agents through listing, adding, and removing rows in tasks/queue.md for /queue. Use when the user runs /queue, asks what is queued, or wants to add or remove a module, slice, or roadmap idea from the Janus work queue.
+description: Queue list/add/remove/fill/release and orchestrator launch checklist for tasks/queue.md. Use for /queue, Grok orchestrator waves, and drift checks. Launch rules live only in this skill.
 ---
 
 # Janus queue
 
 ## Overview
 
-`tasks/queue.md` is the approval list autonomous agents read after `CAPABILITY-MAP.md`. A row must be `spec-approved` before an agent may `/plan` and `/build`. `/queue` shows that list, appends one row, or deletes one row.
+`tasks/queue.md` is the shared work list for **local** Cursor sessions and the **Grok orchestrator**. Slice jobs use `Orchestrator-Job:` (see `docs/specs/SPEC-autonomous-queue.md`). This skill is the **only** home for the launch checklist — commands and rules link here; they do not copy the checklist.
 
-This command does not write specs, rewrite `CAPABILITY-MAP.md`, or move status on a row that is already in the file.
+**Orchestrator-Job** prompts may **not** use Fill, Release, Add, or Remove, and must not edit `tasks/queue.md`.
 
 ## When to Use
 
-- The user runs `/queue`, `/queue list`, `/queue add`, or `/queue remove`
-- The user asks what is queued, what to build next, or to add or drop a queue item
-- You are about to edit `tasks/queue.md` from a chat request to add or remove work
+- `/queue` list, add, remove, fill, release
+- Grok orchestrator before launching cloud agents
+- Drift checks between queue, specs, and `CAPABILITY-MAP.md`
 
-**When NOT to use:** Implementing a slice (`/build`), writing a spec (`/spec`), or breaking a spec into tasks (`/plan`). Agents that finish a shipped slice still follow `.cursor/rules/janus-autonomy.mdc` for `in-progress` → `done`. Do not use `/queue` to approve your own next slice.
+**When NOT to use:** Implementing a slice (`/build`), writing specs (`/spec`), or planning (`/plan`) except where those commands call back to queue updates documented here.
 
-## Process
+---
 
-Read `tasks/queue.md` first. Read `CAPABILITY-MAP.md` and any spec path you will cite. Then follow one mode.
+## Orchestrator wave (Grok bot)
 
-### List (default)
+Before each launch wave:
+
+1. Read open and merged PRs and running cloud agents. Map each to a **Module / slice** row via PR body `Queue-Row:`.
+2. On a **queue-only branch**, update status cells in `tasks/queue.md`: `running`, `pr-open`, `needs-decision`, or `done` (merged). Open a PR that touches **only** `tasks/queue.md`.
+3. Leave rows with Notes **`local`** or status **`in-progress`** unchanged **unless** that row already has a PR — then set `pr-open` and clear `local`.
+4. Apply **Launch checklist** below. Launch one cloud agent per returned row with the brief from `SPEC-autonomous-queue.md`.
+
+---
+
+## Launch checklist
+
+A capability row is **launchable** when **all** are true:
+
+- Row is in the **capability** table (not ROADMAP ideas).
+- Status is `idea`, `spec-draft`, or `spec-approved`.
+- Notes is **not** `local`.
+- Status is **not** `running`, `in-progress`, `pr-open`, `needs-decision`, or `done`.
+- **Needs behavior** is empty, or every named row has status `done` (merged).
+- Every name in **Needs behavior** matches some capability row’s Module / slice cell. If not, **stop and ask the human** — do not launch.
+
+Return launchable rows in **table order** (ascending Order). Launch **all** of them that pass (parallel when independent).
+
+### Worked examples (walk these when verifying)
+
+| Situation | Launch? |
+|-----------|---------|
+| Two rows, status `idea`, empty Needs behavior, not in PR snapshot | Both, table order |
+| `comments panel` needs `side panels`; `side panels` is `pr-open` | Neither of those two |
+| Independent third row `idea`, empty Needs behavior | Third row only |
+| `comments panel` needs `side panels`; `side panels` is `done` | `comments panel` |
+| Row `running`, `in-progress`, `pr-open`, `needs-decision`, or `done` | No |
+| Row `spec-draft`, Notes `local` | No |
+| Same row after `/queue release` (no `local`), dependencies met | Yes |
+| Needs behavior names a missing row | Stop; ask human |
+| ROADMAP ideas table row | Never |
+| `tasks/jobs/zoom/slice-1/` exists, row `done`; new `zoom — slice 2` queued | Launch slice 2 when checklist passes; do not edit `slice-1/` |
+
+---
+
+## Process: List (default)
 
 Read-only. Report:
 
-1. **Current queue head** — the first capability-table row in build order whose status is `spec-approved`, or none.
-2. Both tables, unchanged: capability modules, then ROADMAP ideas.
-3. Counts by status (`idea`, `spec-draft`, `spec-approved`, `in-progress`, `done`).
-4. Drift, each item named:
-   - Spec file contains `Status: **Approved**` but its queue row is not `spec-approved`
-   - Queue row names a spec path that is not a file
-   - Module id in the `CAPABILITY-MAP.md` table has no queue row whose Module / slice cell mentions that id
+1. **Current queue head** — first capability row that is `spec-approved` or `in-progress` with an active local slice, or name the orchestrator’s next launchable set (checklist).
+2. Both tables unchanged.
+3. Counts by status (include `running`, `pr-open`, `needs-decision` when present).
+4. **Drift**, each item named:
+   - Spec `Status: **Approved**` but row not `spec-approved` / `in-progress` / `done`
+   - Spec path not a file
+   - `CAPABILITY-MAP.md` module id with no queue row mentioning it
+   - **Needs behavior** names a row that does not exist
 
-Do not add the missing rows. Do not edit the file.
+Do not edit the file during List.
 
-### Add
+---
 
-Append exactly one row. If the request names several items, add the first and list the rest for a later `/queue add`.
+## Process: Add
 
-Pick the table:
+Append **one** row. Capability table columns:
 
-- **Capability modules** — a module or slice that has, or is about to be tied to, `docs/specs/SPEC-*.md`, or that the user calls a build-order item.
-- **ROADMAP ideas** — an informal idea with no spec path.
+| Order | Module / slice | Status | Spec | Needs behavior | Notes |
 
-If the table is ambiguous, ask. Do not guess, and do not copy items out of `ROADMAP.md` unless the user named that idea.
+- **Order:** max existing Order + 1.
+- **Needs behavior:** empty or exact Module / slice text of another capability row.
+- **Status:** default `idea` unless the user names another allowed status in the same message.
+- **`spec-approved`:** only when the user names it **and** the spec file has `Status: **Approved**`.
+- **Notes:** user clause, `local`, or `—`.
 
-Capability row:
+Ideas table: `| Area | Idea | Status |` — never `spec-approved` / `in-progress` / `done` without a spec path.
 
-| Order | Module / slice | Status | Spec | Notes |
-|---|---|---|---|---|
+Update **Current queue head** after Add (see below).
 
-- **Order:** one greater than the highest numeric Order already in the table. Leave existing orders unchanged. Do not assign an order to a row that belongs in the ideas table.
-- **Spec:** the path the user gave, or `docs/specs/SPEC-<module-id>.md` when that file exists. Use `—` when no spec file exists.
-- **Status:** `idea`, unless the same message names another status from the queue’s status table.
-- **`spec-approved`:** only when the user names that status and the spec file contains a line `Status: **Approved**`. Otherwise stop and say what is missing. Do not mark the spec Approved yourself.
-- **Notes:** one short clause from the user, or `—`.
+---
 
-Ideas row: `| Area | Idea | Status |` with status `idea` unless the user names `spec-draft`. Do not put `spec-approved`, `in-progress`, or `done` on an idea with no spec.
+## Process: Remove
 
-Then set **Current queue head** (see below) and show the new row.
+Delete **one** row. Match Module / slice or Idea cell exactly (case-insensitive). `in-progress` → stop and ask. `done` → warn, then delete if user insisted.
 
-### Remove
+Leave specs, `tasks/jobs/`, `tasks/archive/`, and `CAPABILITY-MAP.md` untouched.
 
-Delete exactly one row from `tasks/queue.md`. Leave the spec file, `tasks/archive/`, and `CAPABILITY-MAP.md` in place.
+---
 
-Match the user’s text to one Module / slice cell or one Idea cell (or one unique Order number). Case-insensitive exact match on that cell. If the text is only a substring and hits more than one row, stop and list the candidates. If it hits none, stop and list the closest cells.
+## Process: Fill
 
-- Status `in-progress`: stop and ask. `tasks/plan.md` and `tasks/todo.md` may still be the live plan.
-- Status `done`: say that the row is shipped history, then delete it. The user already asked to remove it.
+Only when the **user’s message** asks (not from Orchestrator-Job).
 
-Then set **Current queue head** and show the deleted row.
+| Mode | Action |
+|------|--------|
+| `fill from roadmap` | For each `ROADMAP.md` bullet with no matching idea/capability row, append an **ideas** row (`idea`) |
+| `fill gaps` | For capability-map modules/slices with no queue row and no shipped spec slice, append **ideas** or capability rows as `idea` |
+| `fill` | Ask what the user wants, then Add those rows |
 
-### Current queue head
+Never set `spec-approved` or start jobs from Fill.
 
-After Add or Remove, replace the head line so it matches the file:
+---
 
-- No `spec-approved` row: `**Current queue head:** none (\`spec-approved\` empty). Run \`/plan\` after the next approval.`
-- Otherwise: name the first capability row in ascending Order whose status is `spec-approved`, and its spec path.
+## Process: Release
 
-Do not change the Active plan line, the status-value table, or the human-approval steps.
+`/queue release <row>` — match one Module / slice cell.
+
+- Clear Notes (`local` → `—` or empty).
+- Set status to **`spec-draft`** (or `spec-approved` if spec is Approved and user asked).
+
+Orchestrator may launch on the next wave if the checklist passes.
+
+---
+
+## Current queue head
+
+After Add or Remove:
+
+- Prefer reporting first `spec-approved` row for **local** `/plan` hints, **or** state that orchestrator launchables come from the checklist.
+- If no `spec-approved`: `**Current queue head:** none (\`spec-approved\` empty for local plan). Orchestrator: see launch checklist.`
+
+---
 
 ## Common Rationalizations
 
 | Rationalization | Reality |
 |---|---|
-| "The map already describes it, so I'll queue it" | `CAPABILITY-MAP.md` prose is not approval. Add a row only when the user asked to add that item. |
-| "The spec is Approved, so I'll set `spec-approved` while adding" | Add defaults to `idea`. `spec-approved` only when the user names that status and the spec line says Approved. |
-| "I'll mark the current row `done` via `/queue`" | This command lists, adds, and removes. It does not edit the status of an existing row. |
-| "Several library rows match; I'll remove the obvious one" | More than one match means stop and list them. |
-| "Removing the row should delete the spec too" | Remove deletes the queue row only. |
+| "I'll copy the launch checklist into autonomy.mdc" | Duplication drifts. Link to this skill only. |
+| "Ideas table rows can run overnight" | Only capability rows launch. |
+| "Open PR counts as done for Needs behavior" | Only **merged** (`done`) satisfies behavior deps. |
+| "Orchestrator-Job can /queue fill" | Forbidden — human message only. |
 
 ## Red Flags
 
-- Writing `tasks/queue.md` during List
-- Adding a row the user did not name
-- Setting `spec-approved` when the spec lacks `Status: **Approved**`
-- Changing status on a row that was already in the file
-- Deleting a spec, archive, or capability-map entry as part of Remove
-- Removing an `in-progress` row without asking
-- Renumbering existing Order values
-- Treating `ROADMAP.md` as the queue
+- Launching a `local` or `in-progress` row
+- Slice job editing `tasks/queue.md`
+- Restating the checklist in `.cursor/commands/queue.md`
+- Moving new slice plans into `tasks/archive/`
 
 ## Verification
 
-Before finishing, confirm:
-
-- [ ] Mode was List, Add, or Remove, and List did not write the file
-- [ ] Add created one row in one table, with Order only on a new capability row
-- [ ] Remove deleted one matched row and left specs, archives, and `CAPABILITY-MAP.md` untouched
-- [ ] `spec-approved` was written only with an explicit user status and an Approved spec line
-- [ ] **Current queue head** matches the first `spec-approved` capability row, or says none
-- [ ] The reply shows the reported tables (List) or the row added or removed (Add, Remove)
+- [ ] Launch checklist and examples match `SPEC-autonomous-queue.md` Testing strategy
+- [ ] List did not write the file
+- [ ] Fill/Release refused for Orchestrator-Job
+- [ ] Add/Remove touched only `tasks/queue.md` (plus head line)

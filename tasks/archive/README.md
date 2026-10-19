@@ -1,11 +1,13 @@
 # Archived plans
 
-Each completed or superseded capability keeps its implementation plan and task list here. **Active** work always uses the repo-root pair:
+Historical plans from before the **jobs** layout live here. **Do not add new slices to this tree** — from `SPEC-autonomous-queue.md` onward, slice plans stay under `tasks/jobs/<job>/slice-N/` after merge (see `tasks/jobs/README.md`).
 
-- `tasks/plan.md`
-- `tasks/todo.md`
+**Active local session** still uses:
 
-When `/plan` starts a new `docs/specs/SPEC-<module-id>.md`, move the previous pair into `tasks/archive/<module-id>/` and write fresh root files (task numbers restart at 1).
+- `tasks/plan.md` — pointer to `Active slice: tasks/jobs/<job>/slice-N/`
+- `tasks/todo.md` — mirror or summary; `/build` reads the slice folder when the pointer is set
+
+When switching to a **different module** locally, archive the previous root `plan.md` / `todo.md` pair here (if it was only a root pair) and write a fresh pointer for the new slice.
 
 | Archive folder | Spec | Notes |
 |----------------|------|--------|

@@ -1,12 +1,12 @@
 ---
-description: List, add, or remove rows in the Janus module work queue (tasks/queue.md)
+description: List, add, remove, fill, or release rows in the Janus module work queue (tasks/queue.md)
 ---
 
 > **Cursor:** Read skills at `.cursor/skills/<name>/SKILL.md` (not Claude Code `agent-skills:` plugin names). Janus module specs live at `docs/specs/SPEC-<module-id>.md` per `CAPABILITY-MAP.md`. Project constraints: `AGENTS.md`.
 
-Read and follow `.cursor/skills/janus-queue/SKILL.md`.
+Read and follow `.cursor/skills/janus-queue/SKILL.md` for all modes, including the **launch checklist** (orchestrator only — do not restate here).
 
-`/queue` maintains `tasks/queue.md`. It does not write specs, plans, or code. `/spec` still writes the spec. `/plan` and `/build` still read the queue.
+`/queue` maintains `tasks/queue.md`. It does not write slice plans or product code.
 
 ## Modes
 
@@ -14,15 +14,18 @@ Read and follow `.cursor/skills/janus-queue/SKILL.md`.
 
 | Invocation | Mode |
 |---|---|
-| `/queue`, `/queue list`, or “what is in the queue?” | **List** (default) |
-| `/queue add …` | **Add** — append one row |
-| `/queue remove …` | **Remove** — delete one matching row |
+| `/queue`, `/queue list` | **List** (default) |
+| `/queue add …` | **Add** — append one capability or idea row |
+| `/queue remove …` | **Remove** — delete one row |
+| `/queue fill from roadmap` | **Fill** — idea rows from `ROADMAP.md` gaps |
+| `/queue fill gaps` | **Fill** — idea rows from `CAPABILITY-MAP.md` gaps |
+| `/queue fill` | **Fill** — ask the user, then add rows |
+| `/queue release <row>` | **Release** — clear Notes `local`, set `spec-draft` so orchestrator may launch |
 
-Anything that does not start with `add` or `remove` is **List**.
+**Orchestrator-Job** prompts must not run Fill or Release.
 
 ## Run
 
 1. State the mode before editing.
-2. **List** is read-only. Do not change `tasks/queue.md`.
-3. **Add** and **Remove** change only that file: the matching table row and the **Current queue head** line.
-4. Do not invent an approve, start, or done mode. Status on an existing row stays as written. A status is set only when **Add** includes one in the same message, and only when the skill allows it.
+2. **List** is read-only.
+3. Other modes follow the skill exactly.

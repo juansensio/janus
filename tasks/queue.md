@@ -1,61 +1,73 @@
 # Module work queue
 
-Autonomous agents read this file **after** `CAPABILITY-MAP.md`. Status drives what to build next.
+Autonomous agents read this file **after** `CAPABILITY-MAP.md`. The Grok orchestrator refreshes status here and launches slice jobs per `.cursor/skills/janus-queue/SKILL.md`.
 
 ## Status values
 
 | Status | Meaning |
 |--------|---------|
-| `idea` | Backlog only — no implementing spec |
-| `spec-draft` | Spec exists but is not approved for build |
-| `spec-approved` | Spec (or slice) is approved — agent may `/plan` then `/build` |
-| `in-progress` | Active `tasks/plan.md` / `tasks/todo.md` for this item |
-| `done` | Shipped; plan archived under `tasks/archive/` |
+| `idea` | Backlog — may be launched by orchestrator when not `local` and dependencies are met |
+| `spec-draft` | Spec exists — orchestrator or human may plan/build when not `local` |
+| `spec-approved` | Spec approved — may `/plan` then `/build` locally |
+| `in-progress` | Active slice plan under `tasks/jobs/<job>/slice-N/` or root pointer |
+| `running` | Cloud agent working this row |
+| `pr-open` | Pull request open — waiting for human review |
+| `needs-decision` | Blocked on dangerous/important choice — see PR `Needs-Decision` |
+| `done` | Pull request **merged** to default branch; slice plan stays under `tasks/jobs/` |
 
-## How humans approve work
+**Notes:** `local` means a human Cursor session owns the row; the orchestrator does not launch it until `/queue release`.
 
-1. Finish or update the module spec in `docs/specs/SPEC-<module-id>.md` (or slice spec such as `SPEC-manuscript-slice-2.md`).
-2. Set the spec’s status line to **Approved** with a date (match existing specs).
+## Needs behavior
+
+Capability rows may name another row’s **Module / slice** cell. Empty means the row may run in parallel with others. A dependent row launches only when every named row is `done` (merged). File overlap is not a dependency.
+
+## How humans approve product work
+
+1. Finish or update the module spec in `docs/specs/SPEC-<module-id>.md`.
+2. Set the spec’s status line to **Approved** with a date.
 3. Update `CAPABILITY-MAP.md` if build order or dependencies changed.
-4. Set the matching row below to **`spec-approved`** (or `in-progress` once `/plan` has written root `tasks/plan.md`).
-5. Agents do **not** treat CAPABILITY-MAP prose alone as approval — this queue row must be `spec-approved`.
+4. Set the matching queue row to **`spec-approved`** (or `in-progress` after `/plan`).
+5. Agents do **not** treat CAPABILITY-MAP prose alone as approval — this queue row must reflect approval.
 
-**Current queue head:** none (slice 3 shipped; pick next `spec-approved` row).
+Workflow-only specs (for example `SPEC-autonomous-queue.md`) follow the same queue row pattern but are not CAPABILITY-MAP modules.
+
+**Current queue head:** `autonomous-queue — slice 1` (`in-progress`, Notes `local`).
 
 ---
 
 ## Capability modules (build order)
 
-| Order | Module / slice | Status | Spec | Notes |
-|------:|----------------|--------|------|-------|
-| 1 | shell | done | `docs/specs/SPEC-shell.md` | Archived `tasks/archive/shell/` |
-| 2 | library — slice 1 (shelf CRUD) | done | `docs/specs/SPEC-library.md` | Archived `tasks/archive/library/` |
-| 3 | library — slice 1b (Neo shelf) | done | `docs/specs/SPEC-library.md` | `tasks/archive/library-slice-1b/` |
-| 4 | library — slice 1c (naming) | done | `docs/specs/SPEC-library.md` | `tasks/archive/library-slice-1c/` |
-| 5 | library — slice 1d (wrapping track) | done | `docs/specs/SPEC-library.md` | `tasks/archive/library-slice-1d/` |
-| 6 | manuscript — slice 1 | done | `docs/specs/SPEC-manuscript.md` | `tasks/archive/manuscript-slice-1/` |
-| 7 | library-root — slice 1 | done | `docs/specs/SPEC-library-root.md` | `tasks/archive/library-root-slice-1/` |
-| 8 | library-root — slice 2 + library 1e | done | `docs/specs/SPEC-library-root.md`, `docs/specs/SPEC-library.md` | `tasks/archive/library-root-slice-2-1e/` |
-| 9 | languages — slice 1 | done | `docs/specs/SPEC-languages.md` | `tasks/archive/languages-slice-1/` |
-| 10 | perf — `/perf` command | done | `docs/specs/SPEC-perf-command.md` | `tasks/archive/perf-command-phase-1/` |
-| 11 | ship-gate fixes | done | library / languages / library-root specs | `tasks/archive/ship-gate-fixes/` |
-| 12 | desktop-release v1 | done | `docs/specs/SPEC-desktop-release.md`, `docs/specs/SPEC-desktop-release-command.md` | `tasks/archive/desktop-release/` |
-| 13 | manuscript — slice 2 (HTML) | done | `docs/specs/SPEC-manuscript-slice-2.md` | Built with row 14; `tasks/archive/html-manuscript-ai-assist/` |
-| 14 | ai-assist — slice 1 (SIWC, Write) | done | `docs/specs/SPEC-ai-assist.md` | `tasks/archive/html-manuscript-ai-assist/`, `ai-assist-siwc/`, `ai-assist-write-instruction/` |
-| 15 | ai-assist — slice 2 (usage ledger) | spec-draft | `docs/specs/SPEC-ai-assist-slice-2.md` | Spec status **Deferred** (2026-10-18) — not queued for build |
-| 16 | zoom — slices 1–2 | done | `docs/specs/SPEC-zoom.md` | Archived `tasks/archive/zoom-slice-1/`, `zoom-slice-2/` |
-| 17 | ai-assist — slice 3 (model catalog cache) | done | `docs/specs/SPEC-ai-assist-slice-3-model-catalog-cache.md` | Shipped 2026-10-19; archive `tasks/archive/ai-assist-slice-3/` |
-| — | library (full Neo loop) | spec-draft | `docs/specs/SPEC-library.md` | Further slices not approved beyond archived work |
-| — | languages (per-book writing language) | idea | `docs/specs/SPEC-languages.md` | Slice 1 shipped; later slices not specified |
-| — | manuscript (chapters, breaks, …) | idea | `docs/specs/SPEC-manuscript.md` | Slice 1–2 shipped; map “full loop” not spec’d |
+| Order | Module / slice | Status | Spec | Needs behavior | Notes |
+|------:|----------------|--------|------|----------------|-------|
+| 1 | shell | done | `docs/specs/SPEC-shell.md` | | Archived `tasks/archive/shell/` |
+| 2 | library — slice 1 (shelf CRUD) | done | `docs/specs/SPEC-library.md` | | Archived `tasks/archive/library/` |
+| 3 | library — slice 1b (Neo shelf) | done | `docs/specs/SPEC-library.md` | | `tasks/archive/library-slice-1b/` |
+| 4 | library — slice 1c (naming) | done | `docs/specs/SPEC-library.md` | | `tasks/archive/library-slice-1c/` |
+| 5 | library — slice 1d (wrapping track) | done | `docs/specs/SPEC-library.md` | | `tasks/archive/library-slice-1d/` |
+| 6 | manuscript — slice 1 | done | `docs/specs/SPEC-manuscript.md` | | `tasks/archive/manuscript-slice-1/` |
+| 7 | library-root — slice 1 | done | `docs/specs/SPEC-library-root.md` | | `tasks/archive/library-root-slice-1/` |
+| 8 | library-root — slice 2 + library 1e | done | `docs/specs/SPEC-library-root.md`, `docs/specs/SPEC-library.md` | | `tasks/archive/library-root-slice-2-1e/` |
+| 9 | languages — slice 1 | done | `docs/specs/SPEC-languages.md` | | `tasks/archive/languages-slice-1/` |
+| 10 | perf — `/perf` command | done | `docs/specs/SPEC-perf-command.md` | | `tasks/archive/perf-command-phase-1/` |
+| 11 | ship-gate fixes | done | library / languages / library-root specs | | `tasks/archive/ship-gate-fixes/` |
+| 12 | desktop-release v1 | done | `docs/specs/SPEC-desktop-release.md`, `docs/specs/SPEC-desktop-release-command.md` | | `tasks/archive/desktop-release/` |
+| 13 | manuscript — slice 2 (HTML) | done | `docs/specs/SPEC-manuscript-slice-2.md` | | Built with row 14; `tasks/archive/html-manuscript-ai-assist/` |
+| 14 | ai-assist — slice 1 (SIWC, Write) | done | `docs/specs/SPEC-ai-assist.md` | | `tasks/archive/html-manuscript-ai-assist/`, etc. |
+| 15 | ai-assist — slice 2 (usage ledger) | spec-draft | `docs/specs/SPEC-ai-assist-slice-2.md` | | Spec **Deferred** (2026-10-18) |
+| 16 | zoom — slices 1–2 | done | `docs/specs/SPEC-zoom.md` | | `tasks/jobs/zoom/` not migrated; archive `tasks/archive/zoom-slice-*` |
+| 17 | ai-assist — slice 3 (model catalog cache) | done | `docs/specs/SPEC-ai-assist-slice-3-model-catalog-cache.md` | | Shipped 2026-10-19 |
+| 18 | autonomous-queue — slice 1 | in-progress | `docs/specs/SPEC-autonomous-queue.md` | | local — slice 1 built; PR merge → `done` |
+| — | library (full Neo loop) | spec-draft | `docs/specs/SPEC-library.md` | | Further slices not approved |
+| — | languages (per-book writing language) | idea | `docs/specs/SPEC-languages.md` | | Slice 1 shipped |
+| — | manuscript (chapters, breaks, …) | idea | `docs/specs/SPEC-manuscript.md` | | Slice 1–2 shipped |
 
-Active plan: none — slice 3 archived under `tasks/archive/ai-assist-slice-3/`.
+Active plan: **autonomous-queue** slice 1 — `tasks/jobs/autonomous-queue/slice-1/` (root `tasks/plan.md` pointer).
 
 ---
 
 ## ROADMAP ideas (not specs)
 
-Informal items from `ROADMAP.md` — status **`idea`** until a spec is drafted and approved.
+Informal items from `ROADMAP.md` — status **`idea`** until a spec is drafted. **Never launched** by the orchestrator (capability table only).
 
 | Area | Idea | Status |
 |------|------|--------|

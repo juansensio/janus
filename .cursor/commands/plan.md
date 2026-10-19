@@ -15,8 +15,24 @@ Read the existing spec (`docs/specs/SPEC-*.md`, `SPEC.md`, or equivalent) and th
 5. Add checkpoints between phases
 6. Present the plan for human review
 
-Save the plan to `tasks/plan.md` and the task list to `tasks/todo.md`.
+## Where plans live
 
-Follow **Janus plan/todo lifecycle** in `.cursor/rules/janus-planning.mdc` (archive previous module, fresh root `tasks/plan.md` + `tasks/todo.md`, tasks restart at 1).
+Follow `.cursor/rules/janus-planning.mdc`.
 
-If the current plan still has **unchecked tasks for in-progress work** on the same module, stop and ask before archiving or overwriting.
+1. Resolve **job** id from the spec path (`SPEC-<job>.md` → `<job>`).
+2. Resolve **slice** folder: `slice-N` (next N under `tasks/jobs/<job>/`, or `slice-1` if new).
+3. Write **`tasks/jobs/<job>/slice-N/plan.md`** and **`todo.md`** (full plan and tasks).
+4. Set root **`tasks/plan.md`** to a short pointer, including `Active slice: tasks/jobs/<job>/slice-N/`.
+5. Mirror or summarize tasks in root **`tasks/todo.md`** so `/build` can find them before the pointer is read (optional duplicate; prefer pointer).
+
+## Queue (local session)
+
+In the same turn, update `tasks/queue.md` for this slice row:
+
+- Set status **`in-progress`**
+- Set Notes **`local`**
+- Upsert the capability row if missing (see `.cursor/skills/janus-queue/SKILL.md` Add)
+
+Do **not** start a cloud job. Do **not** move plans to `tasks/archive/` when planning a new slice.
+
+If the current slice still has **unchecked tasks**, stop and ask before replacing the pointer — unless the user explicitly discards or archives.

@@ -1,12 +1,13 @@
 # Active plan
 
-**No module plan in progress.**
+**Active slice:** `tasks/jobs/autonomous-queue/slice-1/` (slice 1 **complete** — pending PR merge for queue `done`)
 
-| Last completed | Location |
-|----------------|----------|
-| ai-assist slice 3 — model catalog cache | `tasks/archive/ai-assist-slice-3/` |
-| zoom slices 1–2 | `tasks/archive/zoom-slice-2/` |
+| Field | Value |
+|-------|--------|
+| Spec | `docs/specs/SPEC-autonomous-queue.md` (**Approved** 2026-10-19) |
+| Queue row | 18 — `autonomous-queue — slice 1` (`in-progress`, Notes `local`) |
+| Job folder | `tasks/jobs/autonomous-queue/` |
 
-**Next:** run `/plan` when the next approved spec slice is ready (see `tasks/queue.md` and `CAPABILITY-MAP.md`).
+Markdown-only workflow landed per spec success criteria. Run `/queue release autonomous-queue` after merge if the orchestrator should own the next slice.
 
-**Archived:** `tasks/archive/ai-assist-slice-3/` (previous root plan).
+**Archived:** `tasks/archive/ai-assist-slice-3/` (previous idle root plan).
