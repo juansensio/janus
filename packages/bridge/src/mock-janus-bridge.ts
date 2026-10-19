@@ -5,7 +5,11 @@ import {
     insertOrReplaceDraft as insertOrReplaceDraftHtml,
     rejectAiDraft as rejectAiDraftHtml,
 } from "@janus/manuscript";
+<<<<<<< HEAD
 import type { BeginHighlightRewriteInput } from "./index";
+=======
+import { plainTextToEditorHtml } from "@janus/support-docs";
+>>>>>>> 096911b (build(support-docs): extend JanusBridge and mock (task 2))
 import type { JanusBridge } from "./index";
 import { assertSupported } from "@janus/languages";
 import {
@@ -27,11 +31,16 @@ function createMockManuscriptStore(): Map<string, string> {
     return new Map();
 }
 
+function supportDocKey(bookId: string, kind: string): string {
+    return `${bookId}:${kind}`;
+}
+
 /** Minimal async stubs for Vitest and local UI work. */
 export function createMockJanusBridge(
     overrides: Partial<JanusBridge> = {},
 ): JanusBridge {
     const manuscripts = createMockManuscriptStore();
+    const supportDocs = new Map<string, string>();
     let mockSavedLocale: string | null = null;
     let mockEditorZoomPercent: number | undefined;
     let mockOpenAiModel = "auto";
@@ -53,6 +62,38 @@ export function createMockJanusBridge(
         readManuscript: async (id) => manuscripts.get(id) ?? emptyHtml,
         writeManuscript: async (id, text) => {
             manuscripts.set(id, text);
+        },
+        listSupportDocs: async (id) => {
+            const exists = supportDocs.has(supportDocKey(id, "worldbuilding"));
+            return [{ kind: "worldbuilding", exists }];
+        },
+        createSupportDoc: async (id, kind) => {
+            const key = supportDocKey(id, kind);
+            if (supportDocs.has(key)) {
+                throw Object.assign(new Error("Already exists"), {
+                    code: "SUPPORT_DOC_ALREADY_EXISTS",
+                });
+            }
+            supportDocs.set(key, plainTextToEditorHtml(""));
+            return { kind, exists: true };
+        },
+        readSupportDoc: async (id, kind) => {
+            const key = supportDocKey(id, kind);
+            if (!supportDocs.has(key)) {
+                throw Object.assign(new Error("Not found"), {
+                    code: "SUPPORT_DOC_NOT_FOUND",
+                });
+            }
+            return supportDocs.get(key) ?? plainTextToEditorHtml("");
+        },
+        writeSupportDoc: async (id, kind, editorHtml) => {
+            const key = supportDocKey(id, kind);
+            if (!supportDocs.has(key)) {
+                throw Object.assign(new Error("Not found"), {
+                    code: "SUPPORT_DOC_NOT_FOUND",
+                });
+            }
+            supportDocs.set(key, editorHtml);
         },
         acceptAiDraft: async (id, draftId) => {
             const html = manuscripts.get(id) ?? emptyHtml;
