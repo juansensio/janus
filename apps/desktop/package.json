@@ -42,6 +42,7 @@
         "@janus/languages": "workspace:*",
         "@janus/library": "workspace:*",
         "@janus/manuscript": "workspace:*",
+        "@janus/support-docs": "workspace:*",
         "@janus/ai-assist": "workspace:*",
         "electron": "33.2.1",
         "electron-builder": "25.1.8"

@@ -21,6 +21,14 @@ const bridge: JanusBridge = {
     readManuscript: (id: string) => invoke("janus:manuscript:readManuscript", id),
     writeManuscript: (id: string, text: string) =>
         invoke("janus:manuscript:writeManuscript", id, text),
+    listSupportDocs: (id: string) =>
+        invoke("janus:support-docs:listSupportDocs", id),
+    createSupportDoc: (id: string, kind: string) =>
+        invoke("janus:support-docs:createSupportDoc", id, kind),
+    readSupportDoc: (id: string, kind: string) =>
+        invoke("janus:support-docs:readSupportDoc", id, kind),
+    writeSupportDoc: (id: string, kind: string, editorHtml: string) =>
+        invoke("janus:support-docs:writeSupportDoc", id, kind, editorHtml),
     acceptAiDraft: (id: string, draftId: string) =>
         invoke("janus:manuscript:acceptAiDraft", id, draftId),
     rejectAiDraft: (id: string, draftId: string) =>

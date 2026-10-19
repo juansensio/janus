@@ -11,6 +11,8 @@ import { loadJanusSettings, saveJanusSettings } from "./janus-settings";
 import { createCapacitorShelfFs } from "./library-fs";
 import { createCapacitorManuscriptFs } from "./manuscript-fs";
 import { createManuscriptBridgeService } from "./manuscript-service";
+import { createCapacitorSupportDocFs } from "./support-docs-fs";
+import { createSupportDocsBridgeService } from "./support-docs-service";
 
 declare global {
     interface Window {
@@ -27,6 +29,11 @@ const manuscriptService = createManuscriptBridgeService(
     MOBILE_LIBRARY_ROOT,
     manuscriptFs,
 );
+const supportDocFs = createCapacitorSupportDocFs();
+const supportDocsService = createSupportDocsBridgeService(
+    MOBILE_LIBRARY_ROOT,
+    supportDocFs,
+);
 
 export function installMobileBridge(): void {
     const bridge: JanusBridge = {
@@ -39,6 +46,12 @@ export function installMobileBridge(): void {
         readManuscript: (id) => manuscriptService.readManuscript(id),
         writeManuscript: (id, text) =>
             manuscriptService.writeManuscript(id, text),
+        listSupportDocs: (id) => supportDocsService.listSupportDocs(id),
+        createSupportDoc: (id, kind) =>
+            supportDocsService.createSupportDoc(id, kind),
+        readSupportDoc: (id, kind) => supportDocsService.readSupportDoc(id, kind),
+        writeSupportDoc: (id, kind, editorHtml) =>
+            supportDocsService.writeSupportDoc(id, kind, editorHtml),
         acceptAiDraft: (id, draftId) =>
             manuscriptService.acceptAiDraft(id, draftId),
         rejectAiDraft: (id, draftId) =>

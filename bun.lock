@@ -22,6 +22,7 @@
         "@janus/languages": "workspace:*",
         "@janus/library": "workspace:*",
         "@janus/manuscript": "workspace:*",
+        "@janus/support-docs": "workspace:*",
         "electron": "33.2.1",
         "electron-builder": "25.1.8",
       },
@@ -37,6 +38,7 @@
         "@janus/languages": "workspace:*",
         "@janus/library": "workspace:*",
         "@janus/manuscript": "workspace:*",
+        "@janus/support-docs": "workspace:*",
         "@janus/ui": "workspace:*",
         "@janus/zoom": "workspace:*",
       },
@@ -50,6 +52,7 @@
       "dependencies": {
         "@janus/languages": "workspace:*",
         "@janus/manuscript": "workspace:*",
+        "@janus/support-docs": "workspace:*",
         "@janus/zoom": "workspace:*",
       },
     },
@@ -91,6 +94,13 @@
       "version": "0.0.0",
       "dependencies": {
         "node-html-parser": "^9.0.4",
+      },
+    },
+    "services/support-docs": {
+      "name": "@janus/support-docs",
+      "version": "0.0.0",
+      "dependencies": {
+        "@janus/manuscript": "workspace:*",
       },
     },
     "services/zoom": {
@@ -206,6 +216,8 @@
     "@janus/manuscript": ["@janus/manuscript@workspace:services/manuscript"],
 
     "@janus/mobile": ["@janus/mobile@workspace:apps/mobile"],
+
+    "@janus/support-docs": ["@janus/support-docs@workspace:services/support-docs"],
 
     "@janus/ui": ["@janus/ui@workspace:packages/ui"],
 

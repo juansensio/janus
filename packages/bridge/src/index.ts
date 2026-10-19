@@ -15,6 +15,14 @@ export type BookSummary = {
     createdAt: string;
 };
 
+export type SupportDocKind = "worldbuilding";
+
+/** Support document row for project nav in the editor. */
+export type SupportDocSummary = {
+    kind: SupportDocKind;
+    exists: boolean;
+};
+
 /**
  * Bridge methods reject with `Error` objects whose `code` is a stable string
  * (for example `BOOK_NOT_FOUND`). Callers and tests should read `code`, not
@@ -69,7 +77,13 @@ export type JanusBridgeErrorCode =
     | "AI_PROVIDER_ERROR"
     | "AI_AUTH_FAILED"
     | "AI_AUTH_CANCELLED"
-    | "INVALID_EDITOR_ZOOM";
+    | "INVALID_EDITOR_ZOOM"
+    | "INVALID_SUPPORT_DOC_KIND"
+    | "SUPPORT_DOC_NOT_FOUND"
+    | "SUPPORT_DOC_ALREADY_EXISTS"
+    | "SUPPORT_DOC_READ_FAILED"
+    | "SUPPORT_DOC_WRITE_FAILED"
+    | "SUPPORT_DOC_INVALID";
 
 export type { UiLanguageResult } from "./ui-language";
 export { buildUiLanguage, buildUiLanguageForCode } from "./ui-language";
@@ -106,6 +120,17 @@ export interface JanusBridge {
     deleteBook(id: string): Promise<void>;
     readManuscript(id: string): Promise<string>;
     writeManuscript(id: string, text: string): Promise<void>;
+    listSupportDocs(id: string): Promise<SupportDocSummary[]>;
+    createSupportDoc(
+        id: string,
+        kind: SupportDocKind,
+    ): Promise<SupportDocSummary>;
+    readSupportDoc(id: string, kind: SupportDocKind): Promise<string>;
+    writeSupportDoc(
+        id: string,
+        kind: SupportDocKind,
+        editorHtml: string,
+    ): Promise<void>;
     acceptAiDraft(id: string, draftId: string): Promise<string>;
     rejectAiDraft(id: string, draftId: string): Promise<string>;
     insertOrReplaceDraft(

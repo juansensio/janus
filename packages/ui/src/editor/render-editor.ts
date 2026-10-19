@@ -2,6 +2,11 @@ import type { BookSummary, JanusBridge } from "@janus/bridge";
 import { getUiLocale, t } from "../i18n";
 import { createAutosaveController, type EditorSaveStatus } from "./autosave";
 import { aiWriteErrorMessage } from "./ai-write-error";
+import {
+    mountProjectNav,
+    mountSupportDocCreatePanel,
+    type BookProjectDoc,
+} from "./editor-project-nav";
 import type { AiWriteFlight } from "./manuscript-editor";
 import { mountEditorZoomBar } from "./editor-zoom-bar";
 import {
@@ -9,7 +14,10 @@ import {
     createEditorZoomController,
     loadInitialEditorZoom,
 } from "./editor-zoom";
-import { createManuscriptEditor } from "./manuscript-editor";
+import {
+    createManuscriptEditor,
+    type ManuscriptEditor,
+} from "./manuscript-editor";
 
 const AUTOSAVE_INTERVAL_MS = 1000;
 
@@ -65,12 +73,8 @@ export async function renderEditor(
     rewriteSelectionButton.textContent = t("ai.rewriteSelection");
     rewriteSelectionButton.hidden = true;
 
-    const showAiChrome = bridge.platform() === "desktop";
+    const desktopAiCapable = bridge.platform() === "desktop";
     header.append(backButton);
-    if (showAiChrome) {
-        header.append(addCommentButton, rewriteSelectionButton);
-    }
-    chrome.append(header);
 
     const status = document.createElement("p");
     status.className = "editor-status";
@@ -88,19 +92,33 @@ export async function renderEditor(
     chrome.append(status, saveError, transformError, loadError);
     host.append(chrome);
 
-    let loadedHtml = "";
+    let worldbuildingExists = false;
     try {
-        loadedHtml = await bridge.readManuscript(book.id);
+        const supportList = await bridge.listSupportDocs(book.id);
+        const worldbuilding = supportList.find(
+            (entry) => entry.kind === "worldbuilding",
+        );
+        worldbuildingExists = worldbuilding?.exists ?? false;
     } catch {
-        loadError.textContent = t("manuscript.loadFailed");
-        backButton.addEventListener("click", () => {
-            options.onBack();
-        });
-        return;
+        worldbuildingExists = false;
     }
 
-    const locale = getUiLocale();
-    document.documentElement.lang = locale;
+    let activeDoc: BookProjectDoc = "manuscript";
+    let switching = false;
+
+    const projectNav = mountProjectNav(header, {
+        active: activeDoc,
+        onSelect: (doc) => {
+            void switchDoc(doc);
+        },
+    });
+    if (desktopAiCapable) {
+        header.append(addCommentButton, rewriteSelectionButton);
+    }
+    chrome.prepend(header);
+
+    const scrollport = document.createElement("div");
+    scrollport.className = "editor-scrollport";
 
     const page = document.createElement("article");
     page.className = "editor-page";
@@ -114,11 +132,16 @@ export async function renderEditor(
     field.setAttribute("aria-label", book.title);
 
     page.append(title, field);
-
-    const scrollport = document.createElement("div");
-    scrollport.className = "editor-scrollport";
     scrollport.append(page);
     host.append(scrollport);
+
+    const createHost = document.createElement("div");
+    createHost.className = "editor-support-create-host";
+    createHost.hidden = true;
+    scrollport.append(createHost);
+
+    let createPanel: ReturnType<typeof mountSupportDocCreatePanel> | null =
+        null;
 
     const initialZoomPercent = await loadInitialEditorZoom(host, bridge);
     let syncZoomBar: (percent: number) => void = () => {};
@@ -160,143 +183,281 @@ export async function renderEditor(
         current: ReturnType<typeof createAutosaveController> | null;
     } = { current: null };
 
+    let editor: ManuscriptEditor | null = null;
+
     const writeFlight: AiWriteFlight = {
         inFlight: false,
         commentId: null,
         statusMessage: null,
     };
 
+    const openAiModelOptions: string[] = ["auto"];
+
+    const locale = getUiLocale();
+    document.documentElement.lang = locale;
+
     let syncRewriteSelectionButton: () => void = () => {};
 
-    const editor = createManuscriptEditor(field, loadedHtml, {
-        lang: locale,
-        showAiChrome,
-        openAiModelOptions: ["auto"],
-        getWriteFlight: () => writeFlight,
-        onDocChange: () => {
-            autosaveRef.current?.onInput(editor.getHtml());
+    function updateAiChromeVisibility(): void {
+        const showAi =
+            desktopAiCapable &&
+            activeDoc === "manuscript" &&
+            page.hidden === false;
+        addCommentButton.hidden = !showAi;
+        if (!showAi) {
+            rewriteSelectionButton.hidden = true;
+        } else {
             syncRewriteSelectionButton();
-        },
-        onSelectionChange: () => {
-            syncRewriteSelectionButton();
-        },
-        onWriteComment: async (commentId) => {
-            writeFlight.statusMessage = null;
-            writeFlight.inFlight = true;
-            writeFlight.commentId = commentId;
-            addCommentButton.disabled = true;
-            rewriteSelectionButton.disabled = true;
-            editor.refreshAiCommentChrome();
-            const streamingDraftId = crypto.randomUUID();
-            let writeError: unknown;
-            try {
-                if (autosaveRef.current?.isDirty()) {
-                    await autosaveRef.current.flush();
-                }
-                const html = await bridge.writeForComment(
-                    book.id,
-                    commentId,
-                    locale,
-                    {
-                        onDraftDelta: (draftHtml) => {
-                            editor.applyStreamingDraft(
-                                commentId,
-                                streamingDraftId,
-                                draftHtml,
-                            );
-                        },
-                    },
-                );
-                editor.setHtml(html);
-                autosaveRef.current?.markLoaded(html);
-                writeFlight.statusMessage = null;
-            } catch (error) {
-                writeError = error;
-                writeFlight.statusMessage = {
-                    commentId,
-                    text: aiWriteErrorMessage(error, t),
-                };
-            } finally {
-                writeFlight.inFlight = false;
-                writeFlight.commentId = null;
-                addCommentButton.disabled = false;
-                rewriteSelectionButton.disabled = false;
-                syncRewriteSelectionButton();
-                editor.refreshAiCommentChrome();
-            }
-            if (writeError) {
-                throw writeError;
-            }
-        },
-        onAcceptDraft: async (draftId) => {
-            transformError.textContent = "";
-            try {
-                const html = await bridge.acceptAiDraft(book.id, draftId);
-                editor.setHtml(html);
-                autosaveRef.current?.markLoaded(html);
-            } catch {
-                transformError.textContent = t("manuscript.transformFailed");
-            }
-        },
-        onRejectDraft: async (draftId) => {
-            transformError.textContent = "";
-            try {
-                const html = await bridge.rejectAiDraft(book.id, draftId);
-                editor.setHtml(html);
-                autosaveRef.current?.markLoaded(html);
-            } catch {
-                transformError.textContent = t("manuscript.transformFailed");
-            }
-        },
-        onTransformError: (message) => {
-            transformError.textContent = message;
-        },
-    });
-
-    syncRewriteSelectionButton = (): void => {
-        if (!showAiChrome) {
-            return;
         }
-        const spans = editor.getHighlightRewriteSpans();
-        rewriteSelectionButton.hidden = spans === null;
-        rewriteSelectionButton.disabled = writeFlight.inFlight;
-    };
-
-    if (showAiChrome) {
-        void (async () => {
-            try {
-                const modelSettings = await bridge.getOpenAiModelSettings();
-                if (host.isConnected) {
-                    editor.setOpenAiModelOptions(modelSettings.options);
-                }
-            } catch {
-                // keep default auto-only options
-            }
-        })();
     }
 
-    const autosave = createAutosaveController({
-        intervalMs: AUTOSAVE_INTERVAL_MS,
-        getText: () => editor.getHtml(),
-        save: (text) => bridge.writeManuscript(book.id, text),
-        onStatus: (saveStatus) => {
-            setStatus(status, saveStatus, saveError);
-        },
-    });
-    autosaveRef.current = autosave;
-    autosave.markLoaded(loadedHtml);
+    function showCreateState(): void {
+        page.hidden = true;
+        createHost.hidden = false;
+        createPanel?.dispose();
+        createPanel = mountSupportDocCreatePanel(createHost, {
+            onCreate: async () => {
+                saveError.textContent = "";
+                try {
+                    await bridge.createSupportDoc(book.id, "worldbuilding");
+                    worldbuildingExists = true;
+                    hideCreateState();
+                    await mountEditorForDoc("worldbuilding");
+                } catch {
+                    saveError.textContent = t("supportDocs.createFailed");
+                }
+            },
+        });
+        updateAiChromeVisibility();
+    }
+
+    function hideCreateState(): void {
+        createPanel?.dispose();
+        createPanel = null;
+        createHost.hidden = true;
+        createHost.replaceChildren();
+        page.hidden = false;
+        updateAiChromeVisibility();
+    }
+
+    async function teardownEditor(): Promise<void> {
+        editor?.destroy();
+        editor = null;
+        autosaveRef.current?.dispose();
+        autosaveRef.current = null;
+        field.replaceChildren();
+        syncRewriteSelectionButton = () => {};
+    }
+
+    async function loadHtmlForDoc(doc: BookProjectDoc): Promise<string> {
+        if (doc === "manuscript") {
+            return bridge.readManuscript(book.id);
+        }
+        return bridge.readSupportDoc(book.id, "worldbuilding");
+    }
+
+    async function mountEditorForDoc(doc: BookProjectDoc): Promise<boolean> {
+        hideCreateState();
+        loadError.textContent = "";
+        let loadedHtml = "";
+        try {
+            loadedHtml = await loadHtmlForDoc(doc);
+        } catch {
+            loadError.textContent =
+                doc === "manuscript"
+                    ? t("manuscript.loadFailed")
+                    : t("supportDocs.loadFailed");
+            return false;
+        }
+
+        const showAiChrome = desktopAiCapable && doc === "manuscript";
+        const manuscriptEditor = createManuscriptEditor(field, loadedHtml, {
+            lang: locale,
+            showAiChrome,
+            openAiModelOptions,
+            getWriteFlight: () => writeFlight,
+            onDocChange: () => {
+                autosaveRef.current?.onInput(manuscriptEditor.getHtml());
+                syncRewriteSelectionButton();
+            },
+            onSelectionChange: () => {
+                syncRewriteSelectionButton();
+            },
+            onWriteComment: async (commentId) => {
+                writeFlight.statusMessage = null;
+                writeFlight.inFlight = true;
+                writeFlight.commentId = commentId;
+                addCommentButton.disabled = true;
+                rewriteSelectionButton.disabled = true;
+                manuscriptEditor.refreshAiCommentChrome();
+                const streamingDraftId = crypto.randomUUID();
+                let writeError: unknown;
+                try {
+                    if (autosaveRef.current?.isDirty()) {
+                        await autosaveRef.current.flush();
+                    }
+                    const html = await bridge.writeForComment(
+                        book.id,
+                        commentId,
+                        locale,
+                        {
+                            onDraftDelta: (draftHtml) => {
+                                manuscriptEditor.applyStreamingDraft(
+                                    commentId,
+                                    streamingDraftId,
+                                    draftHtml,
+                                );
+                            },
+                        },
+                    );
+                    manuscriptEditor.setHtml(html);
+                    autosaveRef.current?.markLoaded(html);
+                    writeFlight.statusMessage = null;
+                } catch (error) {
+                    writeError = error;
+                    writeFlight.statusMessage = {
+                        commentId,
+                        text: aiWriteErrorMessage(error, t),
+                    };
+                } finally {
+                    writeFlight.inFlight = false;
+                    writeFlight.commentId = null;
+                    addCommentButton.disabled = false;
+                    rewriteSelectionButton.disabled = false;
+                    syncRewriteSelectionButton();
+                    manuscriptEditor.refreshAiCommentChrome();
+                }
+                if (writeError) {
+                    throw writeError;
+                }
+            },
+            onAcceptDraft: async (draftId) => {
+                transformError.textContent = "";
+                try {
+                    const html = await bridge.acceptAiDraft(book.id, draftId);
+                    manuscriptEditor.setHtml(html);
+                    autosaveRef.current?.markLoaded(html);
+                } catch {
+                    transformError.textContent = t("manuscript.transformFailed");
+                }
+            },
+            onRejectDraft: async (draftId) => {
+                transformError.textContent = "";
+                try {
+                    const html = await bridge.rejectAiDraft(book.id, draftId);
+                    manuscriptEditor.setHtml(html);
+                    autosaveRef.current?.markLoaded(html);
+                } catch {
+                    transformError.textContent = t("manuscript.transformFailed");
+                }
+            },
+            onTransformError: (message) => {
+                transformError.textContent = message;
+            },
+        });
+        editor = manuscriptEditor;
+
+        if (showAiChrome) {
+            syncRewriteSelectionButton = (): void => {
+                const spans = manuscriptEditor.getHighlightRewriteSpans();
+                rewriteSelectionButton.hidden = spans === null;
+                rewriteSelectionButton.disabled = writeFlight.inFlight;
+            };
+            void (async () => {
+                try {
+                    const modelSettings = await bridge.getOpenAiModelSettings();
+                    if (host.isConnected && editor === manuscriptEditor) {
+                        manuscriptEditor.setOpenAiModelOptions(
+                            modelSettings.options,
+                        );
+                    }
+                } catch {
+                    // keep default options
+                }
+            })();
+        } else {
+            syncRewriteSelectionButton = () => {};
+            rewriteSelectionButton.hidden = true;
+        }
+
+        const save =
+            doc === "manuscript"
+                ? (text: string) => bridge.writeManuscript(book.id, text)
+                : (text: string) =>
+                      bridge.writeSupportDoc(book.id, "worldbuilding", text);
+
+        const autosave = createAutosaveController({
+            intervalMs: AUTOSAVE_INTERVAL_MS,
+            getText: () => manuscriptEditor.getHtml(),
+            save,
+            onStatus: (saveStatus) => {
+                setStatus(status, saveStatus, saveError);
+            },
+        });
+        autosaveRef.current = autosave;
+        autosave.markLoaded(loadedHtml);
+        manuscriptEditor.focus();
+        updateAiChromeVisibility();
+        syncRewriteSelectionButton();
+        return true;
+    }
+
+    async function switchDoc(next: BookProjectDoc): Promise<void> {
+        if (switching || next === activeDoc) {
+            return;
+        }
+        switching = true;
+        saveError.textContent = "";
+        if (autosaveRef.current?.isDirty()) {
+            try {
+                await autosaveRef.current.flush();
+            } catch {
+                saveError.textContent = t("manuscript.saveFailed");
+                switching = false;
+                return;
+            }
+        }
+        await teardownEditor();
+
+        activeDoc = next;
+        projectNav.setActive(activeDoc);
+
+        if (activeDoc === "worldbuilding" && !worldbuildingExists) {
+            showCreateState();
+            switching = false;
+            return;
+        }
+
+        const ok = await mountEditorForDoc(activeDoc);
+        if (!ok && activeDoc === "worldbuilding") {
+            activeDoc = "manuscript";
+            projectNav.setActive(activeDoc);
+            await mountEditorForDoc("manuscript");
+        }
+        switching = false;
+    }
+
+    const initialOk = await mountEditorForDoc("manuscript");
+    if (!initialOk) {
+        backButton.addEventListener("click", () => {
+            options.onBack();
+        });
+        disposeEditorZoom();
+        projectNav.dispose();
+        return;
+    }
 
     addCommentButton.addEventListener("click", () => {
-        if (writeFlight.inFlight) {
+        if (writeFlight.inFlight || !editor) {
             return;
         }
         editor.insertAiComment();
-        autosave.onInput(editor.getHtml());
+        autosaveRef.current?.onInput(editor.getHtml());
     });
 
     rewriteSelectionButton.addEventListener("click", () => {
         void (async () => {
-            if (writeFlight.inFlight) {
+            if (writeFlight.inFlight || !editor) {
                 return;
             }
             transformError.textContent = "";
@@ -307,8 +468,8 @@ export async function renderEditor(
             }
             const commentId = crypto.randomUUID();
             try {
-                if (autosave.isDirty()) {
-                    await autosave.flush();
+                if (autosaveRef.current?.isDirty()) {
+                    await autosaveRef.current.flush();
                 }
                 const html = await bridge.beginHighlightRewrite(book.id, {
                     commentId,
@@ -316,7 +477,7 @@ export async function renderEditor(
                     spans,
                 });
                 editor.setHtml(html);
-                autosave.markLoaded(html);
+                autosaveRef.current?.markLoaded(html);
                 syncRewriteSelectionButton();
             } catch {
                 transformError.textContent = t("ai.rewriteSelectionFailed");
@@ -324,23 +485,22 @@ export async function renderEditor(
         })();
     });
 
-    editor.focus();
-    syncRewriteSelectionButton();
-
     backButton.addEventListener("click", () => {
         void (async () => {
-            if (!autosave.isDirty()) {
+            if (!autosaveRef.current?.isDirty()) {
                 disposeEditorZoom();
-                editor.destroy();
-                autosave.dispose();
+                await teardownEditor();
+                createPanel?.dispose();
+                projectNav.dispose();
                 options.onBack();
                 return;
             }
             try {
-                await autosave.flush();
+                await autosaveRef.current.flush();
                 disposeEditorZoom();
-                editor.destroy();
-                autosave.dispose();
+                await teardownEditor();
+                createPanel?.dispose();
+                projectNav.dispose();
                 options.onBack();
             } catch {
                 saveError.textContent = t("manuscript.saveFailed");

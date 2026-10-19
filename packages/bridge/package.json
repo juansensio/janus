@@ -9,6 +9,7 @@
     "dependencies": {
         "@janus/languages": "workspace:*",
         "@janus/manuscript": "workspace:*",
+        "@janus/support-docs": "workspace:*",
         "@janus/zoom": "workspace:*"
     }
 }

@@ -82,6 +82,63 @@
     align-items: flex-start;
     gap: 0.75rem;
     width: 100%;
+    flex-wrap: wrap;
+}
+
+.editor-project-nav {
+    display: inline-flex;
+    gap: 0.25rem;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.editor-project-nav-item {
+    font: inherit;
+    font-size: 0.8125rem;
+    color: var(--shelf-text-muted, #6b6b6b);
+    background: transparent;
+    border: 1px solid var(--shelf-ghost-border, #444444);
+    border-radius: 0.375rem;
+    padding: 0.35rem 0.65rem;
+    cursor: pointer;
+}
+
+.editor-project-nav-item.is-active {
+    color: var(--shelf-text, #e8e8e8);
+    border-color: rgba(255, 255, 255, 0.28);
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.editor-support-create {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    min-height: 12rem;
+    padding: 2rem 1.5rem;
+    text-align: center;
+}
+
+.editor-support-create-message {
+    margin: 0;
+    color: var(--shelf-text-muted, #6b6b6b);
+    font-size: 0.9375rem;
+}
+
+.editor-support-create-button {
+    font: inherit;
+    font-size: 0.875rem;
+    color: var(--shelf-text, #e8e8e8);
+    background: transparent;
+    border: 1px solid var(--shelf-ghost-border, #444444);
+    border-radius: 0.375rem;
+    padding: 0.45rem 0.9rem;
+    cursor: pointer;
+}
+
+.editor-support-create-button:hover {
+    border-color: rgba(255, 255, 255, 0.22);
 }
 
 .editor-back {
