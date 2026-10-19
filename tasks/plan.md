@@ -1,12 +1,12 @@
 # Active plan
 
-**Active slice:** none (autonomous-queue slice 1 shipped 2026-10-19).
+**Active slice:** `tasks/jobs/ai-highlight/slice-1/`
 
 | Field | Value |
 |-------|--------|
-| Last job | `tasks/jobs/autonomous-queue/slice-1/` |
-| Queue row | 18 — `autonomous-queue — slice 1` (`done`) |
+| Spec | `docs/specs/SPEC-ai-highlight.md` (Approved 2026-10-19) |
+| Queue row | 20 — ai-highlight — slice 1 |
 
-Slice plan stays under `tasks/jobs/autonomous-queue/`. Use `/plan` on the next `spec-approved` capability row when ready.
+Full plan and tasks: `tasks/jobs/ai-highlight/slice-1/plan.md`, `todo.md`.
 
-**Archived:** `tasks/archive/ai-assist-slice-3/` (previous idle root plan).
+**Previous:** `tasks/jobs/autonomous-queue/slice-1/` (shipped).
