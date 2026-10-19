@@ -71,15 +71,15 @@
 
 **Acceptance criteria:**
 
-- [ ] IPC channels registered in `main.ts`; preload exposes four methods
-- [ ] Invalid book id / missing book map to existing library error codes
-- [ ] Support-doc domain errors surface stable `code` on reject
-- [ ] Integration test: create book, create worldbuilding, read/write round-trip on disk
+- [x] IPC channels registered in `main.ts`; preload exposes four methods
+- [x] Invalid book id / missing book map to existing library error codes
+- [x] Support-doc domain errors surface stable `code` on reject
+- [x] Integration test: create book, create worldbuilding, read/write round-trip on disk
 
 **Verification:**
 
-- [ ] `bun run test apps/desktop/src/support-docs-ipc.test.ts` (or colocated test path)
-- [ ] `bun run lint`
+- [x] `bun run test apps/desktop/src/support-docs-ipc.test.ts` (or colocated test path)
+- [x] `bun run lint`
 
 **Dependencies:** Task 2
 
@@ -93,12 +93,12 @@
 
 **Acceptance criteria:**
 
-- [ ] Mobile bridge implements all four support-doc methods
-- [ ] Behavior matches desktop for create/list/read/write on in-memory or fixture FS test
+- [x] Mobile bridge implements all four support-doc methods
+- [x] Behavior matches desktop for create/list/read/write on in-memory or fixture FS test
 
 **Verification:**
 
-- [ ] `bun run test apps/mobile` (support-docs tests)
+- [x] `bun run test apps/mobile` (support-docs tests)
 
 **Dependencies:** Task 2
 
