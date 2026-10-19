@@ -131,6 +131,11 @@ export function installMobileBridge(): void {
             return buildEditorZoomResult(valid);
         },
         subscribeEditorZoomMenuAction: () => () => {},
+        exportManuscriptPdf: async () => {
+            throw Object.assign(new Error("PDF export is not supported on mobile"), {
+                code: "PDF_EXPORT_NOT_SUPPORTED",
+            });
+        },
     };
     window.janus = bridge;
 }
