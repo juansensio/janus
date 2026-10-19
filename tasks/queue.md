@@ -32,7 +32,7 @@ Capability rows may name another row’s **Module / slice** cell. Empty means th
 
 Workflow-only specs (for example `SPEC-autonomous-queue.md`) follow the same queue row pattern but are not CAPABILITY-MAP modules.
 
-**Current queue head:** none (`spec-approved` empty for local `/plan`). **First orchestrator candidate when launched:** row 19 `pdf-export — slice 1` (`idea`, not `spec-approved`).
+**Current queue head:** none (`spec-approved` empty for local `/plan`). **Orchestrator trial wave (parallel, launch checklist):** rows 19–21 — `support-docs — slice 1`, `ai-highlight — slice 1`, `pdf-export — slice 1` (all `idea`, empty Needs behavior, not `local`).
 
 ---
 
@@ -58,7 +58,9 @@ Workflow-only specs (for example `SPEC-autonomous-queue.md`) follow the same que
 | 16 | zoom — slices 1–2 | done | `docs/specs/SPEC-zoom.md` | | `tasks/jobs/zoom/` not migrated; archive `tasks/archive/zoom-slice-*` |
 | 17 | ai-assist — slice 3 (model catalog cache) | done | `docs/specs/SPEC-ai-assist-slice-3-model-catalog-cache.md` | | Shipped 2026-10-19 |
 | 18 | autonomous-queue — slice 1 | done | `docs/specs/SPEC-autonomous-queue.md` | | Shipped 2026-10-19; `tasks/jobs/autonomous-queue/slice-1/` |
-| 19 | pdf-export — slice 1 | idea | — | | First overnight candidate — agent `/spec` at launch; Juan approves before `spec-approved` |
+| 19 | support-docs — slice 1 | idea | — | | Book project: manuscript + one free-text support doc (e.g. worldbuilding); open/switch; no templates — orchestrator `/spec` at launch |
+| 20 | ai-highlight — slice 1 | idea | — | | Highlight → rewrite selection; Accept/Reject; reuse existing ai-assist pipeline — orchestrator `/spec` at launch |
+| 21 | pdf-export — slice 1 | idea | — | | Desktop: export open book manuscript to one PDF file; minimal layout — orchestrator `/spec` at launch |
 | — | library (full Neo loop) | deferred | `docs/specs/SPEC-library.md` | | no auto-spec — Neo loop not sliced |
 | — | languages (per-book writing language) | idea | `docs/specs/SPEC-languages.md` | | no auto-spec — slice TBD |
 | — | manuscript (chapters, breaks, …) | idea | `docs/specs/SPEC-manuscript.md` | | no auto-spec — slice TBD |
@@ -74,8 +76,8 @@ Informal items from `ROADMAP.md` — status **`idea`** until a spec is drafted. 
 | UI | Zoom page | done (`SPEC-zoom.md`, slices 1–2) |
 | UI | Side panels (nav left, comments right) | idea |
 | UI | Reference documents side-by-side | idea |
-| AI | Text highlight rewrite | idea |
+| AI | Text highlight rewrite | promoted → capability row 20 |
 | AI | Per-comment model override (beyond shipped settings) | idea |
-| Features | PDF export | promoted → capability row 19 |
-| Features | Reference documents (worldbuilding, characters, …) | idea |
+| Features | PDF export | promoted → capability row 21 |
+| Features | Reference documents (worldbuilding, characters, …) | promoted → capability row 19 |
 | Features | Agents (reviewer, canon, …) | idea |
