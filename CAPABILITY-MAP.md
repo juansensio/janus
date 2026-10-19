@@ -30,6 +30,8 @@ Build order (full Neo loop): shell → languages → manuscript → library, ai-
 
 **AI-assist slice 1** (`docs/specs/SPEC-ai-assist.md`, approved 2026-10-18): desktop Connect via **Sign in with ChatGPT** (SIWC loopback OAuth in main), Write → draft tag, Accept/Reject via manuscript transforms. Intent: `docs/intent/ai-assist-mvp.md`. Mobile: HTML editor without AI bridge methods.
 
+**AI-assist slice 3** (`docs/specs/SPEC-ai-assist-slice-3-model-catalog-cache.md`, approved 2026-10-19): session-cached OpenAI model catalog in desktop main; non-blocking editor model options.
+
 **Zoom slice 1** (`docs/specs/SPEC-zoom.md`, approved 2026-10-18): discrete manuscript page zoom in the editor; persisted `editorZoomPercent`; Settings control; desktop View menu and keyboard shortcuts.
 
 **Zoom slice 2** (`docs/specs/SPEC-zoom.md`, approved 2026-10-19): pinned editor bar `+ zoom (X%) −`; the page card scales with the level (paper and type together).

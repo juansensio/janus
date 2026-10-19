@@ -20,7 +20,7 @@ Autonomous agents read this file **after** `CAPABILITY-MAP.md`. Status drives wh
 4. Set the matching row below to **`spec-approved`** (or `in-progress` once `/plan` has written root `tasks/plan.md`).
 5. Agents do **not** treat CAPABILITY-MAP prose alone as approval — this queue row must be `spec-approved`.
 
-**Current queue head:** zoom slice 1 (`in-progress`, PR open).
+**Current queue head:** none (slice 3 shipped; pick next `spec-approved` row).
 
 ---
 
@@ -43,12 +43,13 @@ Autonomous agents read this file **after** `CAPABILITY-MAP.md`. Status drives wh
 | 13 | manuscript — slice 2 (HTML) | done | `docs/specs/SPEC-manuscript-slice-2.md` | Built with row 14; `tasks/archive/html-manuscript-ai-assist/` |
 | 14 | ai-assist — slice 1 (SIWC, Write) | done | `docs/specs/SPEC-ai-assist.md` | `tasks/archive/html-manuscript-ai-assist/`, `ai-assist-siwc/`, `ai-assist-write-instruction/` |
 | 15 | ai-assist — slice 2 (usage ledger) | spec-draft | `docs/specs/SPEC-ai-assist-slice-2.md` | Spec status **Deferred** (2026-10-18) — not queued for build |
-| 16 | zoom — slice 1 | in-progress | `docs/specs/SPEC-zoom.md` | **spec-approved** 2026-10-18; PR #2 |
+| 16 | zoom — slices 1–2 | done | `docs/specs/SPEC-zoom.md` | Archived `tasks/archive/zoom-slice-1/`, `zoom-slice-2/` |
+| 17 | ai-assist — slice 3 (model catalog cache) | done | `docs/specs/SPEC-ai-assist-slice-3-model-catalog-cache.md` | Shipped 2026-10-19; archive `tasks/archive/ai-assist-slice-3/` |
 | — | library (full Neo loop) | spec-draft | `docs/specs/SPEC-library.md` | Further slices not approved beyond archived work |
 | — | languages (per-book writing language) | idea | `docs/specs/SPEC-languages.md` | Slice 1 shipped; later slices not specified |
 | — | manuscript (chapters, breaks, …) | idea | `docs/specs/SPEC-manuscript.md` | Slice 1–2 shipped; map “full loop” not spec’d |
 
-Active plan: **zoom** (`tasks/plan.md`, all tasks complete pending merge).
+Active plan: none — slice 3 archived under `tasks/archive/ai-assist-slice-3/`.
 
 ---
 
@@ -58,7 +59,7 @@ Informal items from `ROADMAP.md` — status **`idea`** until a spec is drafted a
 
 | Area | Idea | Status |
 |------|------|--------|
-| UI | Zoom page | in-progress (`SPEC-zoom.md`, PR #2) |
+| UI | Zoom page | done (`SPEC-zoom.md`, slices 1–2) |
 | UI | Side panels (nav left, comments right) | idea |
 | UI | Reference documents side-by-side | idea |
 | AI | Text highlight rewrite | idea |

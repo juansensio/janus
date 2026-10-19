@@ -27,3 +27,5 @@ When `/plan` starts a new `docs/specs/SPEC-<module-id>.md`, move the previous pa
 | `ai-assist-write-instruction/` | `SPEC-ai-assist` | Write: prose context, JSON draft/refusal, comment status (2026-10-18; manual sign-off) |
 | `idle-pre-zoom/` | — | Idle root plan before zoom slice (2026-10-18) |
 | `zoom-slice-1/` | `docs/specs/SPEC-zoom.md` | Slice 1 — persisted zoom, Settings, shortcuts, View menu (2026-10-18) |
+| `zoom-slice-2/` | `docs/specs/SPEC-zoom.md` | Slice 2 — editor zoom bar, page-scale zoom (2026-10-19) |
+| `ai-assist-slice-3/` | `SPEC-ai-assist-slice-3-model-catalog-cache` | Cached model catalog, non-blocking editor (2026-10-19) |
