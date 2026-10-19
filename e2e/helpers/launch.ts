@@ -4,6 +4,7 @@ import path from "node:path";
 import { createRequire } from "node:module";
 import type { ElectronApplication } from "@playwright/test";
 import { _electron as electron } from "@playwright/test";
+import { resolveElectronSlowMoMs } from "./launch-mode";
 import { desktopAppDir, repoRoot } from "./paths";
 
 const require = createRequire(import.meta.url);
@@ -41,6 +42,8 @@ export async function launchJanusApp(
             ? ["--no-sandbox", "--disable-dev-shm-usage"]
             : [];
 
+    const slowMo = resolveElectronSlowMoMs();
+
     const app = await electron.launch({
         executablePath: electronExecutablePath(),
         cwd: repoRoot,
@@ -54,6 +57,7 @@ export async function launchJanusApp(
             JANUS_LIBRARY_ROOT: dirs.libraryRoot,
         },
         timeout: 60_000,
+        ...(slowMo > 0 ? { slowMo } : {}),
     });
 
     return app;

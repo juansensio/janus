@@ -15,9 +15,14 @@ Playwright browser downloads are **not** required (Electron only). `PLAYWRIGHT_S
 
 | Command | Purpose |
 |--------|---------|
-| `bun run e2e` | Build UI + desktop, then run all flows |
-| `bun run e2e -- e2e/flows/zoom.spec.ts` | Run a single flow file |
+| `bun run e2e` | **CI / fast path** — no action delay, traces only on failure |
+| `bun run e2e:watch` | **Local debugging** — `slowMo` between actions (default 400ms), trace on every test |
+| `bun run e2e -- e2e/flows/zoom.spec.ts` | Run a single flow file (same for `e2e:watch`) |
+| `bun run e2e:watch -- --debug e2e/flows/zoom.spec.ts` | Step through one flow in the Playwright Inspector |
+| `JANUS_E2E_SLOW_MO=800 bun run e2e:watch` | Override pause between actions (milliseconds) |
 | `bun run e2e:shots` | Copy `e2e/artifacts/` → `/opt/cursor/artifacts/e2e-screenshots` when that path exists (cloud agents) |
+
+GitHub Actions runs `bun run e2e` only (headless via `xvfb` on Linux, no `JANUS_E2E_WATCH`).
 
 Named screenshots are written under `e2e/artifacts/<flow-slug>/`. That directory is gitignored. On failure, Playwright also keeps a trace under `e2e/test-results/` and the fixture copies `failure.png` + `trace.zip` into the flow artifact folder.
 

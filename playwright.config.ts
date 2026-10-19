@@ -1,5 +1,7 @@
 import { defineConfig } from "@playwright/test";
 
+const e2eWatch = process.env.JANUS_E2E_WATCH === "1";
+
 export default defineConfig({
     testDir: "e2e/flows",
     timeout: 90_000,
@@ -9,7 +11,7 @@ export default defineConfig({
     retries: process.env.CI ? 1 : 0,
     reporter: process.env.CI ? [["list"], ["github"]] : [["list"]],
     use: {
-        trace: "retain-on-failure",
+        trace: e2eWatch ? "on" : "retain-on-failure",
         video: "off",
         screenshot: "off",
     },

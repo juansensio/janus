@@ -15,6 +15,7 @@
         "desktop:package": "bun run build:ui && bun run --filter @janus/desktop build && bun run --filter @janus/desktop package",
         "test": "vitest run",
         "e2e": "bun scripts/e2e-run.ts",
+        "e2e:watch": "JANUS_E2E_WATCH=1 bun scripts/e2e-run.ts",
         "e2e:shots": "bun scripts/e2e-copy-artifacts.ts",
         "lint": "oxlint .",
         "cap:sync:ios": "bun run build:ui && bun apps/mobile/scripts/prepare-cap-web.ts && bun run --filter @janus/mobile cap:sync",

@@ -1,5 +1,6 @@
 import { spawnSync } from "node:child_process";
 import path from "node:path";
+import { isE2eWatchMode, resolveElectronSlowMoMs } from "../e2e/helpers/launch-mode";
 
 const root = path.resolve(import.meta.dir, "..");
 
@@ -24,6 +25,16 @@ function main(): void {
         if (code !== 0) {
             process.exit(code);
         }
+    }
+
+    if (isE2eWatchMode()) {
+        const slowMo = resolveElectronSlowMoMs();
+        console.log(
+            `[e2e:watch] Visible run with slowMo=${slowMo}ms. CI uses: bun run e2e`,
+        );
+        console.log(
+            "[e2e:watch] Add -- --debug to step through with the Playwright Inspector.",
+        );
     }
 
     const playwrightArgs = [
