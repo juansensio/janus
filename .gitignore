@@ -6,3 +6,5 @@ apps/desktop/dist/
 apps/desktop/release/
 .DS_Store
 *.log
+e2e/artifacts/
+e2e/test-results/
