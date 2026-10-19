@@ -8,6 +8,9 @@
     --editor-page-shadow: 0 0.5rem 2.5rem rgba(0, 0, 0, 0.55),
         -1.25rem 0 2.5rem rgba(0, 0, 0, 0.28),
         1.25rem 0 2.5rem rgba(0, 0, 0, 0.28);
+    --editor-scrollbar-track: rgba(255, 255, 255, 0.04);
+    --editor-scrollbar-thumb: rgba(184, 160, 102, 0.38);
+    --editor-scrollbar-thumb-hover: rgba(184, 160, 102, 0.58);
 }
 
 .janus-editor-shell {
@@ -36,6 +39,32 @@
     min-height: 0;
     overflow: auto;
     box-sizing: border-box;
+    scrollbar-width: thin;
+    scrollbar-color: var(--editor-scrollbar-thumb) var(--editor-scrollbar-track);
+}
+
+.editor-scrollport::-webkit-scrollbar {
+    width: 0.625rem;
+    height: 0.625rem;
+}
+
+.editor-scrollport::-webkit-scrollbar-track {
+    background: var(--editor-scrollbar-track);
+}
+
+.editor-scrollport::-webkit-scrollbar-thumb {
+    background-color: var(--editor-scrollbar-thumb);
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+}
+
+.editor-scrollport::-webkit-scrollbar-thumb:hover {
+    background-color: var(--editor-scrollbar-thumb-hover);
+}
+
+.editor-scrollport::-webkit-scrollbar-corner {
+    background: var(--editor-scrollbar-track);
 }
 
 .editor-chrome {
